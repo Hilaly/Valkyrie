@@ -1,0 +1,16 @@
+{
+    "name": "Valkyrie.Di.Unity",
+    "rootNamespace": "Valkyrie.Di",
+    "references": [
+        "GUID:a70afe01e6ebbf540b8af288529acd50"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

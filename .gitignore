@@ -8,3 +8,5 @@ UnityWorkplace/obj/
 UnityWorkplace/Valkyrie.Di.csproj
 UnityWorkplace/Assembly-CSharp.csproj
 UnityWorkplace/Valkyrie.Di.Tests.csproj
+UnityWorkplace/Valkyrie.Di.Runtime.csproj
+UnityWorkplace/Valkyrie.Di.Unity.csproj
