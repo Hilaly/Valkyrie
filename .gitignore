@@ -5,3 +5,6 @@ UnityWorkplace/UserSettings/
 UnityWorkplace/UnityWorkplace.sln
 UnityWorkplace/.idea/
 UnityWorkplace/obj/
+UnityWorkplace/Valkyrie.Di.csproj
+UnityWorkplace/Assembly-CSharp.csproj
+UnityWorkplace/Valkyrie.Di.Tests.csproj

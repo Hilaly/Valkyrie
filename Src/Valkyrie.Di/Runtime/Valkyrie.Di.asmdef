@@ -1,3 +1,14 @@
 {
-	"name": "Valkyrie.Di"
+    "name": "Valkyrie.Di",
+    "rootNamespace": "Valkyrie.Di",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
 }
