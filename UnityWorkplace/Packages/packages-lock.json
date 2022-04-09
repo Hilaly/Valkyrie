@@ -154,6 +154,14 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.valkyrie.di": {
+      "version": "file:../../Src/Valkyrie.Di",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "1.1.2"
+      }
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
