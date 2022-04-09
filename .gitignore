@@ -1,0 +1,12 @@
+UnityWorkplace/Library/
+UnityWorkplace/Temp/
+UnityWorkplace/Logs/
+UnityWorkplace/UserSettings/
+UnityWorkplace/UnityWorkplace.sln
+UnityWorkplace/.idea/
+UnityWorkplace/obj/
+UnityWorkplace/Valkyrie.Di.csproj
+UnityWorkplace/Assembly-CSharp.csproj
+UnityWorkplace/Valkyrie.Di.Tests.csproj
+UnityWorkplace/Valkyrie.Di.Runtime.csproj
+UnityWorkplace/Valkyrie.Di.Unity.csproj
