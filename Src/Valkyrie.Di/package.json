@@ -5,7 +5,7 @@
 	"version": "0.1.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Hilaly/Valkyrie/Src/Valkyrie.Di"
+		"url": "https://github.com/Hilaly/Valkyrie.git?path=/Src/Valkyrie.Di"
 	},
 	"dependencies": {
 		"com.unity.nuget.newtonsoft-json": "1.1.2"
