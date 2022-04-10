@@ -1,0 +1,14 @@
+{
+    "name": "Valkyrie.Profile",
+    "rootNamespace": "Valkyrie.Profile",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
