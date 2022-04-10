@@ -4,14 +4,20 @@ A set of tools for unity
 ## Valkyrie.Di
 A very simple implementation of Dependency Injection Container.
 To use it in your project just include package "https://github.com/Hilaly/Valkyrie.git?path=/Src/Valkyrie.Di"
-```
-var container = new Valkyrie.Di.Container();
-container.Register<InheritedClass>().AsInterfacesAndSelf().As<BaseClass>().SingleInstance().NonLazy();
-container.Build();
-var resolvedInstance = container.Resolve<InheritedClass>();
-var resolvedInheritedInstance = container.Resolve<BaseClass>();
-Debug.Assert(resolvedInstance == resolvedInheritedInstance);
-container.Dispose(); //All created instances, that implement IDisposable will be disposed here
+```c#
+class BaseClass {}
+class InheritedClass : BaseClass {}
+
+void SampleMethod()
+{
+    var container = new Valkyrie.Di.Container();
+    container.Register<InheritedClass>().AsInterfacesAndSelf().As<BaseClass>().SingleInstance().NonLazy();
+    container.Build();
+    var resolvedInstance = container.Resolve<InheritedClass>();
+    var resolvedInheritedInstance = container.Resolve<BaseClass>();
+    Debug.Assert(resolvedInstance == resolvedInheritedInstance);
+    container.Dispose(); //All created instances, that implement IDisposable will be disposed here
+}
 ```
 
 ## Valkyrie.Profile
@@ -26,7 +32,7 @@ It has some limitations:
 - Types of data are also supported: string, float, double
 - Supports only playerPrefs as storage now
 
-```
+```c#
 //Model entites
 public class Unit
 {
