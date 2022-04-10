@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Valkyrie.Profile
 {
-    class PlayerPrefsProfileLoader : IProfileLoader
+    internal class PlayerPrefsProfileLoader : IProfileLoader
     {
         private const string DataKey = "PlayerPrefsProfileLoaderData";
         

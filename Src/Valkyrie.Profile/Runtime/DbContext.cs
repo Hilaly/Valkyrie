@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Valkyrie.Profile
@@ -21,7 +23,7 @@ namespace Valkyrie.Profile
                     throw new NotImplementedException("Now you can use only player prefs data storage");
             }
 
-            _dbSchema = new DbSchema(GetType());
+            _dbSchema = new DbSchema();
         }
 
         public void Add(object o)
@@ -32,6 +34,11 @@ namespace Valkyrie.Profile
         public void Remove(object o)
         {
             _dbSchema.Context.Remove(o);
+        }
+
+        public List<T> GetAll<T>()
+        {
+            return _dbSchema.Context.Get(typeof(T)).Values.OfType<T>().ToList();
         }
 
         public void Dispose()

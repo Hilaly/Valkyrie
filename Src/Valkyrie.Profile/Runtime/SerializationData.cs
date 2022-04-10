@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Valkyrie.Profile
 {
-    class SerializationData
+    internal class SerializationData
     {
         private readonly Dictionary<Type, TypeSerializationInfo> _serializationInfos = new();
 
@@ -22,10 +22,10 @@ namespace Valkyrie.Profile
         {
             lock (_serializationInfos)
             {
-                foreach (var pair in _serializationInfos)
+                foreach (var (_, value) in _serializationInfos)
                 {
-                    if (pair.Value.Table == tableName)
-                        return pair.Value;
+                    if (value.Table == tableName)
+                        return value;
                 }
 
                 return default;

@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace Valkyrie.Profile
 {
-    class SerializationUtils
+    internal static class SerializationUtils
     {
-        public static bool IsSupportedClass(Type type, out string errString)
+        private static bool IsSupportedClass(Type type, out string errString)
         {
             if (!type.IsClass)
             {
@@ -52,7 +52,7 @@ namespace Valkyrie.Profile
                 && idPropType != typeof(ulong)
             )
             {
-                errString = $"id property must be of integral type";
+                errString = "id property must be of integral type";
                 return false;
             }
 
@@ -173,7 +173,7 @@ namespace Valkyrie.Profile
                 if (v == 0)
                 {
                     var lv = table.Id++;
-                    v = (ulong)lv;
+                    v = lv;
                     idPropInfo.SetValue(instance, v);
                 }
 
@@ -228,7 +228,7 @@ namespace Valkyrie.Profile
             return converter;
         }
 
-        public static bool IsSimpleSupportedType(Type type)
+        private static bool IsSimpleSupportedType(Type type)
         {
             return
                 type == typeof(byte)
@@ -245,7 +245,7 @@ namespace Valkyrie.Profile
                 ;
         }
 
-        static Action<object, JObject> GetSerializeMethod(SerializationData serRoot, PropertyInfo propertyInfo,
+        private static Action<object, JObject> GetSerializeMethod(SerializationData serRoot, PropertyInfo propertyInfo,
             out string errString)
         {
             var propType = propertyInfo.PropertyType;
@@ -282,7 +282,7 @@ namespace Valkyrie.Profile
             return GetReferenceSerializeMethod(serRoot, propertyInfo);
         }
 
-        private static Action<object, JObject> GetDeserializeMethod(SerializationData serRoot, PropertyInfo propertyInfo, out string errString)
+        private static Action<object, JObject> GetDeserializeMethod(PropertyInfo propertyInfo, out string errString)
         {
             var propType = propertyInfo.PropertyType;
             if (typeof(IEnumerable).IsAssignableFrom(propType))
@@ -303,9 +303,9 @@ namespace Valkyrie.Profile
                 if (!IsSupportedClass(enumType, out errString))
                     return default;
 
-                return GetReferenceListDeserializeMethod(serRoot, propertyInfo);
+                return GetReferenceListDeserializeMethod(propertyInfo);
             }
-            
+
             errString = string.Empty;
             if (IsSimpleSupportedType(propType))
             {
@@ -313,10 +313,10 @@ namespace Valkyrie.Profile
             }
 
             errString = string.Empty;
-            return (o, jo) => { propertyInfo.SetValue(o, default); };
+            return (o, _) => { propertyInfo.SetValue(o, default); };
         }
-        
-        static Action<object, JObject> GetReferenceListSerializeMethod(SerializationData serRoot,
+
+        private static Action<object, JObject> GetReferenceListSerializeMethod(SerializationData serRoot,
             PropertyInfo propertyInfo)
         {
             var propType = propertyInfo.PropertyType;
@@ -330,27 +330,25 @@ namespace Valkyrie.Profile
                 if (sourceList == null || sourceList.Count == 0)
                     return;
                 referenceList.Clear();
-                for (int i = 0; i < sourceList.Count; i++)
+                for (var i = 0; i < sourceList.Count; i++)
                 {
                     var refObject = sourceList[i];
-                    if (refObject == null)
-                        referenceList.Add(0);
-                    else
+                    if (refObject != null)
                         referenceList.Add(table.GetId(refObject));
                 }
 
                 jo.Add(new JProperty(propertyInfo.Name, referenceList));
             };
         }
-        static Action<object, JObject> GetReferenceListDeserializeMethod(SerializationData serRoot,
-            PropertyInfo propertyInfo) =>
-            (instance, jo) =>
+
+        private static Action<object, JObject> GetReferenceListDeserializeMethod(PropertyInfo propertyInfo) =>
+            (instance, _) =>
             {
-                if(propertyInfo.GetValue(instance) == null)
+                if (propertyInfo.GetValue(instance) == null)
                     propertyInfo.SetValue(instance, Activator.CreateInstance(propertyInfo.PropertyType));
             };
 
-        static Action<object, JObject> GetReferenceSerializeMethod(SerializationData serRoot, PropertyInfo propertyInfo)
+        private static Action<object, JObject> GetReferenceSerializeMethod(SerializationData serRoot, PropertyInfo propertyInfo)
         {
             var propType = propertyInfo.PropertyType;
             var table = serRoot.GetTypeInfo(propType);
@@ -363,15 +361,15 @@ namespace Valkyrie.Profile
             };
         }
 
-        static Action<object, JObject> GetSimpleSerializeMethod(PropertyInfo propertyInfo) =>
+        private static Action<object, JObject> GetSimpleSerializeMethod(PropertyInfo propertyInfo) =>
             (instance, jo) =>
             {
                 var value = propertyInfo.GetValue(instance);
                 if (value != null)
                     jo.Add(new JProperty(propertyInfo.Name, value));
             };
-        
-        static Action<object, JObject> GetSimpleDeserializeMethod(PropertyInfo propertyInfo) =>
+
+        private static Action<object, JObject> GetSimpleDeserializeMethod(PropertyInfo propertyInfo) =>
             (instance, jo) =>
             {
                 if (jo.TryGetValue(propertyInfo.Name, out var token))
@@ -403,7 +401,7 @@ namespace Valkyrie.Profile
             return FactoryMethod;
         }
 
-        public static Action<TypeSerializationInfo,JObject,object> DeserializeMethod(SerializationData serRoot, Type type)
+        public static Action<TypeSerializationInfo, JObject, object> DeserializeMethod(Type type)
         {
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.SetProperty | BindingFlags.Public);
 
@@ -411,13 +409,13 @@ namespace Valkyrie.Profile
 
             foreach (var propertyInfo in properties)
             {
-                var m = GetDeserializeMethod(serRoot, propertyInfo, out var errString);
+                var m = GetDeserializeMethod(propertyInfo, out var errString);
                 if (m != null)
                     calls.Add(m);
                 else
                     Debug.LogWarning($"[PROFILE]: {errString}, property {type.FullName}.{propertyInfo.Name} ignored");
             }
-            
+
             void FactoryMethod(TypeSerializationInfo typeInfo, JObject json, object o)
             {
                 foreach (var call in calls) call(o, json);
@@ -426,5 +424,126 @@ namespace Valkyrie.Profile
             return FactoryMethod;
         }
 
+        public static Action<SerializationContext, object> PrepareReferencesMethod(SerializationData serRoot, Type type)
+        {
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.SetProperty | BindingFlags.Public);
+
+            var calls = new List<Action<object, SerializationContext>>();
+
+            foreach (var propertyInfo in properties)
+            {
+                var m = GetPrepareReferencesMethod(serRoot, propertyInfo);
+                if (m != null)
+                    calls.Add(m);
+            }
+
+            void FactoryMethod(SerializationContext ctx, object o)
+            {
+                foreach (var call in calls) call(o, ctx);
+            }
+
+            return FactoryMethod;
+        }
+
+        private static Action<object, SerializationContext> GetPrepareReferencesMethod(SerializationData serializationData, PropertyInfo propertyInfo)
+        {
+            var propType = propertyInfo.PropertyType;
+            if (typeof(IEnumerable).IsAssignableFrom(propType)
+                && propType.IsGenericType
+                && propType.GetGenericTypeDefinition() == typeof(List<>)
+                && IsSupportedClass(propType.GetGenericArguments()[0], out _))
+            {
+                var typeInfo = serializationData.GetTypeInfo(propType.GetGenericArguments()[0]);
+                return (o, ctx) =>
+                {
+                    var list = (IList)propertyInfo.GetValue(o);
+                    if (list != null)
+                        foreach (var reference in list)
+                            if (reference != null)
+                            {
+                                ctx.Add(reference);
+                                typeInfo.PrepareDb(ctx, reference);
+                            }
+                };
+            }
+
+            if (IsSupportedClass(propType, out _))
+            {
+                var typeInfo = serializationData.GetTypeInfo(propType);
+                return (o, ctx) =>
+                {
+                    var reference = propertyInfo.GetValue(o);
+                    if (reference != null)
+                    {
+                        ctx.Add(reference);
+                        typeInfo.PrepareDb(ctx, reference);
+                    }
+                };
+            }
+
+            return default;
+        }
+
+        public static Action<SerializationContext, object, JObject> SetReferencesMethod(SerializationData serRoot, Type type)
+        {
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.SetProperty | BindingFlags.Public);
+            
+            var calls = new List<Action<SerializationContext, object, JObject>>();
+
+            foreach (var propertyInfo in properties)
+            {
+                var m = GetSetReferencesMethod(serRoot, propertyInfo);
+                if(m != null)
+                    calls.Add(m);
+            }
+            
+            void FactoryMethod(SerializationContext ctx, object o, JObject jo)
+            {
+                foreach (var call in calls) call(ctx, o, jo);
+            }
+
+            return FactoryMethod;
+        }
+
+        private static Action<SerializationContext, object, JObject> GetSetReferencesMethod(SerializationData serializationData, PropertyInfo propertyInfo)
+        {
+            var propType = propertyInfo.PropertyType;
+            if (typeof(IEnumerable).IsAssignableFrom(propType)
+                && propType.IsGenericType
+                && propType.GetGenericTypeDefinition() == typeof(List<>)
+                && IsSupportedClass(propType.GetGenericArguments()[0], out _))
+            {
+                var typeInfo = serializationData.GetTypeInfo(propType.GetGenericArguments()[0]);
+                var listType = typeof(List<>).MakeGenericType(typeInfo.IdType);
+                return (ctx, o, jo) =>
+                {
+                    var value = (IList)propertyInfo.GetValue(o);
+                    value.Clear();
+                    if (jo.TryGetValue(propertyInfo.Name, out var token))
+                    {
+                        var ids = (IList)token.ToObject(listType);
+                        for (var i = 0; i < ids.Count; i++)
+                        {
+                            var id = ids[i];
+                            value.Add(ctx.Get(typeInfo.Type, id));
+                        }
+                    }
+                };
+            }
+
+            if (IsSupportedClass(propType, out _))
+            {
+                var typeInfo = serializationData.GetTypeInfo(propType);
+                return (ctx, o, jo) =>
+                {
+                    propertyInfo.SetValue(o,
+                        jo.TryGetValue(propertyInfo.Name, out var token)
+                            ? ctx.Get(typeInfo.Type, token.ToObject(typeInfo.IdType))
+                            : null);
+                };
+            }
+
+            return default;
+        }
     }
 }

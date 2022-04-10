@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Valkyrie.Profile
 {
-    class SerializationContext
+    internal class SerializationContext
     {
         private readonly SerializationData _serializationData;
         private readonly Dictionary<string, TableInfo> _values;
         private readonly Dictionary<string, Dictionary<string, object>> _parsedValues = new();
-        private readonly HashSet<Type> _unsupportedTypes = new HashSet<Type>();
+        private readonly HashSet<Type> _unsupportedTypes = new();
 
         public SerializationContext(SerializationData serializationData, string json, object dbContext)
         {
@@ -22,6 +23,15 @@ namespace Valkyrie.Profile
             TryDeserializeObject(dbContext);
         }
 
+        public SerializationContext(SerializationData serializationData, object dbContext)
+        {
+            _serializationData = serializationData;
+            _values = new Dictionary<string, TableInfo>();
+            _unsupportedTypes.Add(dbContext.GetType());
+
+            Add(dbContext);
+        }
+
         private void TryDeserializeObject(object value)
         {
             var tableType = value.GetType();
@@ -29,7 +39,7 @@ namespace Valkyrie.Profile
             var tableName = typeInfo.Table;
             if (_values.TryGetValue(tableName, out var unparsedList) && unparsedList.Values.Count > 0)
             {
-                var pair = unparsedList.Values.FindLast(x => true);
+                var pair = unparsedList.Values[^1];
                 var jo = JObject.Parse(pair.Value);
                 typeInfo.Deserialize(value, jo);
                 typeInfo.SetReferences(this, value, jo);
@@ -38,7 +48,7 @@ namespace Valkyrie.Profile
             }
         }
 
-        private Dictionary<string, object> Get(Type tableType)
+        public Dictionary<string, object> Get(Type tableType)
         {
             var typeInfo = _serializationData.GetTypeInfo(tableType);
             if (!_parsedValues.TryGetValue(typeInfo.Table, out var parsedList))
@@ -51,7 +61,7 @@ namespace Valkyrie.Profile
             return parsedList;
         }
 
-        void Deserialize(TableInfo unparsedList, TypeSerializationInfo typeInfo, Dictionary<string, object> parsedList)
+        private void Deserialize(TableInfo unparsedList, TypeSerializationInfo typeInfo, IDictionary<string, object> parsedList)
         {
             if(_unsupportedTypes.Contains(typeInfo.Type))
                 return;
@@ -80,12 +90,26 @@ namespace Valkyrie.Profile
 
         public string Serialize()
         {
+            //Fill with all exist objects
+            foreach (var parsedValue in _parsedValues.ToList())
+            {
+                var table = _serializationData.GetTypeInfo(parsedValue.Key);
+                if (table == null)
+                {
+                    Debug.LogWarning("Serialization info not created");
+                    continue;
+                }
+
+                foreach (var pair in parsedValue.Value) table.PrepareDb(this, pair.Value);
+            }
+            
+            //serialize all exist objects
             foreach (var parsedValue in _parsedValues)
             {
                 var table = _serializationData.GetTypeInfo(parsedValue.Key);
                 if (table == null)
                 {
-                    Debug.LogWarning($"Serialization info not created");
+                    Debug.LogWarning("Serialization info not created");
                     continue;
                 }
 
@@ -96,10 +120,20 @@ namespace Valkyrie.Profile
                     e.Add(new KeyValuePair<string, string>(table.GetId(o).ToString(), json.ToString()));
                 }
 
-                _values[parsedValue.Key] = new TableInfo() { Id = table.Id, Values = e };
+                _values[parsedValue.Key] = new TableInfo { Id = table.Id, Values = e };
             }
 
-            return JsonConvert.SerializeObject(_values);
+#if UNITY_EDITOR
+            return JsonConvert.SerializeObject(_values, Formatting.Indented);
+#else
+            return JsonConvert.SerializeObject(_values, Formatting.None);
+#endif
+        }
+
+        public object Get(Type type, object id)
+        {
+            var list = Get(type);
+            return list.TryGetValue(id.ToString(), out var result) ? result : default;
         }
 
         public void Add(object o)
