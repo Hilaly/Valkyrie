@@ -7,6 +7,8 @@ namespace Valkyrie.Profile
         private readonly IProfileLoader _loader;
         private readonly DbSchema _dbSchema;
 
+        public ulong Id { get; set; }
+        
         protected DbContext(ProfileConnectionString connectionString)
         {
             switch (connectionString.ToString())
@@ -23,9 +25,14 @@ namespace Valkyrie.Profile
             _loader.Load(_dbSchema, this);
         }
 
+        public void Add(object o)
+        {
+            _dbSchema.Context.Add(o);
+        }
+
         public void Remove(object o)
         {
-            throw new NotImplementedException();
+            _dbSchema.Context.Remove(o);
         }
 
         public void SaveChanges()
