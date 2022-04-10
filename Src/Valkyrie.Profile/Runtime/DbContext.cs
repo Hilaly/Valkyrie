@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Valkyrie.Profile
 {
@@ -21,8 +22,6 @@ namespace Valkyrie.Profile
             }
 
             _dbSchema = new DbSchema(GetType());
-            
-            _loader.Load(_dbSchema, this);
         }
 
         public void Add(object o)
@@ -35,14 +34,19 @@ namespace Valkyrie.Profile
             _dbSchema.Context.Remove(o);
         }
 
-        public void SaveChanges()
-        {
-            _loader.Save(_dbSchema, this);
-        }
-
         public void Dispose()
         {
-            SaveChanges();
+            SaveAsync().Wait();
+        }
+
+        public async Task LoadAsync()
+        {
+            await _loader.Load(_dbSchema, this);
+        }
+
+        public async Task SaveAsync()
+        {
+            await _loader.Save(_dbSchema, this);
         }
     }
 }

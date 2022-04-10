@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
+
 namespace Valkyrie.Profile
 {
     interface IProfileLoader
     {
-        void Load(DbSchema schema, DbContext dbContext);
-        void Save(DbSchema schema, DbContext dbContext);
+        Task Load(DbSchema schema, DbContext dbContext);
+        Task Save(DbSchema schema, DbContext dbContext);
     }
 }
