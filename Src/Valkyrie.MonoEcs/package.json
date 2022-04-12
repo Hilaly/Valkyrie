@@ -1,0 +1,10 @@
+{
+	"name": "com.valkyrie.monoecs",
+	"displayName": "Valkyrie ECS state generator",
+	"description": "Workflow for ECS architecture, based on components, inherited from MonoBehaviour",
+	"version": "0.1.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Hilaly/Valkyrie.git?path=/Src/Valkyrie.MonoEcs"
+	}
+}
