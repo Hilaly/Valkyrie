@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor.Callbacks;
 using UnityEngine;
+using Valkyrie.Di;
 using Valkyrie.Ecs;
 
 namespace Valkyrie.Editor
@@ -146,9 +147,11 @@ namespace Valkyrie.Editor
 
             fb.Write();
 
+            fb.Write("/*");
             fb.StartClass($"{MonoTypeName}SimulationSystem", "ISimulationSystem");
             FillSimulationSystem(fb);
             fb.EndClass();
+            fb.Write("*/");
 
             fb.EndNamespace();
         }
@@ -164,11 +167,8 @@ namespace Valkyrie.Editor
 
         private static bool NeedInject(this Type type)
         {
-            return false;
-            /*
-            TODO: make integration with Valkyrie.Di
             var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(u => DataExtensions.GetCustomAttribute<InjectAttribute>(u, true) != null).ToArray();
+                .Where(u => u.GetCustomAttribute<InjectAttribute>(true) != null).ToArray();
             if (fields.Length > 0)
                 return true;
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -182,7 +182,6 @@ namespace Valkyrie.Editor
             if (type.BaseType != null)
                 return NeedInject(type.BaseType);
             return false;
-            */
         }
 
         private static int GetOrder(this Type type)
@@ -279,7 +278,7 @@ namespace Valkyrie.Editor
             fb.Write($"public static {MonoTypeName} CreateEntity(string name = null)");
             fb.Write("{");
             fb.Increase();
-            fb.Write($"var go = name.IsNullOrEmpty() ? new GameObject() : new GameObject(name);");
+            fb.Write($"var go = string.IsNullOrEmpty(name) ? new GameObject() : new GameObject(name);");
             fb.Write($"return RegisterEntity(go, name);");
             fb.Decrease();
             fb.Write("}");
@@ -298,7 +297,7 @@ namespace Valkyrie.Editor
             fb.Write($"static {MonoTypeName} RegisterEntity(GameObject instance, string name)");
             fb.Write("{");
             fb.Increase();
-            fb.Write($"if (name.NotNullOrEmpty() && instance.name != name) instance.name = name;");
+            fb.Write($"if (!string.IsNullOrEmpty(name) && instance.name != name) instance.name = name;");
             fb.Write($"var result = instance.GetComponent<{MonoTypeName}>();");
             fb.Write($"if (result == null)");
             fb.Write("{");
@@ -354,6 +353,9 @@ namespace Valkyrie.Editor
             fb.EndRegion("Unity events");
 
             fb.StartRegion("Pooled behaviour");
+            fb.Write("/*");
+            fb.Write();
+            
             fb.Write("private static ObjectsPool _objectsPool;");
             fb.Write("private static ObjectsPool ObjectsPool");
             fb.Write("{");
@@ -433,6 +435,8 @@ namespace Valkyrie.Editor
             fb.Write();
             fb.Write("public void Destroy() => DestroyEntity(this);");
 
+            fb.Write();
+            fb.Write("*/");
             fb.EndRegion("Pooled behaviour");
 
             fb.EndRegion("Methods");
