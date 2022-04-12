@@ -122,5 +122,18 @@ namespace Valkyrie.Di
 
             return o;
         }
+        
+        public static IContainer FindContainerInScene(this GameObject gameObject)
+        {
+            var scene = gameObject.scene;
+            foreach (var rootGameObject in scene.GetRootGameObjects())
+            {
+                var c = rootGameObject.GetComponentInChildren<SceneContext>();
+                if (c != null)
+                    return c.Container;
+            }
+
+            return ProjectContext.Instance.Container;
+        }
     }
 }
