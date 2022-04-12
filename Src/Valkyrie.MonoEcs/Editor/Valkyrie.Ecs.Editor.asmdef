@@ -1,0 +1,18 @@
+{
+    "name": "Valkyrie.Ecs.Editor",
+    "rootNamespace": "Valkyrie.Editor",
+    "references": [
+        "GUID:db05d9e54c9cddb44b3108bc58b173f6"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

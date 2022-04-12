@@ -1,0 +1,14 @@
+{
+    "name": "Valkyrie.Ecs",
+    "rootNamespace": "Valkyrie.Ecs",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
