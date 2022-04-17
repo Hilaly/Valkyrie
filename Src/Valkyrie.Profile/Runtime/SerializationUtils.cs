@@ -249,7 +249,7 @@ namespace Valkyrie.Profile
             out string errString)
         {
             var propType = propertyInfo.PropertyType;
-            if (typeof(IEnumerable).IsAssignableFrom(propType))
+            if (typeof(IEnumerable).IsAssignableFrom(propType) && propType != typeof(string))
             {
                 if (!propType.IsGenericType || propType.GetGenericTypeDefinition() != typeof(List<>))
                 {
@@ -285,7 +285,7 @@ namespace Valkyrie.Profile
         private static Action<object, JObject> GetDeserializeMethod(PropertyInfo propertyInfo, out string errString)
         {
             var propType = propertyInfo.PropertyType;
-            if (typeof(IEnumerable).IsAssignableFrom(propType))
+            if (typeof(IEnumerable).IsAssignableFrom(propType) && propType != typeof(string))
             {
                 if (!propType.IsGenericType || propType.GetGenericTypeDefinition() != typeof(List<>))
                 {
