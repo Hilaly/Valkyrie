@@ -66,5 +66,7 @@ namespace Valkyrie.Di
         object TryResolve(Type type, string name, params object[] args);
 
         #endregion
+
+        object Instantiate(Type t, params object[] args);
     }
 }

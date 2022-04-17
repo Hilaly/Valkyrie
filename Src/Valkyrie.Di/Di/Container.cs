@@ -299,6 +299,36 @@ namespace Valkyrie.Di
             return TryResolve(StartResolving(args), type, name);
         }
 
+        public object Instantiate(Type t, params object[] args)
+        {
+            Func<ResolvingArguments, object> MakeCtor()
+            {
+                var constructors = t.GetConstructors();
+                if (constructors.Length == 1)
+                    return DiUtils.MakeFactory(constructors[0], t);
+
+                try
+                {
+                    var concreteCtor = constructors.Single(ctor =>
+                        ctor.GetCustomAttributes(typeof(InjectAttribute), false).Length != 0);
+                    return DiUtils.MakeFactory(concreteCtor, t);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(
+                        $"Can not find single constructor with Inject attribute at type {t.FullName}", e);
+                }
+            }
+
+            var ctor = MakeCtor();
+            var inject = DiUtils.MakeInjectionAction(t);
+            var s = StartResolving(args);
+
+            var instance = ctor(s);
+            inject(s, instance);
+            return instance;
+        }
+
         internal object TryResolve(ResolvingArguments args, Type type, string name)
         {
             var resolver = GetResolver(type, name);
