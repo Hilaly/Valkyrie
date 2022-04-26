@@ -5,6 +5,21 @@ using System.Linq;
 
 namespace Valkyrie.Di
 {
+    public class ActionDisposable : IDisposable
+    {
+        private readonly Action _disposeAction;
+
+        public ActionDisposable(Action disposeAction)
+        {
+            _disposeAction = disposeAction;
+        }
+
+        public void Dispose()
+        {
+            _disposeAction?.Invoke();
+        }
+    }
+
     public class CompositeDisposable
     {
         private readonly HashSet<IDisposable> _subs = new HashSet<IDisposable>();
