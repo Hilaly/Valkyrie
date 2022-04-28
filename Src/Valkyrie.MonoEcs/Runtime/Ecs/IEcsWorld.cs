@@ -26,10 +26,10 @@ namespace Valkyrie.Ecs
 
         public EcsWorld()
         {
-            _ecsEntities = new EcsEntities();
             _ecsState = new EcsState();
-            _ecsGroups = new EcsGroups(_ecsState, _ecsEntities);
             _ecsSystems = new EcsSystems();
+            _ecsEntities = new EcsEntities(_ecsState);
+            _ecsGroups = new EcsGroups(_ecsState, _ecsEntities);
         }
         
         public void Simulate(float dt)

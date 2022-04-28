@@ -13,11 +13,18 @@ namespace Valkyrie.Ecs
 
     class EcsState : IEcsState
     {
-        public class Data<T> where T : struct
+        public interface IData
+        {
+            IPool GetPool();
+        }
+
+        public class Data<T> : IData where T : struct
         {
             public Pool<T> Pool = new Pool<T>();
             public ExistEcsFilter<T> ExistEcsFilter;
             public NotExistEcsFilter<T> NotExistEcsFilter;
+
+            IPool IData.GetPool() => this.Pool;
 
             public Data(EcsState state)
             {
@@ -26,7 +33,7 @@ namespace Valkyrie.Ecs
             }
         }
 
-        private readonly Dictionary<Type, object> _data = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, IData> _data = new Dictionary<Type, IData>();
         public event Action<int> OnEntityChanged;
 
         public Data<T> Get<T>() where T : struct
@@ -46,14 +53,24 @@ namespace Valkyrie.Ecs
 
         public void Remove<T>(EcsEntity e) where T : struct
         {
-            Get<T>().Pool.RemoveById(e.Id);
-            OnOnEntityChanged(e.Id);
+            if(Get<T>().Pool.RemoveById(e.Id))
+                OnOnEntityChanged(e.Id);
         }
 
         public bool Has<T>(EcsEntity e) where T : struct
         {
             Get<T>().Pool.GetById(e.Id, out var exist);
             return exist;
+        }
+
+        public void Clear(EcsEntity e)
+        {
+            var any = false;
+            foreach (var pair in _data)
+                if (pair.Value.GetPool().RemoveById(e.Id))
+                    any = true;
+            if(any)
+                OnOnEntityChanged(e.Id);
         }
 
         protected virtual void OnOnEntityChanged(int id)

@@ -2,7 +2,12 @@ using System;
 
 namespace Valkyrie.Ecs
 {
-    class Pool<T> where T : struct
+    internal interface IPool
+    {
+        bool RemoveById(int id);
+    }
+
+    class Pool<T> : IPool where T : struct
     {
         internal struct X
         {
@@ -66,7 +71,7 @@ namespace Valkyrie.Ecs
             _components[inde] = value;
         }
 
-        public void RemoveById(int id)
+        public bool RemoveById(int id)
         {
             var index = FindIndex(id, out var exist);
             if (exist)
@@ -74,6 +79,8 @@ namespace Valkyrie.Ecs
                 Array.Copy(_components, index + 1, _components, index, _count - index - 1);
                 _count--;
             }
+
+            return exist;
         }
 
         private void Resize()

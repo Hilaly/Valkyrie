@@ -14,7 +14,13 @@ namespace Valkyrie.Ecs
     {
         private int _idCounter = 1;
         private readonly HashSet<int> _entities = new HashSet<int>();
-        
+        private EcsState _ecsState;
+
+        public EcsEntities(EcsState ecsState)
+        {
+            _ecsState = ecsState;
+        }
+
         public EcsEntity GetEntity(int id)
         {
             if(!_entities.Contains(id))
@@ -32,6 +38,7 @@ namespace Valkyrie.Ecs
 
         public void Destroy(int id)
         {
+            _ecsState.Clear(new EcsEntity() { Id = id });
             if (!_entities.Remove(id))
                 throw new Exception($"Entity {id} not exist");
         }
