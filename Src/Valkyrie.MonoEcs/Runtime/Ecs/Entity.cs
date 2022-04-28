@@ -145,7 +145,7 @@ namespace Valkyrie.Ecs
         public IEcsGroup Build()
         {
             var list = _filters.OrderBy(x => x.GetHash()).ToList();
-            var hash = string.Join(',', list.Select(x => x.GetHash()));
+            var hash = string.Join('&', list.Select(x => x.GetHash()));
             if (!_groups.TryGetValue(hash, out var result))
                 _groups.Add(hash, result = new EcsGroup(_state, _entities, list));
             return result;

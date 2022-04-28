@@ -14,7 +14,7 @@ namespace Valkyrie.Ecs
     {
         private int _idCounter = 1;
         private readonly HashSet<int> _entities = new HashSet<int>();
-        private EcsState _ecsState;
+        private readonly EcsState _ecsState;
 
         public EcsEntities(EcsState ecsState)
         {

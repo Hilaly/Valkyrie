@@ -10,9 +10,9 @@ namespace Valkyrie.Ecs
     
     class EcsGroups : IEcsGroups, IDisposable
     {
-        private EcsState _ecsState;
+        private readonly EcsState _ecsState;
         private readonly Dictionary<string, EcsGroup> _groups = new Dictionary<string, EcsGroup>();
-        private EcsEntities _ecsEntities;
+        private readonly EcsEntities _ecsEntities;
 
         public EcsGroups(EcsState ecsState, EcsEntities ecsEntities)
         {
