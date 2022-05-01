@@ -2,11 +2,6 @@ using System;
 
 namespace Valkyrie.Ecs
 {
-    internal interface IPool
-    {
-        bool RemoveById(int id);
-    }
-
     class Pool<T> : IPool where T : struct
     {
         internal struct X
