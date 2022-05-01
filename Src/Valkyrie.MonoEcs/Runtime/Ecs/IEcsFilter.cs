@@ -18,6 +18,11 @@ namespace Valkyrie.Ecs
             _ecsFilters = new List<IEcsFilter>(ecsFilters);
         }
 
+        public AnyOfEcsFilter(params IEcsFilter[] ecsFilters)
+        {
+            _ecsFilters = new List<IEcsFilter>(ecsFilters);
+        }
+
         public bool IsMatch(EcsEntity e)
         {
             return _ecsFilters.Any(x => x.IsMatch(e));

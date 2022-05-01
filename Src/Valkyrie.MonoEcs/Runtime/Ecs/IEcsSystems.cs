@@ -30,7 +30,7 @@ namespace Valkyrie.Ecs
     {
     }
 
-    public interface IEcsSimulationSystem
+    public interface IEcsSimulationSystem : IEcsSystem
     {
         void Simulate(float dt);
     }
@@ -39,13 +39,11 @@ namespace Valkyrie.Ecs
     {
         public IEcsState State { get; }
         public IEcsGroups Groups { get; }
-        public IEcsEntities Entities { get; }
 
         protected BaseEcsSystem(IEcsWorld ecsWorld)
         {
             State = ecsWorld.State;
             Groups = ecsWorld.Groups;
-            Entities = ecsWorld.Entities;
         }
     }
 

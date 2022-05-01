@@ -24,13 +24,13 @@ namespace Valkyrie.Ecs
 
         public int Count => _entities.Count;
 
-        public EcsGroup(EcsState state, EcsEntities entities, IEnumerable<IEcsFilter> filters)
+        public EcsGroup(EcsState state, IEnumerable<IEcsFilter> filters)
         {
             _ecsFilters = new List<IEcsFilter>(filters);
             _state = state;
             _state.OnEntityChanged += OnEntityChanged;
 
-            foreach (var e in entities.GetAll())
+            foreach (var e in _state.GetAll())
                 OnEntityChanged(e);
         }
 

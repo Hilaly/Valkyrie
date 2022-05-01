@@ -12,9 +12,9 @@ namespace Valkyrie.Ecs
     {
         private readonly EcsState _ecsState;
         private readonly Dictionary<string, EcsGroup> _groups = new Dictionary<string, EcsGroup>();
-        private readonly EcsEntities _ecsEntities;
+        private readonly EcsState _ecsEntities;
 
-        public EcsGroups(EcsState ecsState, EcsEntities ecsEntities)
+        public EcsGroups(EcsState ecsState, EcsState ecsEntities)
         {
             _ecsState = ecsState;
             _ecsEntities = ecsEntities;

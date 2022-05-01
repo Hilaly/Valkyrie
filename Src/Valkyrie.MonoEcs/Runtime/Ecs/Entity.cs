@@ -60,6 +60,28 @@ namespace Valkyrie.Ecs
         IGroupBuilder NotOf<T0>()
             where T0 : struct;
 
+        IGroupBuilder AnyOf<T0, T1, T2, T3, T4>()
+            where T0 : struct
+            where T1 : struct
+            where T2 : struct
+            where T3 : struct
+            where T4 : struct;
+
+        IGroupBuilder AnyOf<T0, T1, T2, T3>()
+            where T0 : struct
+            where T1 : struct
+            where T2 : struct
+            where T3 : struct;
+
+        IGroupBuilder AnyOf<T0, T1, T2>()
+            where T0 : struct
+            where T1 : struct
+            where T2 : struct;
+
+        IGroupBuilder AnyOf<T0, T1>()
+            where T0 : struct
+            where T1 : struct;
+
         IEcsGroup Build();
     }
 
@@ -67,10 +89,10 @@ namespace Valkyrie.Ecs
     {
         private readonly Dictionary<string, EcsGroup> _groups;
         private readonly List<IEcsFilter> _filters = new List<IEcsFilter>();
-        private readonly EcsEntities _entities;
+        private readonly EcsState _entities;
         private readonly EcsState _state;
 
-        public GroupBuilder(Dictionary<string, EcsGroup> groups, EcsState state, EcsEntities entities)
+        public GroupBuilder(Dictionary<string, EcsGroup> groups, EcsState state, EcsState entities)
         {
             _groups = groups;
             _state = state;
@@ -142,12 +164,61 @@ namespace Valkyrie.Ecs
             return this;
         }
 
+        public IGroupBuilder AnyOf<T0, T1, T2, T3, T4>() where T0 : struct
+            where T1 : struct
+            where T2 : struct
+            where T3 : struct
+            where T4 : struct
+        {
+            _filters.Add(new AnyOfEcsFilter(
+                _state.Get<T0>().ExistEcsFilter,
+                _state.Get<T1>().ExistEcsFilter,
+                _state.Get<T2>().ExistEcsFilter,
+                _state.Get<T3>().ExistEcsFilter,
+                _state.Get<T4>().ExistEcsFilter
+            ));
+            return this;
+        }
+
+        public IGroupBuilder AnyOf<T0, T1, T2, T3>() where T0 : struct
+            where T1 : struct
+            where T2 : struct
+            where T3 : struct
+        {
+            _filters.Add(new AnyOfEcsFilter(
+                _state.Get<T0>().ExistEcsFilter,
+                _state.Get<T1>().ExistEcsFilter,
+                _state.Get<T2>().ExistEcsFilter,
+                _state.Get<T3>().ExistEcsFilter
+            ));
+            return this;
+        }
+
+        public IGroupBuilder AnyOf<T0, T1, T2>() where T0 : struct where T1 : struct where T2 : struct
+        {
+            _filters.Add(new AnyOfEcsFilter(
+                _state.Get<T0>().ExistEcsFilter,
+                _state.Get<T1>().ExistEcsFilter,
+                _state.Get<T2>().ExistEcsFilter
+            ));
+            return this;
+        }
+
+        public IGroupBuilder AnyOf<T0, T1>() where T0 : struct where T1 : struct
+        {
+            _filters.Add(new AnyOfEcsFilter(
+                _state.Get<T0>().ExistEcsFilter,
+                _state.Get<T1>().ExistEcsFilter
+            ));
+            return this;
+        }
+
         public IEcsGroup Build()
         {
             var list = _filters.OrderBy(x => x.GetHash()).ToList();
             var hash = string.Join('&', list.Select(x => x.GetHash()));
             if (!_groups.TryGetValue(hash, out var result))
-                _groups.Add(hash, result = new EcsGroup(_state, _entities, list));
+                _groups.Add(hash, result = new EcsGroup(_state, list));
             return result;
         }
     }
