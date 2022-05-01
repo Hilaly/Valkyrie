@@ -242,6 +242,7 @@ namespace Valkyrie.Profile
                 || type == typeof(string)
                 || type == typeof(float)
                 || type == typeof(double)
+                || type == typeof(bool)
                 ;
         }
 
