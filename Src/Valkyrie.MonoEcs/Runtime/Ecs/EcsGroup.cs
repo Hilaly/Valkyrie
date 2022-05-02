@@ -34,7 +34,7 @@ namespace Valkyrie.Ecs
 
         private void OnEntityChanged(int id)
         {
-            var e = new EcsEntity { Id = id };
+            var e = new EcsEntity { Id = id, State = _state };
             if (_ecsFilters.TrueForAll(x => x.IsMatch(e)))
                 _entities.Add(e);
             else

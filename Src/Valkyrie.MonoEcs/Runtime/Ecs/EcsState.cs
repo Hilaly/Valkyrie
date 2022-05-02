@@ -12,20 +12,20 @@ namespace Valkyrie.Ecs
         {
             if(!_entities.Contains(id))
                 throw new ArgumentOutOfRangeException($"Couldn't find entity {id}");
-            return new EcsEntity() { Id = id };
+            return new EcsEntity() { Id = id, State = this };
         }
 
         public EcsEntity CreateEntity()
         {
             var id = _idCounter++;
             if (_entities.Add(id))
-                return new EcsEntity() { Id = id };
+                return new EcsEntity() { Id = id, State = this };
             throw new Exception($"Couldn't create entity");
         }
 
         public void Destroy(int id)
         {
-            Clear(new EcsEntity() { Id = id });
+            Clear(new EcsEntity() { Id = id, State = this });
             if (!_entities.Remove(id))
                 throw new Exception($"Entity {id} not exist");
         }
