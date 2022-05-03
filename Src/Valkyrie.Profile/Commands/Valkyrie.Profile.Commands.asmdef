@@ -1,0 +1,16 @@
+{
+    "name": "Valkyrie.Profile.Commands",
+    "rootNamespace": "Valkyrie.Profile.Commands",
+    "references": [
+        "GUID:b531fb602403a174ca9591253a15095a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

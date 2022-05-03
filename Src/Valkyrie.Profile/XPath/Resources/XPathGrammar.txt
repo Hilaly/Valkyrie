@@ -1,0 +1,47 @@
+#lexer
+
+(\/\/|\/) -> PATH
+(\.\.) -> PARENT
+(\.) -> POINT
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+(true|false) -> BOOL
+-?([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+@[A-Za-z][A-Za-z0-9_]* -> COMPONENT
+[A-Za-z][A-Za-z0-9 _]* -> IDENTIFIER
+
+(\*) -> ANY
+(\+|\-) -> ADD_OP
+(<=|>=|==|!=|<|>) -> COMP_OP
+= -> ASSIGN_OP
+
+[\{\}\(\),\.;\[\]]
+
+[ \n\r\t]+ -> escape
+
+#parser
+
+<root> -> <path> "|" <root> | <path>
+
+<path> -> [<move_op>] <node_select> [<path_nodes>]
+<path_nodes> -> <path_node> <path_nodes> | <path_node>
+<path_node> -> <move_op> <node_select> | POINT IDENTIFIER
+
+<move_op> -> "/" | "//"
+
+<node_select> -> [<axis_test>] <node_test> [<predicate_test>]
+
+<axis_test> -> <axis_name> "::"
+<axis_name> -> "ancestor" | "ancestor-or-self" | "attribute" | "child" | "descendant" | "descendant-or-self" | "following" | "following-sibling" | "namespace" | "parent" | "preceding" | "preceding-sibling" | "self"
+
+<node_test> -> <parent_node> | <self_node> | <any_node> | <component_node> | IDENTIFIER
+<any_node> -> "\*" | "node" "\(" "\)"
+<parent_node> -> PARENT
+<self_node> -> POINT
+
+<predicate_test> -> "\[" <predicate> "\]"
+<predicate> -> <index_predicate>
+<index_predicate> -> NUMBER
+
+<component_node> -> COMPONENT

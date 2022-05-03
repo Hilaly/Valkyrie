@@ -1,0 +1,18 @@
+{
+    "name": "Valkyrie.MVVM.Editor",
+    "rootNamespace": "Valkyrie",
+    "references": [
+        "GUID:6ff07c5ee7b3ba648a97616ec55f30df"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
