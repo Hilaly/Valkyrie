@@ -1,0 +1,32 @@
+Positive 7.
+Greater_than 4 2.
+Direction west, Direction east.
+Player_symbol k "@".
+
+Height h => Row h.
+Row n, n > 1 => Row (n-1).
+
+Width w => Column w.
+Column n, n > 1 => Column (n-1).
+
+Row i, Column j => Cell c i j .
+
+#simulate Physics
+
+Height 3, Width 3.
+
+Cells: Cell c i j => i j.
+
+Cell c1 i j, Cell c2 (i + 1) j => Adjacent c1 c2, Adjacent c2 c1.
+Cell c1 i j, Cell c2 i (j + 1) => Adjacent c1 c2, Adjacent c2 c1.
+
+=> Item_spec i, Item_name i "flying boots", Material i "cloth".
+
+Position p, Tile_type p "lava" => Temperature p 100.
+Combustion_point item temp, Worn_by item c, Located_at c p, Temperature p t, t > temp => Combust item.
+Combust item, Worn_by item c => Unequip item c.
+Combust item => Destroy item.
+Material item "cloth" => Combustion_point item 50.
+
+Player_symbol id "@", Located_at id position => Player ( id position ).
+-- AddPlayer(position) => Player_symbol x "@", Located_at x position. 

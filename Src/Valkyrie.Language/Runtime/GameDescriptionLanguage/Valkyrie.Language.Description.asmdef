@@ -1,0 +1,16 @@
+{
+    "name": "Valkyrie.Language.Description",
+    "rootNamespace": "Valkyrie.Language.Description",
+    "references": [
+        "GUID:f75c38a534ddcea4e82f39295dd4c8cd"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

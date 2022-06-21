@@ -1,0 +1,16 @@
+#lexer
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+[A-Za-z][A-Za-z0-9_]* -> IDENTIFIER
+
+[ \n\r\t]+ -> escape
+
+(\.) -> SENTENCE_OP
+
+#parser
+
+<root> -> SENTENCE_OP

@@ -1,0 +1,7 @@
+{
+  "name": "valkyrie.language.logic",
+  "displayName": "Valkyrie Logic Programming",
+  "description": "Logic programming parser and interpreter",
+  "version": "0.1.0",
+  "testables": ["valkyrie.language.logic"]
+}

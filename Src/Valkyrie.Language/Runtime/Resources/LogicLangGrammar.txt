@@ -1,0 +1,70 @@
+#lexer
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+[A-Za-z][A-Za-z0-9_]* -> IDENTIFIER
+
+[ \n\r\t]+ -> escape
+
+(--) -> COMMENT
+
+(=>) -> RULE_OP
+(\.) -> SENTENCE_OP
+(,) -> COMMA
+
+(:) -> QUERY
+
+(\*|\/) -> MUL_OP
+(\+|\-) -> ADD_OP
+(<=|>=|==|!=|<|>) -> COMP_OP
+[\(\)]
+
+(#) -> DIRECTIVE
+
+#parser
+
+<root> -> <full_sentence> <root> | <full_sentence>
+
+<full_sentence> -> [COMMENT] <sentence>
+
+<directive> -> DIRECTIVE simulate IDENTIFIER
+
+<sentence> -> <world_query> SENTENCE_OP | <rule> SENTENCE_OP | <facts> SENTENCE_OP | <directive> | <world_view> SENTENCE_OP
+
+<facts> -> <fact> COMMA <facts> | <fact>
+<fact> -> <fact_name> <fact_args>
+<fact_name> -> <identifier>
+<fact_args> -> <fact_arg> <fact_args> | <fact_arg>
+<fact_arg> -> <expr>
+
+<rule> -> <startup_rule> | <dependent_rule>
+<dependent_rule> -> <prerequisites> RULE_OP <facts>
+<startup_rule> -> RULE_OP <facts>
+
+<prerequisites> -> <rule_op> COMMA <prerequisites> | <rule_op>
+<rule_op> -> <fact_ref> | <expr>
+
+
+<expr> -> <comp_expr>
+
+<comp_expr> -> <add_expr> COMP_OP <comp_expr> | <add_expr>
+<add_expr> -> <mul_expr> ADD_OP <add_expr> | <mul_expr>
+<mul_expr> -> <single_expr> MUL_OP <mul_expr> | <single_expr>
+<single_expr> -> <const_expr> | <var_expr> | "\(" <expr> "\)"
+<var_expr> -> <identifier>
+<const_expr> -> STRING | "-" NUMBER | NUMBER | BOOL | NULL
+<identifier> -> IDENTIFIER
+
+<fact_ref> -> <fact_name> <fact_ref_args>
+<fact_ref_args> -> <fact_ref_arg> <fact_ref_args> | <fact_ref_arg>
+<fact_ref_arg> -> <identifier> | <single_expr>
+
+<world_query> -> <identifier> QUERY <world_query_def>
+<world_query_def> -> <prerequisites> RULE_OP <fact_args>
+
+<world_view> -> <prerequisites> RULE_OP <identifier> "\(" <property_list> "\)"
+<property_list> -> <property> <property_list> | <property>
+<property> -> <single_expr>

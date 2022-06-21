@@ -1,0 +1,28 @@
+Positive 7.
+Greater_than 4 2.
+Direction "west", Direction "east".
+Player_symbol "@".
+
+Height h => Row h.
+Row n, n > 1 => Row (n-1).
+
+Width w => Column w.
+Column n, n > 1 => Column (n-1).
+
+Row i, i > 0, i > 0, i > 0, Column j, j > 0, j > 0 => Cell c i j .
+
+Height 3, Width 3.
+
+Row r, Column c, Height h, Width w, Adj a => Result true.
+
+Cells: Cell c i j => i j.
+
+-- Cell c1 i j, Cell c2 (i + 1) j => Adjacent c1 c2, Adjacent c2 c1.
+-- Cell c1 i j, Cell c2 i (j + 1) => Adjacent c1 c2, Adjacent c2 c1.
+
+-- => Item_spec i, Item_name "flying boots" i, Material "cloth" i.
+-- Position p, Tile_type "lava" p => Temperature 100 p.
+-- Combustion_point temp item, Worn_by c item, Located_at p c, Temperature t p, t > temp => Combust item.
+-- Combust item, Worn_by c item => Unequip item c.
+-- Combust item => Destroy item.
+-- Material "cloth" item => Combustion_point 50 item.
