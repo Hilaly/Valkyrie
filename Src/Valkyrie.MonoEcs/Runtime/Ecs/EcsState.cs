@@ -17,9 +17,14 @@ namespace Valkyrie.Ecs
 
         public EcsEntity CreateEntity()
         {
+            return new EcsEntity() { Id = Generate(), State = this };
+        }
+
+        public int Generate()
+        {
             var id = _idCounter++;
             if (_entities.Add(id))
-                return new EcsEntity() { Id = id, State = this };
+                return id;
             throw new Exception($"Couldn't create entity");
         }
 
@@ -62,12 +67,23 @@ namespace Valkyrie.Ecs
             return (Data<T>)result;
         }
 
-        public ref T Get<T>(EcsEntity e) where T : struct => ref Get<T>().Pool.GetById(e.Id);
+        public ref T Get<T>(EcsEntity e) where T : struct => ref Get<T>(e.Id);
 
         public void Add<T>(EcsEntity e, T component) where T : struct
+            => Add(e.Id, component);
+
+        public ref T Get<T>(int eId) where T : struct => ref Get<T>().Pool.GetById(eId);
+
+        public void Add<T>(int eId, T component) where T : struct
         {
-            if(Get<T>().Pool.AddById(e.Id, component))
-                OnOnEntityChanged(e.Id);
+            if(Get<T>().Pool.AddById(eId, component))
+                OnOnEntityChanged(eId);
+        }
+
+        public bool Has<T>(int eId) where T : struct
+        {
+            Get<T>().Pool.GetById(eId, out var exist);
+            return exist;
         }
 
         public void Remove<T>(EcsEntity e) where T : struct
@@ -76,11 +92,7 @@ namespace Valkyrie.Ecs
                 OnOnEntityChanged(e.Id);
         }
 
-        public bool Has<T>(EcsEntity e) where T : struct
-        {
-            Get<T>().Pool.GetById(e.Id, out var exist);
-            return exist;
-        }
+        public bool Has<T>(EcsEntity e) where T : struct => Has<T>(e.Id);
 
         public void Clear(EcsEntity e)
         {

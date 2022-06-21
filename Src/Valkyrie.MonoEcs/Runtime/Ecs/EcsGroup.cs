@@ -47,5 +47,12 @@ namespace Valkyrie.Ecs
             buffer.AddRange(_entities);
             return buffer;
         }
+
+        public List<int> GetEntities(List<int> buffer)
+        {
+            buffer.Clear();
+            buffer.AddRange(_entities.Select(x => x.Id));
+            return buffer;
+        }
     }
 }

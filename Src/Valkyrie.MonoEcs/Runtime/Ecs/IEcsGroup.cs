@@ -7,5 +7,6 @@ namespace Valkyrie.Ecs
         int Count { get; }
 
         List<EcsEntity> GetEntities(List<EcsEntity> buffer);
+        List<int> GetEntities(List<int> buffer);
     }
 }
