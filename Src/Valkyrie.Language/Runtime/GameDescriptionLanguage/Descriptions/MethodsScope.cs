@@ -2,10 +2,28 @@ using System.Collections.Generic;
 
 namespace Valkyrie.Language.Description
 {
-    public class DependentScope
+    public abstract class BaseScope
     {
         public readonly LocalVariables LocalVariables = new LocalVariables();
+    }
+    public class DependentScope : BaseScope
+    {
         public List<FactsFilterMethodDescription> Filters { get; } = new List<FactsFilterMethodDescription>();
+    }
+
+    public class MethodScope : BaseScope
+    {
+        public string Result;
+        public string Name;
+        public List<FieldDescription> Args = new List<FieldDescription>();
+        public List<FactCreationMethodDescription> Methods { get; } = new List<FactCreationMethodDescription>();
+
+        public string GetResultType()
+        {
+            if (!string.IsNullOrEmpty(Result))
+                return LocalVariables.Get(Result).FieldDescription.Type;
+            return "void";
+        }
     }
 
     public class ViewScope : DependentScope

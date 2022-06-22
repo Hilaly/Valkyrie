@@ -7,6 +7,7 @@ namespace Valkyrie.Language.Description
 {
     public class WorldDescription
     {
+        public List<MethodScope> DefinedMethods { get; } = new List<MethodScope>();
         public List<ComponentDescription> Components { get; } = new List<ComponentDescription>();
         public List<MethodsScope> InitMethods { get; } = new List<MethodsScope>();
         public List<ISimPart> SimulationMethods { get; } = new List<ISimPart>();
@@ -79,6 +80,13 @@ namespace Valkyrie.Language.Description
 
         private void WriteWorldSimulation(FormatWriter sb)
         {
+            sb.BeginBlock($"public interface IWorldController");
+            foreach (var methodScope in DefinedMethods)
+                sb.AppendLine(
+                    $"{methodScope.GetResultType()} {methodScope.Name}({string.Join(", ", methodScope.Args.Select(x => $"{x.Type} {x.Name}"))});");
+            sb.EndBlock();
+            sb.AppendLine();
+            
             sb.BeginBlock($"public interface IWorldView");
             sb.AppendLine("IEcsState State { get; }");
             sb.AppendLine("IEcsGroups Groups { get; }");
@@ -96,7 +104,7 @@ namespace Valkyrie.Language.Description
             sb.EndBlock();
             sb.AppendLine();
 
-            sb.BeginBlock("public class WorldSimulation : IWorldSimulation, IWorldView");
+            sb.BeginBlock("public class WorldSimulation : IWorldSimulation, IWorldView, IWorldController");
             //Fields
             sb.AppendLine($"private readonly IEcsWorld _ecsWorld;");
             //Properties
@@ -163,6 +171,19 @@ namespace Valkyrie.Language.Description
             }
             sb.AppendLine();
             sb.AppendLine("#endregion //View getters");
+            
+            //Controller methods
+            sb.AppendLine("#region Control methods");
+            sb.AppendLine();
+            foreach (var methodScope in DefinedMethods)
+            {
+                sb.BeginBlock(
+                    $"public {methodScope.GetResultType()} {methodScope.Name}({string.Join(", ", methodScope.Args.Select(x => $"{x.Type} {x.Name}"))})");
+                WriteControlMethod(sb, methodScope);
+                sb.EndBlock();
+            }
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Control methods");
 
             sb.EndBlock();
         }
@@ -183,6 +204,40 @@ namespace Valkyrie.Language.Description
             }
         }
 
+        private void WriteControlMethod(FormatWriter sb, MethodScope scope)
+        {
+            //Define local variables
+            foreach (var localVariable in scope.LocalVariables.Variables.Where(x => !x.DefineExternal))
+                sb.AppendLine($"{localVariable.FieldDescription.Type} {localVariable.Name};");
+            
+            //Do creation
+            foreach (var method in scope.Methods)
+            {
+                sb.BeginBlock($"// {method.Component.GetTypeName()}");
+                sb.AppendLine($"var entityId = {method.EntityIdExpr};");
+                var argsGeneration = string.Empty;
+                if (method.Arguments.Count > 0)
+                {
+                    argsGeneration += "{ ";
+                    for (var index = 0; index < method.Arguments.Count; index++)
+                    {
+                        var argumentString = method.Arguments[index];
+                        argsGeneration += method.Component.Fields[index].Name + " = " + argumentString;
+                        if (index < method.Arguments.Count - 1)
+                            argsGeneration += ", ";
+                    }
+
+                    argsGeneration += " }";
+                }
+
+                sb.AppendLine($"State.Add(entityId, new {method.Component.GetTypeName()}(){argsGeneration});");
+                sb.EndBlock();
+            }
+
+            if (!string.IsNullOrEmpty(scope.Result))
+                sb.AppendLine($"return {scope.Result};");
+        }
+        
         private void WriteSimulateDirective(FormatWriter sb, SimulateDirective directive)
         {
             sb.BeginBlock($"// {directive.Name}");

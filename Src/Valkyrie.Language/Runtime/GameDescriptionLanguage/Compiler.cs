@@ -79,6 +79,11 @@ namespace Valkyrie.Language.Description
                     FactsCompiler.CreateDeclaration(worldDescription, ast);
                     return;
                 }
+                case "<method_decl>":
+                {
+                    MethodsCompiler.CompileMethod(worldDescription, ast);
+                    return;
+                }
                 default:
                     throw new GrammarCompileException(ast, $"Unsupported node name {name}");
             }

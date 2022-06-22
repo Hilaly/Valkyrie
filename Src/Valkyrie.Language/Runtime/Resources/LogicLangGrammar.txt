@@ -38,7 +38,12 @@
 <sentence> -> <directive>
 <sentence> -> <world_view> SENTENCE_OP
 <sentence> -> <fact_declaration> SENTENCE_OP
+<sentence> -> <method_decl> SENTENCE_OP
 
+<method_decl> -> [<return_var>] <method_name> "\(" <code_args> "\)" RULE_OP <facts>
+<return_var> -> <identifier>
+<method_name> -> <identifier>
+<code_args> -> <code_arg> <code_args> | <code_arg>
 
 <fact_declaration> -> <fact_name> <fact_fields>
 <fact_fields> -> <fact_field> <fact_fields> | <fact_field>
