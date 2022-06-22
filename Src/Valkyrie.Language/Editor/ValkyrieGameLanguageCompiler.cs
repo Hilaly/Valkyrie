@@ -54,7 +54,7 @@ namespace Editor
         }
 
         [UnityEditor.MenuItem("Valkyrie/Logic/Generate Logic World")]
-        static void Compile()
+        public static void Compile()
         {
             Debug.Log($"Valkyrie:<color=green> generating logic ...</color>");
 
@@ -75,6 +75,7 @@ namespace Editor
 
                 File.WriteAllText(CompilationPath, world.ToString());
                 Debug.Log($"Valkyrie: <color=green>logic generated</color>");
+                AssetDatabase.Refresh();
             }
             else
                 Debug.Log($"Valkyrie:<color=yellow> gdl files not found</color>");

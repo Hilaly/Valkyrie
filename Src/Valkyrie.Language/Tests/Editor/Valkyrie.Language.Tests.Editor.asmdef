@@ -5,7 +5,8 @@
         "Valkyrie.Language",
         "Valkyrie.Language.Description",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Valkyrie.Language.Editor"
     ],
     "includePlatforms": [
         "Editor"

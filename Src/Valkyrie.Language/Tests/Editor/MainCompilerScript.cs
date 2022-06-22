@@ -1,4 +1,5 @@
 using System.Collections;
+using Editor;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -36,6 +37,12 @@ namespace Valkyrie.Language.Description.Tests
             // Use the Assert class to test conditions.
             // Use yield to skip a frame.
             yield return null;
+        }
+
+        [Test]
+        public void GenerateProjectFiles()
+        {
+            ValkyrieGameLanguageCompiler.Compile();
         }
     }
 }

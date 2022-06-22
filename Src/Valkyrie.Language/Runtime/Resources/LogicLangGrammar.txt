@@ -32,7 +32,19 @@
 
 <directive> -> DIRECTIVE simulate IDENTIFIER
 
-<sentence> -> <world_query> SENTENCE_OP | <rule> SENTENCE_OP | <facts> SENTENCE_OP | <directive> | <world_view> SENTENCE_OP
+<sentence> -> <world_query> SENTENCE_OP
+<sentence> -> <rule> SENTENCE_OP
+<sentence> -> <facts> SENTENCE_OP
+<sentence> -> <directive>
+<sentence> -> <world_view> SENTENCE_OP
+<sentence> -> <fact_declaration> SENTENCE_OP
+
+
+<fact_declaration> -> <fact_name> <fact_fields>
+<fact_fields> -> <fact_field> <fact_fields> | <fact_field>
+<fact_field> -> "\(" <code_arg> "\)"
+<code_arg> -> <type_name> <identifier>
+<type_name> -> "int" | "float" | "string" | "bool"
 
 <facts> -> <fact> COMMA <facts> | <fact>
 <fact> -> <fact_name> <fact_args>

@@ -54,6 +54,9 @@ namespace Valkyrie.Language.Language.Compiler
                     world.AddWorldQuery(queryName, worldQuery);
                     return;
                 }
+                case "<world_view>":
+                case "<directive>":
+                    return;
                 default:
                     throw new GrammarCompileException(ast, $"Unimplemented node: {name}");
             }

@@ -20,7 +20,7 @@ namespace Valkyrie.Language.Description
             set => _name = value;
         }
     }
-    
+
     public class LocalVariables
     {
         public List<LocalVariableDescription> Variables = new List<LocalVariableDescription>();
@@ -35,9 +35,28 @@ namespace Valkyrie.Language.Description
             return Variables.Find(x => x.Name == varName);
         }
     }
+
     static class FactsCompiler
     {
-        public static FactCreationMethodDescription CompileFact(WorldDescription worldDescription, IAstNode ast, LocalVariables localVariables)
+        public static void CreateDeclaration(WorldDescription worldDescription, IAstNode ast)
+        {
+            var children = ast.GetChildren();
+            var factName = children[0].GetString();
+            var fields = children[1].UnpackNodes(x => x.Name == "<fact_field>");
+
+            var desc = worldDescription.GetOrCreateComponent(factName, fields.Count);
+            for (var index = 0; index < fields.Count; index++)
+            {
+                var fieldNode = fields[index];
+                var fc = fieldNode.GetChildren()[1].GetChildren();
+                var field = desc.Fields[index];
+                field.Name = fc[1].GetString();
+                field.Type = fc[0].GetString();
+            }
+        }
+
+        public static FactCreationMethodDescription CompileFact(WorldDescription worldDescription, IAstNode ast,
+            LocalVariables localVariables)
         {
             var name = ast.Name;
             var children = ast.GetChildren();
@@ -47,13 +66,15 @@ namespace Valkyrie.Language.Description
                 {
                     var factName = children[0].GetString();
                     var argNodes = ast.UnpackNodes(x => x.Name == "<fact_arg>");
-                    var componentDescription = worldDescription.GetOrCreateComponent(factName, argNodes.Count-1);
+                    var componentDescription = worldDescription.GetOrCreateComponent(factName, argNodes.Count - 1);
                     var result = new FactCreationMethodDescription(componentDescription);
-                    result.EntityIdExpr = CompileFactId(worldDescription, componentDescription, argNodes[0], localVariables);
+                    result.EntityIdExpr =
+                        CompileFactId(worldDescription, componentDescription, argNodes[0], localVariables);
                     for (var index = 1; index < argNodes.Count; index++)
                     {
                         var node = argNodes[index];
-                        result.Arguments.Add(CompileFactArg(worldDescription, componentDescription, node, index - 1, localVariables));
+                        result.Arguments.Add(CompileFactArg(worldDescription, componentDescription, node, index - 1,
+                            localVariables));
                     }
 
                     return result;
@@ -64,8 +85,8 @@ namespace Valkyrie.Language.Description
         }
 
         private static string CompileFactId(WorldDescription worldDescription,
-            ComponentDescription componentDescription, 
-            IAstNode ast, 
+            ComponentDescription componentDescription,
+            IAstNode ast,
             LocalVariables localVariables)
         {
             var type = ComputeFactArgType(ast, localVariables);
@@ -81,7 +102,7 @@ namespace Valkyrie.Language.Description
             var compiledType = ComputeFactArgType(ast, localVariables);
             if (string.IsNullOrEmpty(field.Type) || field.Type == AnyName)
                 field.Type = compiledType;
-            if (field.Type != compiledType)
+            if (compiledType != AnyName && field.Type != compiledType)
                 throw new GrammarCompileException(ast, "Type of field is mismatch");
             return CompileFactArgCode(worldDescription, componentDescription, ast, localVariables);
         }
@@ -286,7 +307,8 @@ namespace Valkyrie.Language.Description
                             var strValue = children[0].GetString() + children[1].GetString();
                             return strValue;
                         case 1:
-                            return CompileFactArgCode(worldDescription, componentDescription, children[0], localVariables);
+                            return CompileFactArgCode(worldDescription, componentDescription, children[0],
+                                localVariables);
                         default:
                             throw new GrammarCompileException(ast, $"Unsupported count of children: {children.Count}");
                     }
