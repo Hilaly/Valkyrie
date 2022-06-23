@@ -18,6 +18,9 @@ namespace Valkyrie.Language.Description
         public static void CompileRule(WorldDescription worldDescription, IAstNode ast)
         {
             var scope = new MethodsScope();
+            scope.LocalVariables.Variables.Add(
+                new LocalVariableDescription(new FieldDescription() { Name = "dt", Type = "float" })
+                    { DefineExternal = true });
 
             var name = ast.Name;
             if (name != "<dependent_rule>")

@@ -102,8 +102,12 @@ namespace Valkyrie.Language.Description
             var compiledType = ComputeFactArgType(ast, localVariables);
             if (string.IsNullOrEmpty(field.Type) || field.Type == AnyName)
                 field.Type = compiledType;
-            if (compiledType != AnyName && field.Type != compiledType)
-                throw new GrammarCompileException(ast, "Type of field is mismatch");
+            if (compiledType != AnyName)
+            {
+                if (field.Type != compiledType && !(field.Type == FloatName && compiledType == IntName)) 
+                    throw new GrammarCompileException(ast, "Type of field is mismatch");
+            }
+
             return CompileFactArgCode(worldDescription, componentDescription, ast, localVariables);
         }
 
@@ -314,6 +318,10 @@ namespace Valkyrie.Language.Description
                     }
                 }
                 case "NUMBER":
+                {
+                    var txt = ast.GetString();
+                    return (txt.Contains('.') && !txt.EndsWith("f")) ? $"{txt}f" : txt;
+                }
                 case "STRING":
                 case "BOOL":
                     return ast.GetString();
