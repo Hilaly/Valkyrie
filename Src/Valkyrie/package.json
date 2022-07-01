@@ -1,0 +1,10 @@
+{
+  "name": "com.valkyrie",
+  "displayName": "Valkyrie Framework",
+  "description": "Collection of tools to Unity",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hilaly/Valkyrie.git?path=/Src/Valkyrie"
+  }
+}
