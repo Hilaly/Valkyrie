@@ -2,7 +2,7 @@
     "name": "Valkyrie.Profile.Commands",
     "rootNamespace": "Valkyrie.Profile.Commands",
     "references": [
-        "GUID:b531fb602403a174ca9591253a15095a"
+        "GUID:06d683358a9bf1549974f36ef8fc5080"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
