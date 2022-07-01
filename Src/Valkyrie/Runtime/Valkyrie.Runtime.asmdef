@@ -1,7 +1,9 @@
 {
-    "name": "Valkyrie.Profile",
-    "rootNamespace": "Valkyrie.Profile",
-    "references": [],
+    "name": "Valkyrie",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a70afe01e6ebbf540b8af288529acd50"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
