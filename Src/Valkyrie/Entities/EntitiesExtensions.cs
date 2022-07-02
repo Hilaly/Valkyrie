@@ -45,15 +45,17 @@ namespace Valkyrie.Entities
 
             return entity;
         }
-        
+
+        public static IComponent MakeCopy(this IComponent component) => 
+            (IComponent)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(component), component.GetType());
+
         public static Entity BuildFromTemplate(this EntitiesContext ctx, Entity template)
         {
             var r = new Entity(template.Id);
             r._templates.Add(template);
             foreach (var component in template.CollectComponents(true))
             {
-                var type = component.GetType();
-                r.AddComponent((IComponent)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(component), type));
+                r.AddComponent(MakeCopy(component));
             }
 
             foreach (var slot in template._slots) 

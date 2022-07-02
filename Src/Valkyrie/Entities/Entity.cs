@@ -13,20 +13,25 @@ namespace Valkyrie.Entities
 
     public class Entity : IConfigData, IDisposable, IEntity
     {
+        internal Action _finishLoadAction;
+
+        internal void FinishLoading()
+        {
+            _finishLoadAction?.Invoke();
+            _finishLoadAction = null;
+        }
+        
         #region IConfigData
 
         string IConfigData.GetId() => Id;
 
-        void IConfigData.PastLoad(IDictionary<string, IConfigData> configData)
-        {
-        }
+        void IConfigData.PastLoad(IDictionary<string, IConfigData> configData) { }
 
         #endregion
 
         internal readonly List<Entity> _templates = new List<Entity>();
         internal readonly List<IComponent> _components = new List<IComponent>();
         internal readonly Dictionary<string, Entity> _slots = new Dictionary<string, Entity>();
-        internal readonly Dictionary<string, List<Entity>> _containers = new Dictionary<string, List<Entity>>();
 
         public string Id { get; }
 
@@ -99,9 +104,6 @@ namespace Valkyrie.Entities
                 .Append(_slots.Count > 0
                     ? $" Slots=[{string.Join(",", _slots.Select(x => $"{x.Key}:{x.Value.Id}"))}]"
                     : string.Empty)
-                .Append(_containers.Count > 0
-                    ? $" Containers=[{string.Join(",", _containers.Select(x => $"{x.Key}:[{string.Join(",", x.Value.Select(u => u.Id))}]"))}]"
-                    : string.Empty)
                 .Append(" }");
             return sb.ToString();
         }
@@ -115,20 +117,5 @@ namespace Valkyrie.Entities
 
         public bool Is(Entity template) => template == this || _templates.Find(x => x.Is(template)) != null;
         public bool Is(string id) => Id == id || _templates.Find(x => x.Is(id)) != null;
-
-        #region Containers
-
-        public void SetContainer(string name, IEnumerable<Entity> entities)
-        {
-            if (!_containers.TryGetValue(name, out var list))
-                _containers.Add(name, list = new List<Entity>());
-            list.Clear();
-            list.AddRange(entities);
-        }
-
-        public List<Entity> GetContainer(string name) => _containers.TryGetValue(name, out var r) ? r : default;
-        public bool HasContainer(string name) => GetContainer(name) != null;
-
-        #endregion
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Configs;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -120,14 +121,6 @@ namespace Valkyrie.Entities
                     x => x.Key,
                     x => x.Value.Id), ComponentsSerializer));
 
-            if (e._containers.Count > 0)
-                j.Add("Containers",
-                    JObject.FromObject(e._containers
-                        .ToDictionary(
-                            x => x.Key,
-                            x => x.Value
-                                .ConvertAll(u => u.Id)), ComponentsSerializer));
-
             return j;
         }
 
@@ -166,7 +159,8 @@ namespace Valkyrie.Entities
             var e = entitiesContext.GetEntity(id);
             if (e == null)
                 entitiesContext.Add(e = new Entity(id));
-            return () => Fill(entitiesContext, e, j);
+            e._finishLoadAction = () => Fill(entitiesContext, e, j);
+            return e.FinishLoading;
         }
 
         private void Fill(EntitiesContext entitiesContext, Entity entity, JToken j)
@@ -175,8 +169,24 @@ namespace Valkyrie.Entities
             var templates = j["Templates"] ?? j["Parents"] ?? j["templates"] ?? j["parents"];
             if (templates != null)
                 entity._templates.AddRange(templates.Values<string>().Select(x => entitiesContext.GetEntity(x, true)));
+
+            entity._slots.Clear();
+            var slots = j["Slots"] ?? j["slots"];
+            if (slots != null)
+            {
+                var d = slots.ToObject<Dictionary<string, string>>();
+                foreach (var pair in d) 
+                    entity.AddSlot(pair.Key, entitiesContext.GetEntity(pair.Value, true));
+            }
+            
+            foreach (var oEntity in entity._templates) oEntity.FinishLoading();
+            foreach (var oEntity in entity._slots.Values) oEntity.FinishLoading();
             
             entity._components.Clear();
+            foreach (var oEntity in entity._templates)
+            foreach (var component in oEntity.CollectComponents(false))
+                entity._components.Add(component.MakeCopy());
+
             var components = j["Components"] ?? j["components"];
             if (components is JArray list)
             {
@@ -202,29 +212,8 @@ namespace Valkyrie.Entities
                     }
                 }
             }
-
-            entity._slots.Clear();
-            var slots = j["Slots"] ?? j["slots"];
-            if (slots != null)
-            {
-                var d = slots.ToObject<Dictionary<string, string>>();
-                foreach (var pair in d)
-                {
-                    entity.AddSlot(pair.Key, entitiesContext.GetEntity(pair.Value, true));
-                }
-            }
             
-            entity._containers.Clear();
-            var containers = j["Containers"] ?? j["container"];
-            if (containers != null)
-            {
-                var d = containers.ToObject<Dictionary<string, List<string>>>();
-                foreach (var pair in d)
-                {
-                    entity.SetContainer(pair.Key, pair.Value.ConvertAll(x => entitiesContext.GetEntity(x, true)));
-                }
-            }
-
+            
             Debug.Log($"[LOAD]: loaded entity {entity}");
         }
     }
