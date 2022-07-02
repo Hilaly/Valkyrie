@@ -168,7 +168,13 @@ namespace Valkyrie.Entities
             entity._templates.Clear();
             var templates = j["Templates"] ?? j["Parents"] ?? j["templates"] ?? j["parents"];
             if (templates != null)
-                entity._templates.AddRange(templates.Values<string>().Select(x => entitiesContext.GetEntity(x, true)));
+                entity._templates.AddRange(templates.Values<string>().Select(x =>
+                {
+                    var r = entitiesContext.GetEntity(x, true);
+                    if (r == null)
+                        throw new Exception($"Couldn't found template {x}");
+                    return r;
+                }));
 
             entity._slots.Clear();
             var slots = j["Slots"] ?? j["slots"];
