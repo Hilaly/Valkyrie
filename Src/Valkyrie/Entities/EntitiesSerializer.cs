@@ -190,8 +190,8 @@ namespace Valkyrie.Entities
             
             entity._components.Clear();
             foreach (var oEntity in entity._templates)
-            foreach (var component in oEntity.CollectComponents(false))
-                entity._components.Add(component.MakeCopy());
+            foreach (var component in oEntity.CollectComponents())
+                entity.AddComponent(component.MakeCopy());
 
             var components = j["Components"] ?? j["components"];
             if (components is JArray list)

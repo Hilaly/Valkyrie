@@ -53,13 +53,11 @@ namespace Valkyrie.Entities
         {
             var r = new Entity(template.Id);
             r._templates.Add(template);
-            foreach (var component in template.CollectComponents(true))
-            {
-                r.AddComponent(MakeCopy(component));
-            }
-
             foreach (var slot in template._slots) 
                 r._slots.Add(slot.Key, slot.Value);
+            foreach (var component in template.CollectComponents()) 
+                r.AddComponent(MakeCopy(component));
+
             
             ctx.Add(r);
             return r;
@@ -67,14 +65,14 @@ namespace Valkyrie.Entities
 
         public static T GetOrCreate<T>(this Entity e) where T : IComponent, new()
         {
-            var r = e.CollectComponents<T>(false).FirstOrDefault();
+            var r = e.GetComponent<T>();
             if (r == null) e.AddComponent(r = new T());
             return r;
         }
 
         public static IEnumerable<Entity> GetOfType<TComponent>(this IConfigService configService) where TComponent : IComponent
         {
-            return configService.Get<Entity>().Where(x => x.HasComponent<TComponent>(true)).ToList();
+            return configService.Get<Entity>().Where(x => x.HasComponent<TComponent>()).ToList();
         }
     }
 }

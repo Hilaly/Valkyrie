@@ -30,7 +30,7 @@ namespace Valkyrie.Entities
             foreach (var slot in template._slots) 
                 r._slots.Add(slot.Key, slot.Value);
             
-            foreach (var component in template.CollectComponents(true)) 
+            foreach (var component in template.CollectComponents()) 
                 r.AddComponent(component.MakeCopy());
             
             return r;

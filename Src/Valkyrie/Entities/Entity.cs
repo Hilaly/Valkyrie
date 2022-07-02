@@ -42,21 +42,23 @@ namespace Valkyrie.Entities
 
         #region Components
 
-        public IEnumerable<IComponent> CollectComponents(bool includeTemplates = false)
+        public IEnumerable<IComponent> CollectComponents() => _components;
+
+        public IEnumerable<T> CollectComponents<T>() where T : IComponent =>
+            _components.OfType<T>();
+
+
+        public void AddComponent<T>(T c) where T : IComponent
         {
-            foreach (var component in _components)
-                yield return component;
-            if (includeTemplates)
-                foreach (var template in _templates)
-                foreach (var component in template.CollectComponents(true))
-                    yield return component;
+            for (var i = 0; i < _components.Count;)
+            {
+                if (_components[i].GetType() == c.GetType())
+                    RemoveComponent(_components[i]);
+                else
+                    ++i;
+            }
+            _components.Add(c);
         }
-
-        public IEnumerable<T> CollectComponents<T>(bool includeTemplates = false) where T : IComponent =>
-            CollectComponents(includeTemplates).OfType<T>();
-
-
-        public void AddComponent<T>(T c) where T : IComponent => _components.Add(c);
 
         public bool RemoveComponent<T>(T c) where T : IComponent
         {
@@ -66,11 +68,11 @@ namespace Valkyrie.Entities
             return r;
         }
 
-        public bool HasComponent<T>(bool includeTemplates) where T : IComponent =>
-            CollectComponents<T>(includeTemplates).Any();
+        public bool HasComponent<T>() where T : IComponent =>
+            CollectComponents<T>().Any();
 
-        public T GetComponent<T>(bool includeTemplates) where T : IComponent =>
-            CollectComponents<T>(includeTemplates).FirstOrDefault();
+        public T GetComponent<T>() where T : IComponent =>
+            CollectComponents<T>().FirstOrDefault();
 
         #endregion
 
