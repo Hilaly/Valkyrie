@@ -1,0 +1,16 @@
+{
+    "name": "Valkyrie.Entities",
+    "rootNamespace": "Valkyrie",
+    "references": [
+        "GUID:1b8194f0b56f1aa4baf1da0209ae182d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
