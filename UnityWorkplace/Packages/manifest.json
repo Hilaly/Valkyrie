@@ -41,7 +41,6 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0",
-    "com.valkyrie.di": "file:../../Src/Valkyrie.Di",
-    "com.valkyrie.profile": "file:../../Src/Valkyrie.Profile"
+    "com.valkyrie.core": "file:../../Src/Valkyrie"
   }
 }
