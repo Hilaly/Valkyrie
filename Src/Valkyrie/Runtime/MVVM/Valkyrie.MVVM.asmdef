@@ -1,7 +1,10 @@
 {
-    "name": "Valkyrie.Di",
-    "rootNamespace": "Valkyrie.Di",
-    "references": [],
+    "name": "Valkyrie.MVVM",
+    "rootNamespace": "Valkyrie",
+    "references": [
+        "GUID:93b7a720f25cf044ebb21e09ac718cd5",
+        "GUID:06d683358a9bf1549974f36ef8fc5080"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -10,5 +13,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": true
+    "noEngineReferences": false
 }

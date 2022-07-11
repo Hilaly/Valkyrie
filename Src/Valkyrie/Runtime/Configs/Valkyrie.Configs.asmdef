@@ -2,7 +2,7 @@
     "name": "Valkyrie.Configs",
     "rootNamespace": "Valkyrie",
     "references": [
-        "GUID:a70afe01e6ebbf540b8af288529acd50"
+        "GUID:06d683358a9bf1549974f36ef8fc5080"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

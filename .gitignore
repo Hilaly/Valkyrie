@@ -12,3 +12,4 @@ UnityWorkplace/Valkyrie.Di.Runtime.csproj
 UnityWorkplace/Valkyrie.Di.Unity.csproj
 UnityWorkplace/Valkyrie.Profile.csproj
 Src/Valkyrie.Language/.idea/
+UnityWorkplace/*.csproj
