@@ -1,4 +1,4 @@
-name <is flag> => skip.
+name <is flag> => create struct name.
 name <is> component => skip, skip.
 
 name <is class> => create class name.
