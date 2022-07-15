@@ -1,2 +1,2 @@
-name <is flag> => create component <name>.
-name <is> component => add <component> to <name>.
+name <is flag> => skip.
+name <is> component => skip, skip.

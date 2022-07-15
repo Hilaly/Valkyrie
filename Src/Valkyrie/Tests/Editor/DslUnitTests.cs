@@ -9,8 +9,7 @@ namespace Valkyrie.Language
         private static IDslDictionary LoadTestDictionary()
         {
             var dictionary = new DslCompiler().Dictionary;
-            var source = Resources.Load<TextAsset>("TestDictionary").text;
-            dictionary.Load(source);
+            dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
             return dictionary;
         }
 
@@ -54,9 +53,11 @@ namespace Valkyrie.Language
         public void TestParseProgram()
         {
             var compiler = new DslCompiler();
+            compiler.Dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
             var source = Resources.Load<TextAsset>("TestDslProgram").text;
-            var ast = compiler.Build(source);
-            Assert.NotNull(ast);
+            var ctx = new CompilerContext();
+            compiler.Build(source, ctx);
+            Debug.LogWarning(ctx);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DSL.Actions;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
@@ -38,7 +39,7 @@ namespace Valkyrie.Ecs.DSL
                     if (syntax.Count(x => x is OperatorFormatEntry) != 1)
                         throw new GrammarCompileException(ast, "Only support one operator per rule");
                     
-                    var actions = actionNodes.Select(x => ParseRuleActions(x, syntax)).ToList();
+                    var actions = actionNodes.Select(x => ParseRuleAction(x, syntax)).ToList();
                     
                     _entries.Add(new DslDictionaryEntry()
                     {
@@ -51,9 +52,18 @@ namespace Valkyrie.Ecs.DSL
             }
         }
 
-        private string ParseRuleActions(IAstNode astNode, List<DslDictionaryFormatEntry> syntax)
+        private IDslAction ParseRuleAction(IAstNode astNode, List<DslDictionaryFormatEntry> syntax)
         {
-            return "UNPARSED ACTION";
+            var name = astNode.Name;
+            switch (astNode.Name)
+            {
+                case "<rule_action>":
+                    return ParseRuleAction(astNode.GetChildren()[0], syntax);
+                case "<skip_action>":
+                    return new SkipAction();
+                default:
+                    throw new GrammarCompileException(astNode, $"Unknown action node {name}");
+            }
         }
 
         private List<DslDictionaryFormatEntry> ParseRuleSyntax(IAstNode ast)

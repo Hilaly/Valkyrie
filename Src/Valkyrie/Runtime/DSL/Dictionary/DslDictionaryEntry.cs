@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using DSL.Actions;
 using UnityEngine;
 using Valkyrie.Tools;
 
@@ -11,7 +12,7 @@ namespace Valkyrie.Ecs.DSL
         private Regex _regex;
         
         public List<DslDictionaryFormatEntry> Format { get; set; } = new List<DslDictionaryFormatEntry>();
-        public List<string> Actions { get; set; } = new List<string>();
+        public List<IDslAction> Actions { get; set; } = new List<IDslAction>();
 
         public override string ToString()
         {
@@ -24,8 +25,11 @@ namespace Valkyrie.Ecs.DSL
                 _regex = BuildRegex();
             var match = _regex.Match(text);
             if (match.Success)
+            {
                 foreach (Group matchGroup in match.Groups)
                     localContext.SetValue(matchGroup.Name, matchGroup.Value);
+                localContext.Actions = Actions;
+            }
             return match.Success;
         }
 
@@ -49,8 +53,8 @@ namespace Valkyrie.Ecs.DSL
                 }
             }
             sb.Append("$");
+            
             var regExpr = sb.ToString();
-            Debug.LogWarning(regExpr);
             return new Regex(regExpr);
         }
     }

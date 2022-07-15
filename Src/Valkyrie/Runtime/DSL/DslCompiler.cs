@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSL.Actions;
 using UnityEngine;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
 namespace Valkyrie.Ecs.DSL
 {
-    class Sentence
-    {
-        public string Text;
-    }
-
     public class DslCompiler
     {
         private readonly DslDictionary _dslDictionary;
@@ -23,7 +19,7 @@ namespace Valkyrie.Ecs.DSL
             _dslDictionary = new DslDictionary();
         }
 
-        public object Build(string source)
+        public void Build(string source, CompilerContext compilerContext)
         {
             var ast = AstProvider.ProgramConstructor.Parse(source.ToStream());
 
@@ -31,13 +27,29 @@ namespace Valkyrie.Ecs.DSL
 
             Parse(ast, sentences);
 
+            var contexts = new List<LocalContext>();
             foreach (var sentence in sentences)
             {
-                Debug.LogWarning(sentence);
+                var ctx = new LocalContext();
+                if (!TryMatchSentence(sentence, Dictionary, ctx))
+                    throw new Exception($"{sentence} doesn't present in dictionary");
+                contexts.Add(ctx);
             }
 
-            return true;
+            foreach (var localContext in contexts)
+            {
+                Apply(localContext, compilerContext);
+            }
         }
+
+        bool TryMatchSentence(string text, IDslDictionary dictionary, LocalContext localContext)
+        {
+            foreach (var entry in dictionary.GetEntries)
+                if (entry.TryMatch(text, localContext))
+                    return true;
+            return false;
+        }
+
 
         private void Parse(IAstNode ast, List<string> sentences)
         {
@@ -94,6 +106,17 @@ namespace Valkyrie.Ecs.DSL
                 default:
                     throw new GrammarCompileException(ast, "Unsupported word type");
             }
+        }
+        
+        private void Apply(LocalContext localContext, CompilerContext compilerContext)
+        {
+            foreach(var command in localContext.Actions)
+                Apply(command, localContext.Args, compilerContext);
+        }
+
+        private void Apply(IDslAction command, Dictionary<string,string> args, CompilerContext context)
+        {
+            Debug.LogWarning($"{command}: {args.Select(x => $"{x.Key}={x.Value}").Join(", ")}");
         }
     }
 }

@@ -32,4 +32,6 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> <rule_syntax>
+<rule_action> -> <skip_action> | <rule_syntax>
+
+<skip_action> -> "skip"
