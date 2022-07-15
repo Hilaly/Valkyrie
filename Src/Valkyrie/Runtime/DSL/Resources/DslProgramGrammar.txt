@@ -1,0 +1,30 @@
+#lexer
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+
+(true|false) -> BOOL
+
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+
+[A-Za-z]\w* -> IDENTIFIER
+
+(<) -> TAG_OPEN
+(>) -> TAG_CLOSE
+
+(\.) -> SENTENCE_OP
+(,) -> COMMA
+
+[ \n\r\t]+ -> escape
+
+#parser
+
+<root> -> <sentence_list>
+<sentence_list> -> <sentence> <sentence_list> | <sentence>
+<sentence> -> <word_list> SENTENCE_OP
+<word_list> -> <word> <word_list> | <word>
+<word> -> <id_list> | <control>
+<control> -> TAG_OPEN <id>+ TAG_CLOSE
+<id_list> -> <id> <args_list_delimiter> <id_list> | <id>
+<id> -> IDENTIFIER
+<args_list_delimiter> -> "and" | "AND" | COMMA
