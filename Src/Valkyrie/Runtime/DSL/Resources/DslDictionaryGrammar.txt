@@ -32,6 +32,7 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> <skip_action> | <rule_syntax>
+<rule_action> -> <skip_action> | <create_type_action>
 
 <skip_action> -> "skip"
+<create_type_action> -> "create" "class" <id> | "create" "struct" <id> 

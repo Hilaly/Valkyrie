@@ -55,12 +55,15 @@ namespace Valkyrie.Ecs.DSL
         private IDslAction ParseRuleAction(IAstNode astNode, List<DslDictionaryFormatEntry> syntax)
         {
             var name = astNode.Name;
+            var children = astNode.GetChildren();
             switch (astNode.Name)
             {
                 case "<rule_action>":
-                    return ParseRuleAction(astNode.GetChildren()[0], syntax);
+                    return ParseRuleAction(children[0], syntax);
                 case "<skip_action>":
                     return new SkipAction();
+                case "<create_type_action>":
+                    return new CreateTypeAction() { Name = children[2].GetString(), Type = children[1].GetString() };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");
             }

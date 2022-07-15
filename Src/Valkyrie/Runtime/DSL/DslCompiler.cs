@@ -36,10 +36,8 @@ namespace Valkyrie.Ecs.DSL
                 contexts.Add(ctx);
             }
 
-            foreach (var localContext in contexts)
-            {
+            foreach (var localContext in contexts) 
                 Apply(localContext, compilerContext);
-            }
         }
 
         bool TryMatchSentence(string text, IDslDictionary dictionary, LocalContext localContext)
@@ -116,7 +114,8 @@ namespace Valkyrie.Ecs.DSL
 
         private void Apply(IDslAction command, Dictionary<string,string> args, CompilerContext context)
         {
-            Debug.LogWarning($"{command}: {args.Select(x => $"{x.Key}={x.Value}").Join(", ")}");
+            command.Execute(args, context);
+            //Debug.LogWarning($"{command}: {args.Select(x => $"{x.Key}={x.Value}").Join(", ")}");
         }
     }
 }
