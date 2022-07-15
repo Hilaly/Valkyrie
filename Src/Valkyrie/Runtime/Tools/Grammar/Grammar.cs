@@ -307,6 +307,16 @@ namespace Valkyrie.Grammar
         {
             return bool.Parse(node.GetString());
         }
+        
+        public static List<IAstNode> UnpackNodes(this IAstNode node, Func<IAstNode, bool> filter)
+        {
+            var r = new List<IAstNode>();
+            if (filter(node))
+                r.Add(node);
+            foreach (var child in node.GetChildren())
+                r.AddRange(UnpackNodes(child, filter));
+            return r;
+        }
 
         public static int GetInt(this IAstNode node)
         {

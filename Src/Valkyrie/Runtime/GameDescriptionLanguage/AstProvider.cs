@@ -17,7 +17,7 @@ namespace Valkyrie.Language.Description
                 if (_astConstructor == null)
                 {
                     var data = Resources.Load<TextAsset>("DescriptionLanguageGrammar").text;
-                    using var dataStream = ToStream(data);
+                    using var dataStream = data.ToStream();
                     _astConstructor = Valkyrie.Grammar.Grammar.Create(dataStream);
                 }
 

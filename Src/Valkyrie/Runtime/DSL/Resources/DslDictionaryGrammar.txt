@@ -1,0 +1,35 @@
+#lexer
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+[A-Za-z][A-Za-z0-9_]* -> IDENTIFIER
+
+(=>) -> RULE_OP
+
+(<) -> TAG_OPEN
+(>) -> TAG_CLOSE
+
+[ \n\r\t]+ -> escape
+
+(\.) -> SENTENCE_OP
+(,) -> COMMA
+
+#parser
+
+<root> -> <rules>
+
+<rules> -> <rule> <rules> | <rule>
+<rule> -> <rule_syntax> RULE_OP <rule_actions> SENTENCE_OP
+
+<rule_syntax> -> <rule_arg> <rule_syntax> | <rule_arg>
+<rule_arg> -> <rule_var> | <rule_op>
+<rule_var> -> <id>
+<rule_op> -> TAG_OPEN <id>+ TAG_CLOSE
+<id> -> IDENTIFIER
+
+<rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
+
+<rule_action> -> <rule_syntax>

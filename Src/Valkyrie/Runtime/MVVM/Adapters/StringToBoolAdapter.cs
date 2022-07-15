@@ -1,4 +1,5 @@
 using System;
+using Valkyrie.Tools;
 
 namespace Valkyrie.MVVM.Adapters
 {

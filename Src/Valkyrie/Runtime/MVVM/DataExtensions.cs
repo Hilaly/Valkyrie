@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
 using Valkyrie.Di;
+using Valkyrie.Tools;
 using Valkyrie.XPath;
 using Random = System.Random;
 
@@ -75,36 +76,6 @@ namespace Valkyrie.MVVM
         #endregion
 
         #region Strings
-
-        public static bool IsNullOrEmpty(this string text)
-        {
-            return string.IsNullOrEmpty(text);
-        }
-
-        public static bool NotNullOrEmpty(this string text)
-        {
-            return !string.IsNullOrEmpty(text);
-        }
-
-        public static string Join<T>(this IEnumerable<T> source, string separator)
-        {
-            return string.Join(separator, source.Select(u => u.ToString()).ToArray());
-        }
-
-        public static string Join(this string[] source, string separator)
-        {
-            return string.Join(separator, source);
-        }
-
-        public static Stream ToStream(this string source)
-        {
-            return new MemoryStream(Encoding.UTF8.GetBytes(source));
-        }
-
-        public static string ReadAllText(this Stream stream)
-        {
-            return new StreamReader(stream).ReadToEnd();
-        }
 
         private static HashAlgorithm _hashAlgorithm;
 
