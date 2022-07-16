@@ -10,6 +10,8 @@ namespace Valkyrie.Ecs.DSL
 {
     public class DslCompiler
     {
+        public static bool RequireControlMarkers = true;
+        
         private readonly DslDictionary _dslDictionary;
 
         public IDslDictionary Dictionary => _dslDictionary;
@@ -76,7 +78,12 @@ namespace Valkyrie.Ecs.DSL
             IEnumerable<string> EnumerateStrings(string str)
             {
                 foreach (var tail in ConvertToString(nodes.GetRange(1, nodes.Count - 1)))
-                    yield return str + tail;
+                {
+                    if (tail.NotNullOrEmpty())
+                        yield return $"{str} {tail}";
+                    else
+                        yield return str;
+                }
             }
 
             if (nodes.Count == 0)
@@ -91,7 +98,9 @@ namespace Valkyrie.Ecs.DSL
             {
                 case "<control>":
                 {
-                    var str = $"<{idNodes.Select(x => x.GetString()).Join(" ")}>";
+                    var str = RequireControlMarkers 
+                        ? $"<{idNodes.Select(x => x.GetString()).Join(" ")}>"
+                        :  $"{idNodes.Select(x => x.GetString()).Join(" ")}";
                     foreach (var p in EnumerateStrings(str)) yield return p;
                     yield break;
                 }

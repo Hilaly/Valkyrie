@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using DSL.Actions;
@@ -35,26 +36,16 @@ namespace Valkyrie.Ecs.DSL
 
         private Regex BuildRegex()
         {
-            var sb = new StringBuilder();
-            foreach (var formatEntry in Format)
+            var parts = Format.Select(formatEntry =>
             {
-                switch (formatEntry)
+                return formatEntry switch
                 {
-                    case IdentifierFormatEntry idEntry:
-                    {
-                        sb.Append($"(?<{idEntry.Text}>[\\w]+)");
-                        break;
-                    }
-                    case OperatorFormatEntry opEntry:
-                    {
-                        sb.Append(opEntry.Text);
-                        break;
-                    }
-                }
-            }
-            sb.Append("$");
-            
-            var regExpr = sb.ToString();
+                    IdentifierFormatEntry idEntry => ($"(?<{idEntry.Text}>[\\w]+)"),
+                    OperatorFormatEntry opEntry => (opEntry.Text),
+                    _ => string.Empty
+                };
+            });
+            var regExpr = $"^{parts.Join(" ")}$";
             return new Regex(regExpr);
         }
     }

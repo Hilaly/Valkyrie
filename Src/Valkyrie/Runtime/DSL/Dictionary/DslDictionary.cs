@@ -94,7 +94,9 @@ namespace Valkyrie.Ecs.DSL
                 case "<rule_var>":
                     return node.GetString();
                 case "<rule_op>":
-                    return $"<{node.UnpackNodes(x => x.Name == "<id>").Select(x => x.GetString()).Join(" ")}>";
+                    return DslCompiler.RequireControlMarkers
+                        ? $"<{node.UnpackNodes(x => x.Name == "<id>").Select(x => x.GetString()).Join(" ")}>"
+                        : $"{node.UnpackNodes(x => x.Name == "<id>").Select(x => x.GetString()).Join(" ")}";
                 default:
                     throw new GrammarCompileException(node, "Unimplemented ToString method");
             }

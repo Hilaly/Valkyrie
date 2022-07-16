@@ -52,6 +52,7 @@ namespace Valkyrie.Language
         [Test]
         public void TestParseProgram()
         {
+            DslCompiler.RequireControlMarkers = false;
             var compiler = new DslCompiler();
             compiler.Dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
             var source = Resources.Load<TextAsset>("TestDslProgram").text;
