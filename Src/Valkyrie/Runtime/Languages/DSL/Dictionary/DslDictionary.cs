@@ -35,8 +35,7 @@ namespace Valkyrie.DSL.Dictionary
                     var actionNodes = children[2].UnpackNodes(x => x.Name == "<rule_action>");
 
                     var syntax = ParseRuleSyntax(syntaxNode);
-                    if (syntax.Count(x => x is OperatorFormatEntry) != 1)
-                        throw new GrammarCompileException(ast, "Only support one operator per rule");
+                    //if (syntax.Count(x => x is OperatorFormatEntry) != 1) throw new GrammarCompileException(ast, "Only support one operator per rule");
                     
                     var actions = actionNodes.Select(x => ParseRuleAction(x, syntax)).ToList();
                     
@@ -66,6 +65,12 @@ namespace Valkyrie.DSL.Dictionary
                     {
                         Type = CreateStringProvider(children[1], syntax),
                         Name = CreateStringProvider(children[2], syntax)
+                    };
+                case "<add_base_type_action>":
+                    return new AddbaseTypeAction()
+                    {
+                        Type = CreateStringProvider(children[4], syntax),
+                        BaseType = CreateStringProvider(children[2], syntax)
                     };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");

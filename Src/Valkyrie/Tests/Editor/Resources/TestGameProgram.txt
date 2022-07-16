@@ -1,3 +1,3 @@
-Tower is flag. Step and Fulgur is flag.
-Tower, Step is Fulgur.
-ASd is Tower.
+Weight is float property.
+Car is component.
+Position is Vector2 property.

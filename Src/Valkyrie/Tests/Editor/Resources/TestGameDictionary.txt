@@ -1,3 +1,7 @@
 componentName <is component> => 
     create class componentName + Component , 
     add base "IComponent" to componentName + Component.
+
+componentName <is> typed <property> =>
+    create class componentName + Component,
+    add base "ValueComponent<" + typed + ">" to componentName + Component.

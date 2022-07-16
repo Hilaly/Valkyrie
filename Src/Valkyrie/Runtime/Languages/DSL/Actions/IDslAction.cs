@@ -27,4 +27,17 @@ namespace Valkyrie.DSL.Actions
 
         public override string ToString() => $"Create {Type} {Name}";
     }
+
+    class AddbaseTypeAction : IDslAction
+    {
+        public IStringProvider Type;
+        public IStringProvider BaseType;
+        public void Execute(Dictionary<string, string> args, CompilerContext context)
+        {
+            var type = context.GetOrCreateType(Type.GetString(args));
+            type.BaseTypes.Add(BaseType.GetString(args));
+        }
+
+        public override string ToString() => $"{Type} inherited from {BaseType}";
+    }
 }

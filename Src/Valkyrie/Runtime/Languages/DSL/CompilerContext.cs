@@ -57,10 +57,14 @@ namespace Valkyrie.DSL
     {
         public string TypeCategory { get; set; }
         public string Name { get; set; }
-        
+        public List<string> BaseTypes { get; } = new();
+
         public void Write(FormatWriter sb)
         {
-            sb.BeginBlock($"public class {Name}");
+            var classDef = Name;
+            if (BaseTypes.Any()) 
+                classDef += " : " + BaseTypes.Join(", ");
+            sb.BeginBlock($"public class {classDef}");
             sb.EndBlock();
         }
     }
