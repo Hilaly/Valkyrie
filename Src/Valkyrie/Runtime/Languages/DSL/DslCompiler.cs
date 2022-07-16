@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;

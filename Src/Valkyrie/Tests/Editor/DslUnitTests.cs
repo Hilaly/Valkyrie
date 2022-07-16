@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 using Valkyrie.DSL;
+using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
 
 namespace Valkyrie.Language

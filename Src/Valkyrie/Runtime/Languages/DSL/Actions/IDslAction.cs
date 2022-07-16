@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Valkyrie.DSL.Definitions;
 
 namespace Valkyrie.DSL.Actions
 {
