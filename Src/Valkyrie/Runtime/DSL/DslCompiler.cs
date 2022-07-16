@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DSL.Actions;
-using UnityEngine;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
@@ -124,7 +123,6 @@ namespace Valkyrie.Ecs.DSL
         private void Apply(IDslAction command, Dictionary<string,string> args, CompilerContext context)
         {
             command.Execute(args, context);
-            //Debug.LogWarning($"{command}: {args.Select(x => $"{x.Key}={x.Value}").Join(", ")}");
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Valkyrie.Language
         {
             var dictionary = LoadTestDictionary();
 
-            Debug.LogWarning(dictionary.ToString());
+            Debug.LogWarning(dictionary);
         }
 
         [Test]
@@ -31,12 +31,12 @@ namespace Valkyrie.Language
             Assert.AreEqual(false, TryParseText("", dictionary, localContext));
             Assert.AreEqual(0, localContext.Args.Count);
 
-            Assert.AreEqual(true, TryParseText("ASD<is flag>", dictionary, localContext));
+            Assert.AreEqual(true, TryParseText("ASD <is flag>", dictionary, localContext));
             Assert.AreEqual("ASD", localContext.Args["name"]);
-            Assert.AreEqual(true, TryParseText("GDB<is flag>", dictionary, localContext));
+            Assert.AreEqual(true, TryParseText("GDB <is flag>", dictionary, localContext));
             Assert.AreEqual("GDB", localContext.Args["name"]);
             
-            Assert.AreEqual(true, TryParseText("GDB<is>ADB", dictionary, localContext));
+            Assert.AreEqual(true, TryParseText("GDB <is> ADB", dictionary, localContext));
             Assert.AreEqual("GDB", localContext.Args["name"]);
             Assert.AreEqual("ADB", localContext.Args["component"]);
         }

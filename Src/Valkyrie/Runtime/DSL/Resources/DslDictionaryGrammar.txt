@@ -17,6 +17,8 @@
 (\.) -> SENTENCE_OP
 (,) -> COMMA
 
+(\+|\-) -> ADD_OP
+
 #parser
 
 <root> -> <rules>
@@ -35,4 +37,10 @@
 <rule_action> -> <skip_action> | <create_type_action>
 
 <skip_action> -> "skip"
-<create_type_action> -> "create" "class" <id> | "create" "struct" <id> 
+<create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
+
+<final_str_literal> -> <add_words_op>
+<add_words_op> -> <word> ADD_OP <add_words_op> | <word>
+<word> -> <id> | <string>
+
+<string> -> STRING

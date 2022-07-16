@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using DSL.Actions;
-using UnityEngine;
 using Valkyrie.Tools;
 
 namespace Valkyrie.Ecs.DSL

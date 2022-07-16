@@ -20,12 +20,17 @@ namespace DSL.Actions
 
     class CreateTypeAction : IDslAction
     {
-        public string Name;
-        public string Type;
+        public IStringProvider Name;
+        public IStringProvider Type;
         
         public void Execute(Dictionary<string, string> args, CompilerContext context)
         {
-            Debug.LogWarning($"Will create: {Type} {args[Name]}");
+            Debug.LogWarning($"Will create: {Type.GetString(args)} {Name.GetString(args)}");
+        }
+
+        public override string ToString()
+        {
+            return $"Create {Type} {Name}";
         }
     }
 }

@@ -1,5 +1,5 @@
 name <is flag> => create struct name.
-name <is> component => create class name.
+name <is> component => create class name + component.
 
 name <is class> => create class name.
 name <is struct> => create struct name.

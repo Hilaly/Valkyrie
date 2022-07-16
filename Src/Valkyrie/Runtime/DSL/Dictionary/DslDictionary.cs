@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,9 +62,91 @@ namespace Valkyrie.Ecs.DSL
                 case "<skip_action>":
                     return new SkipAction();
                 case "<create_type_action>":
-                    return new CreateTypeAction() { Name = children[2].GetString(), Type = children[1].GetString() };
+                    return new CreateTypeAction()
+                    {
+                        Type = CreateStringProvider(children[1], syntax),
+                        Name = CreateStringProvider(children[2], syntax)
+                    };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");
+            }
+        }
+
+        internal static IStringProvider CreateStringProvider(IAstNode ast, List<DslDictionaryFormatEntry> syntax)
+        {
+            switch (ast.Name)
+            {
+                case "<final_str_literal>":
+                case "<word>":
+                    return CreateStringProvider(ast.GetChildren()[0], syntax);
+                case "<add_words_op>":
+                {
+                    var children = ast.GetChildren();
+                    if (children.Count == 3) 
+                        return new ConcatenateStringProvider()
+                        {
+                            CreateStringProvider(children[0], syntax), 
+                            CreateStringProvider(children[2], syntax)
+                        };
+                    return CreateStringProvider(children[0], syntax);
+                }
+                case "<string>":
+                case "STRING":
+                    return new ConstantStringProvider(ast.GetString());
+                case "<id>":
+                case "IDENTIFIER":
+                {
+                    var value = ast.GetString();
+                    var hasVar = syntax
+                                     .Find(x => 
+                                         x is IdentifierFormatEntry idFormat && idFormat.Text == value)
+                                 != null;
+                    if (hasVar)
+                        return new VariableStringProvider(value);
+                    else
+                        return new ConstantStringProvider(value);
+                }
+                default:
+                    throw new GrammarCompileException(ast, $"Unimplemented STR LITERAL {ast.Name}");
+            }
+            
+            while (true)
+            {
+                switch (ast.Name)
+                {
+                    case "<final_str_literal>":
+                    case "<word>":
+                        ast = ast.GetChildren()[0];
+                        continue;
+                    case "<add_words_op>":
+                    {
+                        var children = ast.GetChildren();
+                        if (children.Count == 3) 
+                            return new ConcatenateStringProvider()
+                            {
+                                CreateStringProvider(children[0], syntax), 
+                                CreateStringProvider(children[2], syntax)
+                            };
+                        ast = children[0];
+                        continue;
+                    }
+                    case "<string>":
+                        return new ConstantStringProvider(ast.GetString());
+                    case "<id>":
+                    {
+                        var value = ast.GetString();
+                        var hasVar = syntax
+                                         .Find(x => 
+                                             x is IdentifierFormatEntry idFormat && idFormat.Text == value)
+                                     != null;
+                        if (hasVar)
+                            return new VariableStringProvider(value);
+                        else
+                            return new ConstantStringProvider(value);
+                    }
+                    default:
+                        throw new GrammarCompileException(ast, $"Unimplemented node {ast.Name}");
+                }
             }
         }
 
