@@ -1,4 +1,5 @@
 using Hilaly.Utils;
+using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
 using Valkyrie.Di;
 
@@ -10,7 +11,16 @@ namespace GamePrototype
         
         public override void Register(IContainer container)
         {
+            container.Register<EntityContext>()
+                .AsInterfacesAndSelf()
+                .SingleInstance();
+            
             container.RegisterFromComponentOnNewPrefab(cameraController)
+                .AsInterfacesAndSelf()
+                .SingleInstance()
+                .NonLazy();
+            
+            container.RegisterFromNewComponentOnNewGameObject<Simulator>("Simulator")
                 .AsInterfacesAndSelf()
                 .SingleInstance()
                 .NonLazy();

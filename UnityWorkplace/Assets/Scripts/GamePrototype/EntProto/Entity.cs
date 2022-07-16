@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 
-namespace GamePrototype
+namespace NaiveEntity.GamePrototype.EntProto
 {
     public class Entity : IEntity
     {
         private readonly List<object> _components = new List<object>();
 
         public string Id { get; }
+
+        public List<object> Components => _components;
 
         public Entity(string id)
         {

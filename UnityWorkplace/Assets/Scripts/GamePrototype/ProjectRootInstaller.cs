@@ -1,3 +1,4 @@
+using NaiveEntity.GamePrototype.EntProto;
 using Valkyrie.Di;
 
 namespace GamePrototype
@@ -6,7 +7,7 @@ namespace GamePrototype
     {
         public override void Register(IContainer container)
         {
-            container.Register<EntityContext>()
+            container.Register<EntityContext>("CONFIG")
                 .AsInterfacesAndSelf()
                 .SingleInstance();
         }

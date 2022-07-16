@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GamePrototype
+namespace NaiveEntity.GamePrototype.EntProto
 {
     public class EntityContext
     {

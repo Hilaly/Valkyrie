@@ -1,4 +1,4 @@
-namespace GamePrototype
+namespace NaiveEntity.GamePrototype.EntProto
 {
     public interface IEntity
     {
