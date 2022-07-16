@@ -34,10 +34,12 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> <skip_action> | <create_type_action>
+<rule_action> -> <add_base_type_action> | <create_type_action> | <skip_action>
 
 <skip_action> -> "skip"
 <create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
+
+<add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>
 
 <final_str_literal> -> <add_words_op>
 <add_words_op> -> <word> ADD_OP <add_words_op> | <word>

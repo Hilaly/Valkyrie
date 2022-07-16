@@ -1,6 +1,6 @@
 {
     "name": "Valkyrie.DSL",
-    "rootNamespace": "",
+    "rootNamespace": "Valkyrie.DSL",
     "references": [
         "GUID:06d683358a9bf1549974f36ef8fc5080",
         "GUID:f75c38a534ddcea4e82f39295dd4c8cd"

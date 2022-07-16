@@ -4,7 +4,7 @@ namespace Valkyrie.Language.Description.Utils
 {
     public class FormatWriter
     {
-        private StringBuilder _sb = new StringBuilder();
+        private readonly StringBuilder _sb = new();
 
         private string _lineStart = string.Empty;
 

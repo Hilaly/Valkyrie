@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
-using Valkyrie.Ecs.DSL;
+using Valkyrie.DSL;
+using Valkyrie.DSL.Dictionary;
 
 namespace Valkyrie.Language
 {
@@ -24,6 +25,8 @@ namespace Valkyrie.Language
         [Test]
         public void TestEntriesParse()
         {
+            DslCompiler.RequireControlMarkers = true;
+            
             var dictionary = LoadTestDictionary();
 
             var localContext = new LocalContext();
@@ -56,7 +59,27 @@ namespace Valkyrie.Language
             var compiler = new DslCompiler();
             compiler.Dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
             var source = Resources.Load<TextAsset>("TestDslProgram").text;
-            var ctx = new CompilerContext();
+            var ctx = new CompilerContext()
+            {
+                Namespace = "Test"
+            };
+            ctx.Usings.Add("System.Collections");
+            compiler.Build(source, ctx);
+            Debug.LogWarning(ctx);
+        }
+        
+        [Test]
+        public void TestGameProgram()
+        {
+            DslCompiler.RequireControlMarkers = false;
+            var compiler = new DslCompiler();
+            compiler.Dictionary.Load(Resources.Load<TextAsset>("TestGameDictionary").text);
+            var source = Resources.Load<TextAsset>("TestGameProgram").text;
+            var ctx = new CompilerContext()
+            {
+                Namespace = "Test"
+            };
+            ctx.Usings.Add("System.Collections");
             compiler.Build(source, ctx);
             Debug.LogWarning(ctx);
         }

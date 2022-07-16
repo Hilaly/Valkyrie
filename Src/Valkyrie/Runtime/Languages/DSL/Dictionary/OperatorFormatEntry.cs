@@ -1,4 +1,4 @@
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL.Dictionary
 {
     class OperatorFormatEntry : DslDictionaryFormatEntry
     {

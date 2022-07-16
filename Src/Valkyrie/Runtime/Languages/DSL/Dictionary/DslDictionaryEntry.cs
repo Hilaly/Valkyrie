@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using DSL.Actions;
+using Valkyrie.DSL.Actions;
 using Valkyrie.Tools;
 
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL.Dictionary
 {
     class DslDictionaryEntry : IDslDictionaryEntry
     {
         private Regex _regex;
         
-        public List<DslDictionaryFormatEntry> Format { get; set; } = new List<DslDictionaryFormatEntry>();
-        public List<IDslAction> Actions { get; set; } = new List<IDslAction>();
+        public List<DslDictionaryFormatEntry> Format { get; set; } = new();
+        public List<IDslAction> Actions { get; set; } = new();
 
         public override string ToString()
         {

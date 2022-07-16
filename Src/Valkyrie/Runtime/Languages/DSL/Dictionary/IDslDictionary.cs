@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL.Dictionary
 {
     public interface IDslDictionary
     {

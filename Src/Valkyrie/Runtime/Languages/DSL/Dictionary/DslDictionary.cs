@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DSL.Actions;
+using Valkyrie.DSL.Actions;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL.Dictionary
 {
     class DslDictionary : IDslDictionary
     {
-        private readonly List<DslDictionaryEntry> _entries = new List<DslDictionaryEntry>();
+        private readonly List<DslDictionaryEntry> _entries = new();
 
         public IEnumerable<IDslDictionaryEntry> GetEntries => _entries;
         

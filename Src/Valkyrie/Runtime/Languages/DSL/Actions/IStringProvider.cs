@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Valkyrie.Tools;
 
-namespace DSL.Actions
+namespace Valkyrie.DSL.Actions
 {
     interface IStringProvider
     {
@@ -34,7 +34,7 @@ namespace DSL.Actions
 
     class ConcatenateStringProvider : IStringProvider, IEnumerable<IStringProvider>
     {
-        private readonly List<IStringProvider> _providers = new List<IStringProvider>();
+        private readonly List<IStringProvider> _providers = new();
 
         public void Add(IStringProvider provider) => _providers.Add(provider);
 

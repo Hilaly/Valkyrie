@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using DSL.Actions;
+using Valkyrie.DSL.Actions;
 using Valkyrie.Tools;
 
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL.Dictionary
 {
     public class LocalContext
     {
-        public Dictionary<string, string> Args = new Dictionary<string, string>();
+        public Dictionary<string, string> Args = new();
         internal List<IDslAction> Actions;
 
         public void SetValue(string name, string value)

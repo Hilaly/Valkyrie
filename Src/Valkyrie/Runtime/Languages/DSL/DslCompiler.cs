@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DSL.Actions;
+using Valkyrie.DSL.Dictionary;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL
 {
     public class DslCompiler
     {
@@ -87,7 +87,7 @@ namespace Valkyrie.Ecs.DSL
 
             if (nodes.Count == 0)
             {
-                yield return String.Empty;
+                yield return string.Empty;
                 yield break;
             }
 
@@ -117,12 +117,7 @@ namespace Valkyrie.Ecs.DSL
         private void Apply(LocalContext localContext, CompilerContext compilerContext)
         {
             foreach(var command in localContext.Actions)
-                Apply(command, localContext.Args, compilerContext);
-        }
-
-        private void Apply(IDslAction command, Dictionary<string,string> args, CompilerContext context)
-        {
-            command.Execute(args, context);
+                command.Execute(localContext.Args, compilerContext);
         }
     }
 }

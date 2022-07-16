@@ -2,7 +2,7 @@ using UnityEngine;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
-namespace Valkyrie.Ecs.DSL
+namespace Valkyrie.DSL
 {
     static class AstProvider
     {

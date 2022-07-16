@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Valkyrie.Ecs.DSL;
 
-namespace DSL.Actions
+namespace Valkyrie.DSL.Actions
 {
     interface IDslAction
     {
@@ -12,10 +11,7 @@ namespace DSL.Actions
     class SkipAction : IDslAction
     {
         public override string ToString() => "skip";
-        public void Execute(Dictionary<string, string> args, CompilerContext context)
-        {
-            Debug.LogWarning($"skip");
-        }
+        public void Execute(Dictionary<string, string> args, CompilerContext context) => Debug.LogWarning($"skip");
     }
 
     class CreateTypeAction : IDslAction
@@ -25,12 +21,10 @@ namespace DSL.Actions
         
         public void Execute(Dictionary<string, string> args, CompilerContext context)
         {
-            Debug.LogWarning($"Will create: {Type.GetString(args)} {Name.GetString(args)}");
+            var type = context.GetOrCreateType(Name.GetString(args));
+            type.TypeCategory = Type.GetString(args);
         }
 
-        public override string ToString()
-        {
-            return $"Create {Type} {Name}";
-        }
+        public override string ToString() => $"Create {Type} {Name}";
     }
 }
