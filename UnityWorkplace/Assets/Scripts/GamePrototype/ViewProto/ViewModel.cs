@@ -1,4 +1,4 @@
-namespace GamePrototype
+namespace GamePrototype.ViewProto
 {
     public class ViewModel
     {
