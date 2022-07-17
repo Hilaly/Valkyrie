@@ -7,17 +7,17 @@ namespace GamePrototype.GameLogic
 {
     public abstract class BaseComponent
     {
-        
     }
 
     public abstract class ValueComponent<T> : BaseComponent
     {
         public T Value;
     }
-    
+
     public class PositionComponent : ValueComponent<Vector3>
-    {}
-    
+    {
+    }
+
     public class ViewComponent : ValueComponent<GameObject>, IEventConsumer<PositionChangedEvent>
     {
         public void PropagateEvent(IEntity entity, PositionChangedEvent e)
@@ -32,7 +32,7 @@ namespace GamePrototype.GameLogic
         {
             entity.GetOrCreateComponent<ViewComponent>().Value =
                 Object.Instantiate(Resources.Load<GameObject>(Value),
-                    entity.GetComponent<PositionComponent>().Value, 
+                    entity.GetComponent<PositionComponent>().Value,
                     Quaternion.identity);
         }
     }
@@ -40,15 +40,15 @@ namespace GamePrototype.GameLogic
     public class ReadKeyboardInputComponent : BaseComponent, IEventConsumer<UpdateEvent>
     {
         public Func<Vector2, Vector3> InputConverter;
-        
+
         public void PropagateEvent(IEntity entity, UpdateEvent e)
         {
             var h = Input.GetAxis("Horizontal");
             var v = Input.GetAxis("Vertical");
-            
+
             entity.PropagateEvent(new InputChangedEvent()
             {
-                Input = InputConverter( new Vector2(h, v)),
+                Input = InputConverter(new Vector2(h, v)),
                 DeltaTime = e.DeltaTime
             });
         }
