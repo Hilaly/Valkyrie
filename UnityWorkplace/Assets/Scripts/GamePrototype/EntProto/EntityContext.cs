@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace NaiveEntity.GamePrototype.EntProto
 {
@@ -18,6 +19,7 @@ namespace NaiveEntity.GamePrototype.EntProto
                 throw new Exception($"Entity {id} already exist");
             var e = new Entity(id);
             _entities.Add(id, e);
+            Debug.Log($"[ECS]: create entity {id}");
             return e;
         }
     }
