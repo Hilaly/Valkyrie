@@ -1,4 +1,5 @@
 using GamePrototype.Mono;
+using GamePrototype.Ui;
 using Hilaly.Utils;
 using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace GamePrototype
     public class GameplaySceneInstaller : MonoBehaviourInstaller
     {
         [SerializeField] private CameraController cameraController;
+        [SerializeField] private HUD hud;
         
         public override void Register(IContainer container)
         {
@@ -36,6 +38,10 @@ namespace GamePrototype
             
             //Prefabs
             container.RegisterFromComponentOnNewPrefab(cameraController)
+                .AsInterfacesAndSelf()
+                .SingleInstance()
+                .NonLazy();
+            container.RegisterFromComponentOnNewPrefab(hud)
                 .AsInterfacesAndSelf()
                 .SingleInstance()
                 .NonLazy();

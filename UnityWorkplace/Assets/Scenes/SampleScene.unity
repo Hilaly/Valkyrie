@@ -341,6 +341,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraController: {fileID: 2893456490422708778, guid: da7d623d793dd054588779a69ef85e68, type: 3}
+  hud: {fileID: 8693270410112899389, guid: d4a2020bf50de3844b4f2213e45ab91f, type: 3}
 --- !u!1 &1268387048
 GameObject:
   m_ObjectHideFlags: 0
