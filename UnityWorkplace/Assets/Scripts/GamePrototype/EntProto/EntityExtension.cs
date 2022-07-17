@@ -15,11 +15,12 @@ namespace NaiveEntity.GamePrototype.EntProto
 
         public static bool WillRespondTo<T>(this IEntity e) where T : class =>
             ((Entity)e).Components.Find(x => x is IEventConsumer<T>) != null;
-        
+
         public static void PropagateEvent<T>(this IEntity e, T ev) where T : class
         {
-            foreach (var consumer in ((Entity)e).Components.OfType<IEventConsumer<T>>()) 
-                consumer.PropagateEvent(e, ev);
+            for (var i = 0; i < ((Entity)e).Components.Count; ++i)
+                if (((Entity)e).Components[i] is IEventConsumer<T> consumer)
+                    consumer.PropagateEvent(e, ev);
         }
     }
 }
