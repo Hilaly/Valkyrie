@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using GamePrototype.GameLogic;
 using NaiveEntity.GamePrototype.EntProto;
@@ -8,25 +7,27 @@ namespace GamePrototype
 {
     public interface ISceneDataProvider
     {
-        Task<List<IEntity>> CreateEntities();
+        Task PopulateSceneData();
     }
 
     public class ControlFlow
     {
         private readonly ISceneDataProvider _sceneData;
+        private readonly GameState _gameState;
 
-        public ControlFlow(ISceneDataProvider sceneData)
+        public ControlFlow(ISceneDataProvider sceneData, GameState gameState)
         {
             _sceneData = sceneData;
+            _gameState = gameState;
         }
 
         public async Task LoadGameplay()
         {
             Debug.LogWarning($"Loading GP");
 
-            var createdEntities = await _sceneData.CreateEntities();
+            await _sceneData.PopulateSceneData();
 
-            foreach (var createdEntity in createdEntities) 
+            foreach (var createdEntity in _gameState.GameplayContext.Get()) 
                 createdEntity.PropagateEvent(new SpawnedEvent());
         }
     }

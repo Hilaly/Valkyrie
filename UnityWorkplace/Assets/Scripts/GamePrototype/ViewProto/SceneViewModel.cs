@@ -20,13 +20,11 @@ namespace GamePrototype.ViewProto
         [SerializeField] private SpawnPlayerMarker playerStartPosition;
         [SerializeField] private List<TownMarker> towns;
 
-        public Task<List<IEntity>> CreateEntities()
+        public Task PopulateSceneData()
         {
             var gpContext = _gameState.GameplayContext;
-            var result = new List<IEntity>();
             
             var player = gpContext.Create("Player");
-            result.Add(player);
             player.AddComponent(new PrefabComponent() { Value = "TestView" });
             player.AddComponent(new MoveCapabilityComponent());
             player.AddComponent(new CameraFollowComponent()
@@ -41,19 +39,16 @@ namespace GamePrototype.ViewProto
             foreach (var townMarker in towns)
             {
                 var town = gpContext.Create(townMarker.name);
-                result.Add(town);
-
                 town.AddComponent(new PositionComponent() { Value = townMarker.transform.position });
                 town.AddComponent(new PrefabComponent() { Value = "TestView" });
+                town.AddComponent(new TownComponent());
                 
                 (townMarker.GetComponent<EntityHolder>() ?? townMarker.AddComponent<EntityHolder>()).Entity = town;
             }
             
             PropagatePlayerPosition(player);
-            
-            
 
-            return Task.FromResult(result);
+            return Task.CompletedTask;
         }
 
         void PropagatePlayerPosition(IEntity player)
