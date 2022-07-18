@@ -1,4 +1,3 @@
-using GamePrototype.Mono;
 using GamePrototype.Ui;
 using GamePrototype.ViewProto;
 using Hilaly.Utils;

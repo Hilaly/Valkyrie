@@ -1,7 +1,9 @@
 {
     "name": "NaiveEntity",
     "rootNamespace": "NaiveEntity",
-    "references": [],
+    "references": [
+        "GUID:06d683358a9bf1549974f36ef8fc5080"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

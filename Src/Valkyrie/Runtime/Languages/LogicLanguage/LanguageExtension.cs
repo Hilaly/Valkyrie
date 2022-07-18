@@ -11,16 +11,6 @@ namespace Valkyrie.Language
 {
     public static class LanguageExtension
     {
-        #region Enumerables
-
-        internal static void RemoveAtWithReplace<T>(this List<T> list, int index)
-        {
-            list[index] = list[list.Count - 1];
-            list.RemoveAt(list.Count - 1);
-        }
-
-        #endregion
-        
         #region Facts
 
         public static IEnumerable<Fact> CollectAllFacts(this IWorld world)

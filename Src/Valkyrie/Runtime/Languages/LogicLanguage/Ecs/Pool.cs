@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tools;
 
 namespace Valkyrie.Language.Ecs
 {
@@ -49,7 +50,7 @@ namespace Valkyrie.Language.Ecs
         {
             var wasAdded = _toAdd.Count > 0 || _toRemove.Count > 0;
 
-            foreach (var index in _toRemove.OrderByDescending(x => x)) 
+            foreach (var index in _toRemove.OrderByDescending(x => x))
                 _facts.RemoveAtWithReplace(index);
             _toRemove.Clear();
 
