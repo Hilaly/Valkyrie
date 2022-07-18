@@ -54,7 +54,6 @@ namespace GamePrototype
                 var b = gpContext.Create(s);
                 b.AddComponent(new BuildingComponent());
                 b.AddComponent(new PrefabComponent() { Value = "House" });
-                b.AddComponent(new SpawnPrefabComponent());
             }
 
             return Task.CompletedTask;

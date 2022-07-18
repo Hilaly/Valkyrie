@@ -35,6 +35,8 @@ namespace GamePrototype.GameLogic
     [Binding]
     public class BuildingViewModel : EntityView
     {
-        [Binding] public Vector3 Position => Entity.GetComponent<PositionComponent>().Value;
+        [Binding] public string Prefab => Entity.GetComponent<PrefabComponent>();
+        [Binding] public Vector3 Position => Entity.GetComponent<PositionComponent>();
+        [Binding] public Quaternion Rotation => Entity.GetComponent<RotationComponent>();
     }
 }
