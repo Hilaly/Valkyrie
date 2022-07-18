@@ -1,5 +1,8 @@
+using Meta;
+
 namespace NaiveEntity.GamePrototype.EntProto
 {
+    [IsValidBindingType]
     public interface IEntity
     {
         public string Id { get; }

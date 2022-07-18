@@ -2,6 +2,6 @@ using UnityEngine;
 
 namespace GamePrototype.Mono
 {
-    public class TownMarker : MonoBehaviour
+    public class NamedEntityPosition : MonoBehaviour
     {}
 }

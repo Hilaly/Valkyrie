@@ -10,7 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6620114359000719813}
   - component: {fileID: 476357309848515426}
+  - component: {fileID: -3812849888736414095}
   - component: {fileID: 2565311241504576152}
+  - component: {fileID: 5916321764332783490}
   m_Layer: 0
   m_Name: BuildingPrefab
   m_TagString: Untagged
@@ -46,6 +48,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _templateClass: GamePrototype.GameLogic.BuildingViewModel
+--- !u!114 &-3812849888736414095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3940254368986408150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abd7eac2e02548a08ac3db3f662d6782, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &2565311241504576152
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61,6 +75,24 @@ MonoBehaviour:
   _isTwoSided: 0
   _viewProperty: UnityEngine.Transform/position:Vector3
   _viewModelProperty: GamePrototype.GameLogic.BuildingViewModel/Position:Vector3
+  _changeEventName: 
+  _isPolling: 1
+  _sourceAdapterType: 
+--- !u!114 &5916321764332783490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3940254368986408150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 273211b1bccf41abbab89de6fa7dba5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isTwoSided: 0
+  _viewProperty: GamePrototype.Mono.EntityHolder/Entity:IEntity
+  _viewModelProperty: GamePrototype.GameLogic.BuildingViewModel/Entity:IEntity
   _changeEventName: 
   _isPolling: 1
   _sourceAdapterType: 

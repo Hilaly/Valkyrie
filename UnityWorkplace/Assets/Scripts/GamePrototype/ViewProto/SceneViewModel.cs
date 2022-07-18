@@ -18,7 +18,7 @@ namespace GamePrototype.ViewProto
         [Inject] CameraController _cameraController;
         
         [SerializeField] private SpawnPlayerMarker playerStartPosition;
-        [SerializeField] private List<TownMarker> towns;
+        [SerializeField] private List<NamedEntityPosition> structures;
 
         [Binding] public IEnumerable<TownViewModel> Towns => _gameState.Towns;
         [Binding] public IEnumerable<BuildingViewModel> Buildings => _gameState.Buildings;
@@ -27,9 +27,31 @@ namespace GamePrototype.ViewProto
         {
             var gpContext = _gameState.GameplayContext;
             
-            var player = gpContext.Create("Player");
-            player.AddComponent(new PrefabComponent() { Value = "TestView" });
-            player.AddComponent(new MoveCapabilityComponent());
+            var player = gpContext.Get("Player");
+            PropagatePlayerPosition(player);
+
+            foreach (var positionProvider in structures)
+            {
+                var e = gpContext.Get(positionProvider.name);
+                if(e != null)
+                    PropagateEntityPosition(e, positionProvider);
+            }
+            
+
+            return Task.CompletedTask;
+        }
+
+        void PropagateEntityPosition(IEntity entity, Component positionProvider)
+        {
+            entity.GetOrCreateComponent<PositionComponent>().Value = positionProvider.transform.position;
+            entity.GetOrCreateComponent<RotationComponent>().Value = positionProvider.transform.rotation;
+        }
+
+        void PropagatePlayerPosition(IEntity player)
+        {
+            if (!player.HasComponent<PositionComponent>())
+                PropagateEntityPosition(player, playerStartPosition);
+            
             player.AddComponent(new CameraFollowComponent()
             {
                 Value = _cameraController
@@ -38,25 +60,6 @@ namespace GamePrototype.ViewProto
             {
                 Value = _cameraController.Convert2DInputTo3DDirection
             });
-
-            foreach (var townMarker in towns)
-            {
-                var town = gpContext.Create(townMarker.name);
-                town.AddComponent(new TownComponent());
-                town.AddComponent(new PositionComponent() { Value = townMarker.transform.position });
-                
-                (townMarker.GetComponent<EntityHolder>() ?? townMarker.AddComponent<EntityHolder>()).Entity = town;
-            }
-            
-            PropagatePlayerPosition(player);
-
-            return Task.CompletedTask;
-        }
-
-        void PropagatePlayerPosition(IEntity player)
-        {
-            if (!player.HasComponent<PositionComponent>())
-                player.AddComponent(new PositionComponent() { Value = playerStartPosition.transform.position });
         }
     }
 }

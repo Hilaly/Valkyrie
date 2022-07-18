@@ -20,6 +20,10 @@ namespace GamePrototype.GameLogic
     {
     }
 
+    public class RotationComponent : ValueComponent<Quaternion>
+    {
+    }
+
     public class ViewComponent : ValueComponent<GameObject>, IEventConsumer<PositionChangedEvent>
     {
         public void PropagateEvent(IEntity entity, PositionChangedEvent e)
@@ -36,7 +40,7 @@ namespace GamePrototype.GameLogic
                 entity.GetOrCreateComponent<ViewComponent>().Value =
                     Object.Instantiate(Resources.Load<GameObject>(Value),
                         entity.GetComponent<PositionComponent>().Value,
-                        Quaternion.identity);
+                        entity.GetComponent<RotationComponent>()?.Value ?? Quaternion.identity);
 
             var c = go.GetComponent<EntityHolder>() ?? go.AddComponent<EntityHolder>();
             c.Entity = entity;
@@ -86,5 +90,20 @@ namespace GamePrototype.GameLogic
     public class BuildingComponent : BaseComponent
     {
         
+    }
+    
+    public class PlayerEnterTriggerComponent : BaseComponent
+        , IEventConsumer<TriggerEnterEvent>
+        , IEventConsumer<TriggerExitEvent>
+    {
+        public void PropagateEvent(IEntity entity, TriggerEnterEvent e)
+        {
+            Debug.Log($"ENTER TRIGGER {e.Entity.Id}");
+        }
+
+        public void PropagateEvent(IEntity entity, TriggerExitEvent e)
+        {
+            Debug.Log($"EXIT TRIGGER {e.Entity.Id}");
+        }
     }
 }

@@ -1,7 +1,9 @@
+using Valkyrie.MVVM;
+
 namespace NaiveEntity.GamePrototype.EntProto.ViewProto
 {
     public class EntityView
     {
-        public IEntity Entity { get; set; }
+        [Binding] public IEntity Entity { get; set; }
     }
 }

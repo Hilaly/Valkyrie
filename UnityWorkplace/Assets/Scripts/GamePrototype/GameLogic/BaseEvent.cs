@@ -1,3 +1,4 @@
+using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
 
 namespace GamePrototype.GameLogic
@@ -40,5 +41,14 @@ namespace GamePrototype.GameLogic
     {
         public Vector3 PreviousPosition;
         public Vector3 Position;
+    }
+
+    public class TriggerEnterEvent : BaseEvent
+    {
+        public IEntity Entity;
+    }
+    public class TriggerExitEvent : BaseEvent
+    {
+        public IEntity Entity;
     }
 }
