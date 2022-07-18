@@ -4,7 +4,6 @@ using GamePrototype.GameLogic;
 using GamePrototype.Mono;
 using Hilaly.Utils;
 using NaiveEntity.GamePrototype.EntProto;
-using NaiveEntity.GamePrototype.EntProto.ViewProto;
 using Unity.VisualScripting;
 using UnityEngine;
 using Valkyrie.Di;
@@ -15,14 +14,15 @@ namespace GamePrototype.ViewProto
     [Binding]
     public class SceneViewModel : MonoBehaviour, ISceneDataProvider
     {
-        [Inject] private IConfig _config;
+        [Inject] private GameState _gameState;
         [Inject] CameraController _cameraController;
         
         [SerializeField] private SpawnPlayerMarker playerStartPosition;
         [SerializeField] private List<TownMarker> towns;
 
-        public Task<List<IEntity>> CreateEntities(EntityContext gpContext)
+        public Task<List<IEntity>> CreateEntities()
         {
+            var gpContext = _gameState.GameplayContext;
             var result = new List<IEntity>();
             
             var player = gpContext.Create("Player");

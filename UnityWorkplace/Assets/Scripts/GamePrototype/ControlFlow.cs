@@ -8,17 +8,15 @@ namespace GamePrototype
 {
     public interface ISceneDataProvider
     {
-        Task<List<IEntity>> CreateEntities(EntityContext gpContext);
+        Task<List<IEntity>> CreateEntities();
     }
 
     public class ControlFlow
     {
-        private readonly EntityContext _ecs;
         private readonly ISceneDataProvider _sceneData;
 
-        public ControlFlow(EntityContext ecs, ISceneDataProvider sceneData)
+        public ControlFlow(ISceneDataProvider sceneData)
         {
-            _ecs = ecs;
             _sceneData = sceneData;
         }
 
@@ -26,7 +24,7 @@ namespace GamePrototype
         {
             Debug.LogWarning($"Loading GP");
 
-            var createdEntities = await _sceneData.CreateEntities(_ecs);
+            var createdEntities = await _sceneData.CreateEntities();
 
             foreach (var createdEntity in createdEntities) 
                 createdEntity.PropagateEvent(new SpawnedEvent());
