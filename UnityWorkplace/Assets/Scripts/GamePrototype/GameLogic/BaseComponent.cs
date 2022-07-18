@@ -78,4 +78,9 @@ namespace GamePrototype.GameLogic
             Value.SetTarget(e.Position, Quaternion.identity);
         }
     }
+
+    public class TownComponent : BaseComponent
+    {
+        
+    }
 }

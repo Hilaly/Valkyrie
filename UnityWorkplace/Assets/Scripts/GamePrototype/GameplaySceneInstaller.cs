@@ -1,3 +1,4 @@
+using GamePrototype.GameLogic;
 using GamePrototype.Ui;
 using GamePrototype.ViewProto;
 using Hilaly.Utils;
@@ -33,6 +34,9 @@ namespace GamePrototype
                 .SingleInstance()
                 .NonLazy();
             container.Register<EntityContext>()
+                .AsInterfacesAndSelf()
+                .SingleInstance();
+            container.Register<GameState>()
                 .AsInterfacesAndSelf()
                 .SingleInstance();
             

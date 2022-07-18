@@ -14,6 +14,7 @@ namespace NaiveEntity.GamePrototype.EntProto.ViewProto
         private readonly SimpleClassPool<T> _pool = new SimpleClassPool<T>();
         private readonly List<T> _instances = new List<T>();
 
+        //TODO: replace with filterGroup
         public EntityViewsCollection(EntityContext entityContext, Func<IEntity, bool> filter)
         {
             _entityContext = entityContext;

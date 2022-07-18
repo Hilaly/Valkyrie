@@ -4,6 +4,7 @@ using GamePrototype.GameLogic;
 using GamePrototype.Mono;
 using Hilaly.Utils;
 using NaiveEntity.GamePrototype.EntProto;
+using NaiveEntity.GamePrototype.EntProto.ViewProto;
 using Unity.VisualScripting;
 using UnityEngine;
 using Valkyrie.Di;
@@ -14,7 +15,7 @@ namespace GamePrototype.ViewProto
     [Binding]
     public class SceneViewModel : MonoBehaviour, ISceneDataProvider
     {
-        [Inject(Name = "CONFIG")] private EntityContext _config;
+        [Inject] private IConfig _config;
         [Inject] CameraController _cameraController;
         
         [SerializeField] private SpawnPlayerMarker playerStartPosition;
