@@ -1,38 +1,35 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using GamePrototype.GameLogic;
-using GamePrototype.Mono;
-using Hilaly.Utils;
 using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
 
 namespace GamePrototype
 {
+    public interface ISceneDataProvider
+    {
+        Task<List<IEntity>> CreateEntities(EntityContext gpContext);
+    }
+
     public class ControlFlow
     {
-        private readonly SpawnPlayerMarker _spawnPlayerMarker;
         private readonly EntityContext _ecs;
-        private readonly CameraController _cameraController;
+        private readonly ISceneDataProvider _sceneData;
 
-        public ControlFlow(SpawnPlayerMarker spawnPlayerMarker, EntityContext ecs, CameraController cameraController)
+        public ControlFlow(EntityContext ecs, ISceneDataProvider sceneData)
         {
-            _spawnPlayerMarker = spawnPlayerMarker;
             _ecs = ecs;
-            _cameraController = cameraController;
+            _sceneData = sceneData;
         }
 
         public async Task LoadGameplay()
         {
             Debug.LogWarning($"Loading GP");
 
-            var player = _ecs.Create("Player");
-            player.AddComponent(new PositionComponent() { Value = _spawnPlayerMarker.transform.position });
-            player.AddComponent(new PrefabComponent() { Value = "TestView" });
-            player.AddComponent(new MoveCapabilityComponent());
-            player.AddComponent(new ReadKeyboardInputComponent()
-            {
-                InputConverter = _cameraController.Convert2DInputTo3DDirection
-            });
-            player.PropagateEvent(SpawnedEvent.Instance);
+            var createdEntities = await _sceneData.CreateEntities(_ecs);
+
+            foreach (var createdEntity in createdEntities) 
+                createdEntity.PropagateEvent(new SpawnedEvent());
         }
     }
 }

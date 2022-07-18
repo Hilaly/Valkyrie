@@ -1,5 +1,6 @@
 using GamePrototype.Mono;
 using GamePrototype.Ui;
+using GamePrototype.ViewProto;
 using Hilaly.Utils;
 using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
@@ -24,7 +25,7 @@ namespace GamePrototype
                 .NonLazy();
             
             //Objects from scene
-            container.RegisterFromHierarchy<SpawnPlayerMarker>(gameObject.scene)
+            container.RegisterFromHierarchy<SceneViewModel>(gameObject.scene)
                 .AsInterfacesAndSelf();
             
             //Simulation

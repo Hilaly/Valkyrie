@@ -1,4 +1,6 @@
 using System;
+using GamePrototype.Mono;
+using Hilaly.Utils;
 using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -30,17 +32,19 @@ namespace GamePrototype.GameLogic
     {
         public void PropagateEvent(IEntity entity, SpawnedEvent e)
         {
-            entity.GetOrCreateComponent<ViewComponent>().Value =
-                Object.Instantiate(Resources.Load<GameObject>(Value),
-                    entity.GetComponent<PositionComponent>().Value,
-                    Quaternion.identity);
+            var go =
+                entity.GetOrCreateComponent<ViewComponent>().Value =
+                    Object.Instantiate(Resources.Load<GameObject>(Value),
+                        entity.GetComponent<PositionComponent>().Value,
+                        Quaternion.identity);
+
+            var c = go.GetComponent<EntityHolder>() ?? go.AddComponent<EntityHolder>();
+            c.Entity = entity;
         }
     }
 
-    public class ReadKeyboardInputComponent : BaseComponent, IEventConsumer<UpdateEvent>
+    public class ReadKeyboardInputComponent : ValueComponent<Func<Vector2, Vector3>>, IEventConsumer<UpdateEvent>
     {
-        public Func<Vector2, Vector3> InputConverter;
-
         public void PropagateEvent(IEntity entity, UpdateEvent e)
         {
             var h = Input.GetAxis("Horizontal");
@@ -48,7 +52,7 @@ namespace GamePrototype.GameLogic
 
             entity.PropagateEvent(new InputChangedEvent()
             {
-                Input = InputConverter(new Vector2(h, v)),
+                Input = Value(new Vector2(h, v)),
                 DeltaTime = e.DeltaTime
             });
         }
@@ -64,6 +68,14 @@ namespace GamePrototype.GameLogic
                 Position = entity.GetOrCreateComponent<PositionComponent>().Value += e.Input * e.DeltaTime
             };
             entity.PropagateEvent(ev);
+        }
+    }
+    
+    public class CameraFollowComponent : ValueComponent<CameraController>, IEventConsumer<PositionChangedEvent>
+    {
+        public void PropagateEvent(IEntity entity, PositionChangedEvent e)
+        {
+            Value.SetTarget(e.Position, Quaternion.identity);
         }
     }
 }
