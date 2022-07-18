@@ -41,6 +41,7 @@ namespace GamePrototype
             player.AddComponent(new PrefabComponent() { Value = "TestView" });
             player.AddComponent(new MoveCapabilityComponent());
             player.AddComponent(new PlayerEnterTriggerComponent());
+            player.AddComponent(new SpawnPrefabComponent());
 
             foreach (var s in new string[] { "A", "B"})
             {
@@ -53,6 +54,7 @@ namespace GamePrototype
                 var b = gpContext.Create(s);
                 b.AddComponent(new BuildingComponent());
                 b.AddComponent(new PrefabComponent() { Value = "House" });
+                b.AddComponent(new SpawnPrefabComponent());
             }
 
             return Task.CompletedTask;

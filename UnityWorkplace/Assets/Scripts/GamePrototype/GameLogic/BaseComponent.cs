@@ -14,6 +14,7 @@ namespace GamePrototype.GameLogic
     public abstract class ValueComponent<T> : BaseComponent
     {
         public T Value;
+        public static implicit operator T(ValueComponent<T> d) => d.Value;
     }
 
     public class PositionComponent : ValueComponent<Vector3>
@@ -32,19 +33,23 @@ namespace GamePrototype.GameLogic
         }
     }
 
-    public class PrefabComponent : ValueComponent<string>, IEventConsumer<SpawnedEvent>
+    public class SpawnPrefabComponent : IEventConsumer<SpawnedEvent>
     {
         public void PropagateEvent(IEntity entity, SpawnedEvent e)
         {
             var go =
                 entity.GetOrCreateComponent<ViewComponent>().Value =
-                    Object.Instantiate(Resources.Load<GameObject>(Value),
+                    Object.Instantiate(Resources.Load<GameObject>(entity.GetComponent<PrefabComponent>()),
                         entity.GetComponent<PositionComponent>().Value,
                         entity.GetComponent<RotationComponent>()?.Value ?? Quaternion.identity);
 
             var c = go.GetComponent<EntityHolder>() ?? go.AddComponent<EntityHolder>();
             c.Entity = entity;
         }
+    }
+
+    public class PrefabComponent : ValueComponent<string>
+    {
     }
 
     public class ReadKeyboardInputComponent : ValueComponent<Func<Vector2, Vector3>>, IEventConsumer<UpdateEvent>
@@ -74,7 +79,7 @@ namespace GamePrototype.GameLogic
             entity.PropagateEvent(ev);
         }
     }
-    
+
     public class CameraFollowComponent : ValueComponent<CameraController>, IEventConsumer<PositionChangedEvent>
     {
         public void PropagateEvent(IEntity entity, PositionChangedEvent e)
@@ -85,13 +90,12 @@ namespace GamePrototype.GameLogic
 
     public class TownComponent : BaseComponent
     {
-        
     }
+
     public class BuildingComponent : BaseComponent
     {
-        
     }
-    
+
     public class PlayerEnterTriggerComponent : BaseComponent
         , IEventConsumer<TriggerEnterEvent>
         , IEventConsumer<TriggerExitEvent>
