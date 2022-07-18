@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4646761618648692758}
   - component: {fileID: 2272234093004099498}
   m_Layer: 0
-  m_Name: Town
+  m_Name: TownMarker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

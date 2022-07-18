@@ -20,6 +20,9 @@ namespace GamePrototype.ViewProto
         [SerializeField] private SpawnPlayerMarker playerStartPosition;
         [SerializeField] private List<TownMarker> towns;
 
+        [Binding] public IEnumerable<TownViewModel> Towns => _gameState.Towns;
+        [Binding] public IEnumerable<BuildingViewModel> Buildings => _gameState.Buildings;
+
         public Task PopulateSceneData()
         {
             var gpContext = _gameState.GameplayContext;
@@ -39,9 +42,8 @@ namespace GamePrototype.ViewProto
             foreach (var townMarker in towns)
             {
                 var town = gpContext.Create(townMarker.name);
-                town.AddComponent(new PositionComponent() { Value = townMarker.transform.position });
-                town.AddComponent(new PrefabComponent() { Value = "TestView" });
                 town.AddComponent(new TownComponent());
+                town.AddComponent(new PositionComponent() { Value = townMarker.transform.position });
                 
                 (townMarker.GetComponent<EntityHolder>() ?? townMarker.AddComponent<EntityHolder>()).Entity = town;
             }

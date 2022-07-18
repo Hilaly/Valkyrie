@@ -83,4 +83,8 @@ namespace GamePrototype.GameLogic
     {
         
     }
+    public class BuildingComponent : BaseComponent
+    {
+        
+    }
 }
