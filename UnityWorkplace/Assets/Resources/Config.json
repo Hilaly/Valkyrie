@@ -1,0 +1,23 @@
+{
+  "Entities": [
+    {
+      "Id": "A",
+      "Components": [
+        "Town"
+      ]
+    },
+    { 
+      "Id":  "B",
+      "components": [
+        "Town"
+      ]
+    },
+    {
+      "Id": "B.House1",
+      "components": [
+        "Building",
+        {"Prefab": "house"}
+      ]
+    }
+  ]
+}

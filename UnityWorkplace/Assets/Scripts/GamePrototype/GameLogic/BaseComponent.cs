@@ -7,14 +7,8 @@ using Object = UnityEngine.Object;
 
 namespace GamePrototype.GameLogic
 {
-    public abstract class BaseComponent
+    public abstract class BaseComponent : IComponent
     {
-    }
-
-    public abstract class ValueComponent<T> : BaseComponent
-    {
-        public T Value;
-        public static implicit operator T(ValueComponent<T> d) => d.Value;
     }
 
     public class PositionComponent : ValueComponent<Vector3>
@@ -33,7 +27,7 @@ namespace GamePrototype.GameLogic
         }
     }
 
-    public class SpawnPrefabComponent : IEventConsumer<SpawnedEvent>
+    public class SpawnPrefabComponent : BaseComponent, IEventConsumer<SpawnedEvent>
     {
         public void PropagateEvent(IEntity entity, SpawnedEvent e)
         {

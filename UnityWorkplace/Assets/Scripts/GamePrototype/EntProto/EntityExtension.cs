@@ -5,12 +5,11 @@ namespace NaiveEntity.GamePrototype.EntProto
 {
     public static class EntityExtension
     {
-        public static T GetOrCreateComponent<T>(this IEntity e) where T : new()
-            => e.GetComponent<T>() ?? e.AddComponent(new T());
+        public static T GetOrCreateComponent<T>(this IEntity e) where T : IComponent, new() => e.GetComponent<T>() ?? e.AddComponent(new T());
 
-        public static bool HasComponent<T>(this IEntity e) => e.GetComponent<T>() != null;
+        public static bool HasComponent<T>(this IEntity e) where T : IComponent => e.GetComponent<T>() != null;
 
-        public static List<IEntity> Get<T>(this EntityContext entityContext) =>
+        public static List<IEntity> Get<T>(this EntityContext entityContext) where T : IComponent =>
             entityContext.Get().Where(HasComponent<T>).ToList();
 
         public static bool WillRespondTo<T>(this IEntity e) where T : class =>

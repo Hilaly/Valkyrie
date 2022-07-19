@@ -9,7 +9,7 @@ namespace NaiveEntity.GamePrototype.EntProto
     {
         private readonly Dictionary<string, Entity> _entities = new Dictionary<string, Entity>();
 
-        public IEntity Get(string id) => _entities[id];
+        public IEntity Get(string id) => _entities.TryGetValue(id, out var r) ? r : default(IEntity);
 
         public List<IEntity> Get() => _entities.Values.OfType<IEntity>().ToList();
 

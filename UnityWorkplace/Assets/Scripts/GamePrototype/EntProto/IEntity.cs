@@ -7,8 +7,8 @@ namespace NaiveEntity.GamePrototype.EntProto
     {
         public string Id { get; }
 
-        T GetComponent<T>();
-        T AddComponent<T>(T component);
-        void RemoveComponent<T>();
+        T GetComponent<T>() where T : IComponent;
+        T AddComponent<T>(T component) where T : IComponent;
+        void RemoveComponent<T>() where T : IComponent;
     }
 }

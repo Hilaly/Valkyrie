@@ -1,7 +1,10 @@
+using System;
 using System.Threading.Tasks;
 using GamePrototype.GameLogic;
 using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
+using Valkyrie.Entities;
+using EntitiesSerializer = NaiveEntity.GamePrototype.EntProto.EntitiesSerializer;
 
 namespace GamePrototype
 {
@@ -25,6 +28,17 @@ namespace GamePrototype
         {
             Debug.LogWarning($"Loading GP");
 
+            var es = new EntitiesSerializer();
+            try
+            {
+                es.Deserialize(_gameState.GameplayContext, Resources.Load<TextAsset>("Config").text);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
+
             await SpawnAllEntities();
 
             await _sceneData.PopulateSceneData();
@@ -42,19 +56,6 @@ namespace GamePrototype
             player.AddComponent(new MoveCapabilityComponent());
             player.AddComponent(new PlayerEnterTriggerComponent());
             player.AddComponent(new SpawnPrefabComponent());
-
-            foreach (var s in new string[] { "A", "B"})
-            {
-                var town = gpContext.Create(s);
-                town.AddComponent(new TownComponent());
-            }
-
-            foreach (var s in new string[]{ "B.House1"})
-            {
-                var b = gpContext.Create(s);
-                b.AddComponent(new BuildingComponent());
-                b.AddComponent(new PrefabComponent() { Value = "House" });
-            }
 
             return Task.CompletedTask;
         }
