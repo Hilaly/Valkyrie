@@ -8,6 +8,9 @@ namespace GamePrototype
     {
         public override void Register(IContainer container)
         {
+            container.Register<EntitiesSerializer>()
+                .AsInterfacesAndSelf()
+                .SingleInstance();
             container.Register<EntityContext>("CONFIG")
                 .AsInterfacesAndSelf()
                 .SingleInstance();

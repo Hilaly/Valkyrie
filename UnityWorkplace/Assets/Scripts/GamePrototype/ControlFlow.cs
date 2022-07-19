@@ -17,21 +17,22 @@ namespace GamePrototype
     {
         private readonly ISceneDataProvider _sceneData;
         private readonly GameState _gameState;
+        private readonly EntitiesSerializer _es;
 
-        public ControlFlow(ISceneDataProvider sceneData, GameState gameState)
+        public ControlFlow(ISceneDataProvider sceneData, GameState gameState, EntitiesSerializer es)
         {
             _sceneData = sceneData;
             _gameState = gameState;
+            _es = es;
         }
 
         public async Task LoadGameplay()
         {
             Debug.LogWarning($"Loading GP");
 
-            var es = new EntitiesSerializer();
             try
             {
-                es.Deserialize(_gameState.GameplayContext, Resources.Load<TextAsset>("Config").text);
+                _es.Deserialize(_gameState.GameplayContext, Resources.Load<TextAsset>("Config").text);
             }
             catch (Exception e)
             {
@@ -43,14 +44,14 @@ namespace GamePrototype
 
             await _sceneData.PopulateSceneData();
 
-            foreach (var createdEntity in _gameState.GameplayContext.Get()) 
+            foreach (var createdEntity in _gameState.GameplayContext.Get())
                 createdEntity.PropagateEvent(new SpawnedEvent());
         }
 
         private Task SpawnAllEntities()
         {
             var gpContext = _gameState.GameplayContext;
-            
+
             var player = gpContext.Create("Player");
             player.AddComponent(new PrefabComponent() { Value = "TestView" });
             player.AddComponent(new MoveCapabilityComponent());
