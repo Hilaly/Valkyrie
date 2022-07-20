@@ -28,8 +28,10 @@ namespace NaiveEntity.GamePrototype.EntProto
         public void Deserialize(EntityContext context, string json)
         {
             var jo = JObject.Parse(json);
+            var deserializeReferences = new List<Action>();
 
-            foreach (var token in jo["Entities"])
+            var allE = jo["Entities"] ?? jo["entities"];
+            foreach (var token in allE)
             {
                 IEntity e = null;
                 if (token["Id"] != null)
@@ -42,6 +44,30 @@ namespace NaiveEntity.GamePrototype.EntProto
                     e = context.Create(Guid.NewGuid().ToString());
 
                 DeserializeComponents((Entity)e, token);
+
+                var containers = token["Containers"] ?? token["containers"];
+                if (containers != null)
+                    deserializeReferences.Add(() => DeserializeContainers((Entity)e, containers, context));
+            }
+
+            foreach (var action in deserializeReferences)
+                action();
+        }
+
+        private void DeserializeContainers(Entity entity, JToken token, EntityContext context)
+        {
+            foreach (var child in token.Children<JProperty>())
+            {
+                var containerName = child.Name;
+                var entityIds = child.Value.Values<string>();
+                foreach (var entityId in entityIds)
+                {
+                    var innerEntity = context.Get(entityId);
+                    if (innerEntity != null)
+                        entity.AddToContainer(containerName, innerEntity);
+                    else
+                        Debug.LogWarning($"Couldn't find entity {entityId}");
+                }
             }
         }
 

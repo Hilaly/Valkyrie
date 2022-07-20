@@ -10,7 +10,13 @@
       "Id":  "B",
       "components": [
         "Town"
-      ]
+      ],
+      "Containers": {
+        "Buildings": [
+          "B.House1",
+          "B.House2"
+        ]
+      }
     },
     {
       "Id": "B.House1",
