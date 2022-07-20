@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Meta;
 
 namespace NaiveEntity.GamePrototype.EntProto
@@ -10,5 +11,9 @@ namespace NaiveEntity.GamePrototype.EntProto
         T GetComponent<T>() where T : IComponent;
         T AddComponent<T>(T component) where T : IComponent;
         void RemoveComponent<T>() where T : IComponent;
+
+        IEnumerable<IEntity> GetContainer(string name);
+        void AddToContainer(string name, IEntity e);
+        void RemoveFromContainer(string name, IEntity e);
     }
 }

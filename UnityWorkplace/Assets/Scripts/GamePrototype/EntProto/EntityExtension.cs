@@ -5,7 +5,8 @@ namespace NaiveEntity.GamePrototype.EntProto
 {
     public static class EntityExtension
     {
-        public static T GetOrCreateComponent<T>(this IEntity e) where T : IComponent, new() => e.GetComponent<T>() ?? e.AddComponent(new T());
+        public static T GetOrCreateComponent<T>(this IEntity e) where T : IComponent, new() =>
+            e.GetComponent<T>() ?? e.AddComponent(new T());
 
         public static bool HasComponent<T>(this IEntity e) where T : IComponent => e.GetComponent<T>() != null;
 
@@ -21,5 +22,7 @@ namespace NaiveEntity.GamePrototype.EntProto
                 if (((Entity)e).Components[i] is IEventConsumer<T> consumer)
                     consumer.PropagateEvent(e, ev);
         }
+
+        public static bool HasContainer(this IEntity e, string name) => e.GetContainer(name) != null;
     }
 }
