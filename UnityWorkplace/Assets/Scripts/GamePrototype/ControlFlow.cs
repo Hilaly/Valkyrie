@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using GamePrototype.GameLogic;
 using NaiveEntity.GamePrototype.EntProto;
 using UnityEngine;
-using Valkyrie.Entities;
 using EntitiesSerializer = NaiveEntity.GamePrototype.EntProto.EntitiesSerializer;
 
 namespace GamePrototype
