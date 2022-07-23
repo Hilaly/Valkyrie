@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 using Valkyrie.DSL.Actions;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
@@ -16,6 +17,9 @@ namespace Valkyrie.DSL.Dictionary
         public void Load(string text)
         {
             var ast = AstProvider.DictionaryConstructor.Parse(text.ToStream());
+
+            Debug.LogWarning(ast);
+            
             Parse(ast);
         }
 

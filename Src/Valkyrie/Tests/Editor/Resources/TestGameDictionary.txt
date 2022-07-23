@@ -5,3 +5,12 @@ componentName <is component> =>
 componentName <is> typed <property> =>
     create class componentName + Component,
     add base "ValueComponent<" + typed + ">" to componentName + Component.
+    
+<There are> entityType =>
+    create class entityType, add base "IComponent" to entityType.
+    
+<When> entity eventName =>
+    add base "IEventConsumer<"+eventName+">" to entity.
+    
+type <has> property =>
+    skip.
