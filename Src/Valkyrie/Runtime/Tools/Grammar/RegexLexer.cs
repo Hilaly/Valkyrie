@@ -40,10 +40,13 @@ namespace Valkyrie.Grammar
                         continue;
                     if(matchResult.Index > index)
                         continue;
+                    if(matchResult.Length == 0)
+                        continue;
+                    
                     index += matchResult.Length;
                     
                     //Skip escape and comments
-                    if (matcher.Key != _escape && matcher.Value != "comment")
+                    if (matcher.Key != _escape && matcher.Value != "comment" && matcher.Value != "escape")
                         result.Add(new Lexem {Name = matcher.Value ?? matchResult.Value, Value = matchResult.Value});
                     
                     founded = true;

@@ -1,3 +1,6 @@
-Tower is flag. Step and Fulgur is flag.
-Tower, Step is Fulgur.
+Tower is flag.
+Step is flag.
+Fulgur is flag.
+Tower is Fulgur.
+Step is Fulgur.
 ASd is Tower.

@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
 using Valkyrie.Grammar;
@@ -13,6 +13,7 @@ namespace Valkyrie.DSL
         private readonly DslDictionary _dslDictionary;
 
         public IDslDictionary Dictionary => _dslDictionary;
+        public IAstConstructor ProgramParser => AstProvider.ProgramConstructor;
 
         public DslCompiler()
         {
@@ -21,7 +22,7 @@ namespace Valkyrie.DSL
 
         public void Build(string source, CompilerContext compilerContext)
         {
-            var ast = AstProvider.ProgramConstructor.Parse(source.ToStream());
+            var ast = ProgramParser.Parse(source.ToStream());
 
             var sentences = new List<string>();
 
@@ -31,9 +32,13 @@ namespace Valkyrie.DSL
             foreach (var sentence in sentences)
             {
                 var ctx = new LocalContext();
-                if (!TryMatchSentence(sentence, Dictionary, ctx))
-                    throw new Exception($"{sentence} doesn't present in dictionary");
-                contexts.Add(ctx);
+                if (TryMatchSentence(sentence, Dictionary, ctx))
+                    contexts.Add(ctx);
+                else
+                {
+                    compilerContext.UnparsedSentences.Add(sentence);
+                    Debug.LogWarning($"{sentence} doesn't present in dictionary");
+                }
             }
 
             foreach (var localContext in contexts) 
@@ -56,7 +61,7 @@ namespace Valkyrie.DSL
             switch (name)
             {
                 case "<root>":
-                case "<sentence_list>":
+                case "<generated-list-<sentence>>":
                     foreach (var astNode in children)
                         Parse(astNode, sentences);
                     break;
@@ -94,6 +99,12 @@ namespace Valkyrie.DSL
             var idNodes = ast.UnpackNodes(x => x.Name == "<id>");
             switch (ast.Name)
             {
+                case "<id>":
+                {
+                    var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";
+                    foreach (var p in EnumerateStrings(str)) yield return p;
+                    yield break;
+                }
                 case "<control>":
                 {
                     var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";

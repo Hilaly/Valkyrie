@@ -8,7 +8,8 @@
         "UnityEditor.TestRunner",
         "Valkyrie",
         "Valkyrie.Editor",
-        "Valkyrie.DSL"
+        "Valkyrie.DSL",
+        "Valkyrie.Grammar"
     ],
     "includePlatforms": [
         "Editor"

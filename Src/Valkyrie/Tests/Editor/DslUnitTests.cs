@@ -1,8 +1,10 @@
+using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using Valkyrie.DSL;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
+using Valkyrie.Tools;
 
 namespace Valkyrie.Language
 {
@@ -63,6 +65,7 @@ namespace Valkyrie.Language
             };
             ctx.Usings.Add("System.Collections");
             compiler.Build(source, ctx);
+            Assert.AreEqual(0, ctx.UnparsedSentences.Count);
             Debug.LogWarning(ctx);
         }
         
@@ -70,15 +73,30 @@ namespace Valkyrie.Language
         public void TestGameProgram()
         {
             var compiler = new DslCompiler();
-            compiler.Dictionary.Load(Resources.Load<TextAsset>("TestGameDictionary").text);
-            var source = Resources.Load<TextAsset>("TestGameProgram").text;
+            compiler.Dictionary.Load(Resources.Load<TextAsset>("DslDictionary").text);
+            var source = File.ReadAllText("Assets/GDD.md");
             var ctx = new CompilerContext()
             {
                 Namespace = "Test"
             };
             ctx.Usings.Add("System.Collections");
             compiler.Build(source, ctx);
+            Assert.AreEqual(0, ctx.UnparsedSentences.Count);
             Debug.LogWarning(ctx);
+        }
+
+        [Test]
+        public void TestMdParsing()
+        {
+            var compiler = new DslCompiler();
+            var astConstructor = compiler.ProgramParser;
+            Assert.IsNotNull(astConstructor);
+            
+            using var filestream = File.OpenRead("Assets/GDD.md");
+            var ast = astConstructor.Parse(filestream);
+            Assert.IsNotNull(ast);
+
+            Debug.LogWarning(ast);
         }
     }
 }

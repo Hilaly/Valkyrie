@@ -1,7 +1,31 @@
 #lexer
 
+<!--(?<value>(\n|.)+?)--> -> comment
+--- -> escape
+\*\*\* -> escape
+
 '(?<value>[^']*)' -> STRING
 "(?<value>[^"]*)" -> STRING
+
+\`\`\`([c|C]#)?(?<value>(\n|.)*?)\`\`\` -> CODE_BLOCK
+\`(?<value>.+?)\` -> CODE_BLOCK
+
+` -> BACKTICK
+
+(-) -> SIGN_MINUS
+(\*) -> SIGN_MUL
+
+\[\^\w+\] -> escape
+
+\[ -> SQ_BRACKET_OPEN
+\] -> SQ_BRACKET_CLOSE
+
+\\ -> BACK_SLASH
+\/ -> SLASH
+\: -> COLON
+\( -> BRACKET_OPEN
+\) -> BRACKET_CLOSE
+' -> SINGLE_QUOTE
 
 (true|false) -> BOOL
 
@@ -12,19 +36,37 @@
 (<) -> TAG_OPEN
 (>) -> TAG_CLOSE
 
+(\!) -> SENTENCE_OP
 (\.) -> SENTENCE_OP
 (,) -> COMMA
 
-[ \n\r\t]+ -> escape
+`` -> escape
+__ -> escape
+\*\* -> escape
+_ -> escape
+[ \#\n\r\t]+ -> escape
 
 #parser
 
-<root> -> <sentence_list>
-<sentence_list> -> <sentence> <sentence_list> | <sentence>
-<sentence> -> <word_list> SENTENCE_OP
+<root> -> <sentence>+
+
+<sentence> -> <sentence_text> COLON <sentence_list> SENTENCE_OP
+<sentence> -> <sentence_text> SENTENCE_OP
+<sentence> -> <any>* SENTENCE_OP
+
+
+<sentence_list> -> <sentence_list_with_comma> | <sentence_list_with_lines>
+<sentence_list_with_comma> -> <sentence_text> COMMA <sentence_list_with_comma> | <sentence_text>
+<sentence_list_with_lines> -> <sentence_line>+
+<sentence_line> -> <list_start> [<check_box>] <sentence_text>
+<check_box> -> SQ_BRACKET_OPEN ["x"] SQ_BRACKET_CLOSE
+
+<sentence_text> -> <word_list>
 <word_list> -> <word> <word_list> | <word>
-<word> -> <id_list> | <control>
-<control> -> TAG_OPEN <id>+ TAG_CLOSE
-<id_list> -> <id> <args_list_delimiter> <id_list> | <id>
+
+<word> -> <id>
 <id> -> IDENTIFIER
-<args_list_delimiter> -> "and" | "AND" | COMMA
+
+<list_start> -> SIGN_MINUS | SIGN_MUL
+
+<any> -> STRING | CODE_BLOCK | CODE_BLOCK | BACKTICK | SIGN_MINUS | SIGN_MUL | SQ_BRACKET_OPEN | SQ_BRACKET_CLOSE | BACK_SLASH | SLASH | COLON | BRACKET_OPEN | BRACKET_CLOSE | SINGLE_QUOTE | BOOL | NUMBER | IDENTIFIER | TAG_OPEN | TAG_CLOSE | COMMA

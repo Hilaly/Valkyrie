@@ -1,23 +1,23 @@
-# Snake The Game
+# Snake The Game :.
 
-## Entities
+## Entities:
 - Wall
 - Food
 - Snake
 - Head
 - Tail
 - Body
-    - Tail
-    - Body.
+    * Tail
+    * Body.
 
-We have very little time
+We have very little time:
 And if we use direct lines, then we have one paragraph.
 
 ***
 ---
 
-    This is code
-This is [an example] [id] reference-style link.
+
+<!--This is [an example] [id] reference-style link.
 
 This is [an example](http://example.com/ "Title") inline link.
 
@@ -37,11 +37,9 @@ _single underscores_
 
 __double underscores__
 
-A First Level Header
-====================
+# A First Level Header
 
-A Second Level Header
----------------------
+## A Second Level Header
 
 Now is the time for all good men to come to
 the aid of their country. This is just a
@@ -67,9 +65,6 @@ dog's back.
 - [x] https://github.com/octo-org/octo-repo/issues/740
 - [ ] Add delight to the experience when all tasks are complete :tada:
 
-<!-- This content will not appear in the rendered Markdown -->
-
-
 <details><summary>CLICK ME</summary>
 <p>
 
@@ -94,3 +89,4 @@ This allows you to have a footnote with multiple lines.
 [^note]:
 Named footnotes will still render with numbers instead of the text but allow easier identification and linking.  
 This footnote also has been made with a different syntax using 4 spaces for new lines.
+-->

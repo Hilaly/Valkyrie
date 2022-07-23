@@ -182,7 +182,7 @@ namespace Valkyrie.Grammar
 
         private static void ReadLexerLine(string line, GrammarDefinition result, int lineNumber)
         {
-            var hasName = line.IndexOf("->", StringComparison.InvariantCultureIgnoreCase);
+            var hasName = line.LastIndexOf("->", StringComparison.InvariantCultureIgnoreCase);
             if (hasName < 0)
                 result.Lexem.Add(new KeyValuePair<Regex, string>(new Regex(line.Trim()), null));
             else

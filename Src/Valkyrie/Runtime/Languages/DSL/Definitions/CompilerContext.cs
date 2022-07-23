@@ -11,6 +11,7 @@ namespace Valkyrie.DSL.Definitions
         public readonly List<string> Usings = new();
 
         public readonly List<GeneratedTypeDefinition> Types = new();
+        public readonly List<string> UnparsedSentences = new ();
 
         public GeneratedTypeDefinition GetOrCreateType(string name)
         {
