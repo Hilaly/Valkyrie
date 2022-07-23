@@ -29,7 +29,7 @@
 <rule_syntax> -> <rule_arg> <rule_syntax> | <rule_arg>
 <rule_arg> -> <rule_var> | <rule_op>
 <rule_var> -> <id>
-<rule_op> -> TAG_OPEN <id>+ TAG_CLOSE
+<rule_op> -> STRING
 <id> -> IDENTIFIER
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>

@@ -10,8 +10,6 @@ namespace Valkyrie.DSL
 {
     public class DslCompiler
     {
-        public static bool RequireControlMarkers = true;
-        
         private readonly DslDictionary _dslDictionary;
 
         public IDslDictionary Dictionary => _dslDictionary;
@@ -98,9 +96,7 @@ namespace Valkyrie.DSL
             {
                 case "<control>":
                 {
-                    var str = RequireControlMarkers 
-                        ? $"<{idNodes.Select(x => x.GetString()).Join(" ")}>"
-                        :  $"{idNodes.Select(x => x.GetString()).Join(" ")}";
+                    var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";
                     foreach (var p in EnumerateStrings(str)) yield return p;
                     yield break;
                 }

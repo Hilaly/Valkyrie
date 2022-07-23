@@ -18,8 +18,6 @@ namespace Valkyrie.DSL.Dictionary
         {
             var ast = AstProvider.DictionaryConstructor.Parse(text.ToStream());
 
-            Debug.LogWarning(ast);
-            
             Parse(ast);
         }
 
@@ -184,9 +182,8 @@ namespace Valkyrie.DSL.Dictionary
                 case "<rule_var>":
                     return node.GetString();
                 case "<rule_op>":
-                    return DslCompiler.RequireControlMarkers
-                        ? $"<{node.UnpackNodes(x => x.Name == "<id>").Select(x => x.GetString()).Join(" ")}>"
-                        : $"{node.UnpackNodes(x => x.Name == "<id>").Select(x => x.GetString()).Join(" ")}";
+                    return node.GetString().Trim('"');
+                    return $"{node.UnpackNodes(x => x.Name == "<id>").Select(x => x.GetString()).Join(" ")}";
                 default:
                     throw new GrammarCompileException(node, "Unimplemented ToString method");
             }

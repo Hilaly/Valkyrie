@@ -26,8 +26,6 @@ namespace Valkyrie.Language
         [Test]
         public void TestEntriesParse()
         {
-            DslCompiler.RequireControlMarkers = true;
-            
             var dictionary = LoadTestDictionary();
 
             var localContext = new LocalContext();
@@ -35,12 +33,12 @@ namespace Valkyrie.Language
             Assert.AreEqual(false, TryParseText("", dictionary, localContext));
             Assert.AreEqual(0, localContext.Args.Count);
 
-            Assert.AreEqual(true, TryParseText("ASD <is flag>", dictionary, localContext));
+            Assert.AreEqual(true, TryParseText("ASD is flag", dictionary, localContext));
             Assert.AreEqual("ASD", localContext.Args["name"]);
-            Assert.AreEqual(true, TryParseText("GDB <is flag>", dictionary, localContext));
+            Assert.AreEqual(true, TryParseText("GDB is flag", dictionary, localContext));
             Assert.AreEqual("GDB", localContext.Args["name"]);
             
-            Assert.AreEqual(true, TryParseText("GDB <is> ADB", dictionary, localContext));
+            Assert.AreEqual(true, TryParseText("GDB is ADB", dictionary, localContext));
             Assert.AreEqual("GDB", localContext.Args["name"]);
             Assert.AreEqual("ADB", localContext.Args["component"]);
         }
@@ -56,7 +54,6 @@ namespace Valkyrie.Language
         [Test]
         public void TestParseProgram()
         {
-            DslCompiler.RequireControlMarkers = false;
             var compiler = new DslCompiler();
             compiler.Dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
             var source = Resources.Load<TextAsset>("TestDslProgram").text;
@@ -72,7 +69,6 @@ namespace Valkyrie.Language
         [Test]
         public void TestGameProgram()
         {
-            DslCompiler.RequireControlMarkers = false;
             var compiler = new DslCompiler();
             compiler.Dictionary.Load(Resources.Load<TextAsset>("TestGameDictionary").text);
             var source = Resources.Load<TextAsset>("TestGameProgram").text;
