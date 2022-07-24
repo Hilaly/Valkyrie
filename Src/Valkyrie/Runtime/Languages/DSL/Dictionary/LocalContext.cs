@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Valkyrie.DSL.Actions;
@@ -9,7 +10,7 @@ namespace Valkyrie.DSL.Dictionary
     {
         private Dictionary<string, string> _args = new();
         private LocalContext _parent;
-        private Dictionary<string, LocalContext> _children = new();
+        private Dictionary<string, List<LocalContext>> _children = new();
 
         internal List<IDslAction> Actions;
 
@@ -44,16 +45,22 @@ namespace Valkyrie.DSL.Dictionary
 
         public void AddChild(string treeName, LocalContext localContext)
         {
-            _children[treeName] = localContext;
+            if (!_children.TryGetValue(treeName, out var list))
+                _children.Add(treeName, list = new List<LocalContext>());
+            list.Add(localContext);
         }
 
         public void ReplaceFrom(LocalContext o)
         {
-            this._args = o._args;
-            this._parent = o._parent;
-            this._children = o._children;
-            this.Actions = o.Actions;
-            foreach (var child in _children.Values) child._parent = this;
+            _args = o._args;
+            _parent = o._parent;
+            _children = o._children;
+            Actions = o.Actions;
+            foreach (var child in _children.SelectMany(x => x.Value))
+                child._parent = this;
         }
+
+        public IEnumerable<LocalContext> GetChildren(string treeName) => 
+            _children.TryGetValue(treeName, out var list) ? list : Enumerable.Empty<LocalContext>();
     }
 }

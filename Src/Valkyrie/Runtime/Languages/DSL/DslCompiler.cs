@@ -23,6 +23,8 @@ namespace Valkyrie.DSL
 
         public void Build(string source, CompilerContext compilerContext)
         {
+            compilerContext.Compiler = this;
+            
             var ast = ProgramParser.Parse(source.ToStream());
 
             var sentences = new List<List<IAstNode>>();
@@ -44,7 +46,7 @@ namespace Valkyrie.DSL
             }
 
             foreach (var localContext in contexts)
-                Apply(localContext, compilerContext);
+                Execute(localContext, compilerContext);
         }
 
         private void Parse(IAstNode ast, List<List<IAstNode>> sentences)
@@ -78,10 +80,12 @@ namespace Valkyrie.DSL
             return nodes.Select(node => node.ConvertTreeToString(sep)).Join(sep);
         }
 
-        private void Apply(LocalContext localContext, CompilerContext compilerContext)
+        internal void Execute(LocalContext localContext, CompilerContext compilerContext)
         {
+            compilerContext.Compiler = this;
+
             foreach (var command in localContext.Actions)
-                command.Execute(localContext.GetArgs(), compilerContext);
+                command.Execute(localContext, compilerContext);
         }
 
 

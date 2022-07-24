@@ -99,7 +99,7 @@ namespace Valkyrie.DSL.Dictionary
                         Name = CreateStringProvider(children[2], syntax)
                     };
                 case "<add_base_type_action>":
-                    return new AddbaseTypeAction()
+                    return new AddBaseTypeAction()
                     {
                         Type = CreateStringProvider(children[4], syntax),
                         BaseType = CreateStringProvider(children[2], syntax)
@@ -108,6 +108,11 @@ namespace Valkyrie.DSL.Dictionary
                     return new LogAction()
                     {
                         Text = CreateStringProvider(children[1], syntax)
+                    };
+                case "<call_action>":
+                    return new CallAction()
+                    {
+                        ChildName = CreateStringProvider(children[1], syntax)
                     };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");

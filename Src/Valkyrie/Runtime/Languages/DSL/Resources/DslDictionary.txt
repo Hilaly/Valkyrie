@@ -1,3 +1,7 @@
 <root>:
     => $name
     => log name.
+
+<entities_creation>:
+    => "Entities :" <entities_list>
+    => log "entities parsed", call <entities_list>.

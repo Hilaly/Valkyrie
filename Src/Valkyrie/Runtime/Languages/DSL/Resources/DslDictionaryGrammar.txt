@@ -51,10 +51,11 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> <add_base_type_action> | <create_type_action> | <skip_action> | <log_action>
+<rule_action> -> <add_base_type_action> | <create_type_action> | <skip_action> | <log_action> | <call_action>
 
-<log_action> -> "log" <final_str_literal>
+<call_action> -> "call" <final_str_literal> 
 <skip_action> -> "skip"
+<log_action> -> "log" <final_str_literal>
 <create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
 
 <add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>

@@ -1,14 +1,14 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Valkyrie.DSL.Definitions;
+using Valkyrie.DSL.Dictionary;
 
 namespace Valkyrie.DSL.Actions
 {
     class LogAction : IDslAction
     {
-        public void Execute(Dictionary<string, string> args, CompilerContext context)
+        public void Execute(LocalContext lc, CompilerContext context)
         {
-            Debug.Log(Text.GetString(args));
+            Debug.Log(Text.GetString(lc.GetArgs()));
         }
 
         public IStringProvider Text { get; set; }

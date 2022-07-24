@@ -12,6 +12,7 @@ namespace Valkyrie.DSL.Definitions
 
         public readonly List<GeneratedTypeDefinition> Types = new();
         public readonly List<string> UnparsedSentences = new ();
+        internal DslCompiler Compiler;
 
         public GeneratedTypeDefinition GetOrCreateType(string name)
         {
