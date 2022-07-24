@@ -92,3 +92,20 @@ This allows you to have a footnote with multiple lines.
 Named footnotes will still render with numbers instead of the text but allow easier identification and linking.  
 This footnote also has been made with a different syntax using 4 spaces for new lines.
 -->
+
+###### This is comment is language dictionary and we can see it in markdown.
+
+```
+<root>:
+  => $name
+  => log name.
+```
+
+<!-- And this is HTML like comment, but we cant see it in markdown -->
+```
+<entities_creation>:
+  => "Entities :" <entities_list>
+  => log "entities parsed", call <entities_list>.
+```
+
+.

@@ -1,5 +1,8 @@
 #lexer
 
+(#(?<value>(\n|.)+?)\.) -> comment
+<!--(?<value>(\n|.)+?)--> -> comment
+
 '(?<value>[^']*)' -> STRING
 "(?<value>[^"]*)" -> STRING
 (true|false) -> BOOL

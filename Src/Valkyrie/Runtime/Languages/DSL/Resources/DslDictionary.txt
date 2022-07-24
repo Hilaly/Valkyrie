@@ -1,7 +1,10 @@
+###### This is simple example of some expression.
+
 <root>:
     => $name
     => log name.
 
+<!-- And this is HTML like comment -->
 <entities_creation>:
     => "Entities :" <entities_list>
     => log "entities parsed", call <entities_list>.
