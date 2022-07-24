@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
@@ -24,7 +25,7 @@ namespace Valkyrie.DSL
         {
             var ast = ProgramParser.Parse(source.ToStream());
 
-            var sentences = new List<string>();
+            var sentences = new List<List<IAstNode>>();
 
             Parse(ast, sentences);
 
@@ -36,13 +37,39 @@ namespace Valkyrie.DSL
                     contexts.Add(ctx);
                 else
                 {
-                    compilerContext.UnparsedSentences.Add(sentence);
-                    Debug.LogWarning($"{sentence} doesn't present in dictionary");
+                    var text = ConvertToString(sentence);
+                    compilerContext.UnparsedSentences.Add(text);
+                    Debug.LogWarning($"{text} doesn't present in dictionary");
                 }
             }
 
             foreach (var localContext in contexts) 
                 Apply(localContext, compilerContext);
+        }
+
+        private void Parse(IAstNode ast, List<List<IAstNode>> sentences)
+        {
+            var name = ast.Name;
+            var children = ast.UnpackGeneratedLists();
+            switch (name)
+            {
+                case "<root>":
+                    foreach (var astNode in children) 
+                        Parse(astNode, sentences);
+                    return;
+                case "<sentence>":
+                {
+                    sentences.Add(
+                        children
+                            .Where(x => x.Name == "<any>")
+                            .Select(x => x.GetChildren()[0])
+                            .ToList()
+                    );
+                    return;
+                }
+                default:
+                    throw new GrammarCompileException(ast, $"Unknown node {name}");
+            }
         }
 
         bool TryMatchSentence(string text, IDslDictionary dictionary, LocalContext localContext)
@@ -54,78 +81,24 @@ namespace Valkyrie.DSL
         }
 
 
-        private void Parse(IAstNode ast, List<string> sentences)
+        string ConvertToString(List<IAstNode> nodes)
         {
-            var name = ast.Name;
-            var children = ast.GetChildren();
-            switch (name)
-            {
-                case "<root>":
-                case "<generated-list-<sentence>>":
-                    foreach (var astNode in children)
-                        Parse(astNode, sentences);
-                    break;
-                case "<sentence>":
-                {
-                    var nodes = ast.UnpackNodes(x => x.Name == "<word>");
-                    sentences.AddRange(ConvertToString(nodes));
-                    break;
-                }
-                default:
-                    throw new GrammarCompileException(ast, $"Unknown node {name}");
-            }
-        }
-
-        IEnumerable<string> ConvertToString(List<IAstNode> nodes)
-        {
-            IEnumerable<string> EnumerateStrings(string str)
-            {
-                foreach (var tail in ConvertToString(nodes.GetRange(1, nodes.Count - 1)))
-                {
-                    if (tail.NotNullOrEmpty())
-                        yield return $"{str} {tail}";
-                    else
-                        yield return str;
-                }
-            }
-
-            if (nodes.Count == 0)
-            {
-                yield return string.Empty;
-                yield break;
-            }
-
-            var ast = nodes[0].GetChildren()[0];
-            var idNodes = ast.UnpackNodes(x => x.Name == "<id>");
-            switch (ast.Name)
-            {
-                case "<id>":
-                {
-                    var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";
-                    foreach (var p in EnumerateStrings(str)) yield return p;
-                    yield break;
-                }
-                case "<control>":
-                {
-                    var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";
-                    foreach (var p in EnumerateStrings(str)) yield return p;
-                    yield break;
-                }
-                case "<id_list>":
-                {
-                    foreach (var p in idNodes.SelectMany(astNode => EnumerateStrings(astNode.GetString())))
-                        yield return p;
-                    yield break;
-                }
-                default:
-                    throw new GrammarCompileException(ast, "Unsupported word type");
-            }
+            var sep = " ";
+            return nodes.Select(node => node.ConvertTreeToString(sep)).Join(sep);
         }
         
         private void Apply(LocalContext localContext, CompilerContext compilerContext)
         {
             foreach(var command in localContext.Actions)
                 command.Execute(localContext.Args, compilerContext);
+        }
+        
+        
+        
+        
+        private bool TryMatchSentence(List<IAstNode> sentence, IDslDictionary dictionary, LocalContext localContext)
+        {
+            return false;
         }
     }
 }
