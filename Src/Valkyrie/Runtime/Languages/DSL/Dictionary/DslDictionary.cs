@@ -27,7 +27,7 @@ namespace Valkyrie.DSL.Dictionary
     {
         private readonly List<DslDictionaryNode> _nodes = new();
 
-        private DslDictionaryNode Get(string name, bool create = false)
+        internal DslDictionaryNode Get(string name, bool create = false)
         {
             var r = _nodes.Find(x => x.Name == name);
             if (create && r == null)

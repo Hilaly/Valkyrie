@@ -45,6 +45,15 @@ namespace Valkyrie.Language
             Assert.AreEqual(true, TryParseText("GDB is ADB", dictionary, localContext));
             Assert.AreEqual("GDB", localContext.Args["name"]);
             Assert.AreEqual("ADB", localContext.Args["component"]);
+            
+            Assert.AreEqual(true, TryParseText("first second is struct", dictionary, localContext));
+            Assert.AreEqual("second", localContext.Args["name"]);
+            Assert.AreEqual("first", localContext.Args["treeName"]);
+
+            Assert.AreEqual(true,
+                TryParseText("ASD is flag , c is component : gg is struct", dictionary, localContext));
+            Assert.AreEqual(false,
+                TryParseText("ASD is flag , c is component : gg is struct asddd", dictionary, localContext));
         }
 
         bool TryParseText(string text, IDslDictionary dictionary, LocalContext localContext)

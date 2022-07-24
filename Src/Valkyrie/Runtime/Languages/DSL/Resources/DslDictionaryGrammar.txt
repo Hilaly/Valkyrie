@@ -15,6 +15,9 @@
 (<) -> TAG_OPEN
 (>) -> TAG_CLOSE
 
+\{ -> CURLY_BRACE_OPEN
+\} -> CURLY_BRACE_CLOSE
+
 [ \n\r\t]+ -> escape
 
 (\.) -> SENTENCE_OP
@@ -34,7 +37,15 @@
 <rule_bnf_entry> -> <rule_var> | <rule_op> | <rule_bnf_match>
 <rule_var> -> VAR_ID <id>
 <rule_op> -> STRING
+<rule_bnf_match> -> <id> \{ <min_count> "," <max_count> \}
+<rule_bnf_match> -> <id> \{ <min_count> "," \}
+<rule_bnf_match> -> <id> \{ "," <max_count> \}
+<rule_bnf_match> -> <id> \{ <exact_count> \}
 <rule_bnf_match> -> <id>
+
+<min_count> -> NUMBER
+<max_count> -> NUMBER
+<exact_count> -> NUMBER
 
 <id> -> IDENTIFIER
 

@@ -427,5 +427,10 @@ namespace Valkyrie.Grammar
 
             return result;
         }
+
+        public static IAstNode CreateTerminalNode(string text)
+        {
+            return new TerminalNode(new Lexem() { Name = text, Value = text });
+        }
     }
 }

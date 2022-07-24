@@ -43,7 +43,7 @@ namespace Valkyrie.DSL
                 }
             }
 
-            foreach (var localContext in contexts) 
+            foreach (var localContext in contexts)
                 Apply(localContext, compilerContext);
         }
 
@@ -54,7 +54,7 @@ namespace Valkyrie.DSL
             switch (name)
             {
                 case "<root>":
-                    foreach (var astNode in children) 
+                    foreach (var astNode in children)
                         Parse(astNode, sentences);
                     return;
                 case "<sentence>":
@@ -72,30 +72,19 @@ namespace Valkyrie.DSL
             }
         }
 
-        bool TryMatchSentence(string text, IDslDictionary dictionary, LocalContext localContext)
-        {
-            foreach (var entry in dictionary.GetEntries)
-                if (entry.TryMatch(text, localContext))
-                    return true;
-            return false;
-        }
-
-
         string ConvertToString(List<IAstNode> nodes)
         {
             var sep = " ";
             return nodes.Select(node => node.ConvertTreeToString(sep)).Join(sep);
         }
-        
+
         private void Apply(LocalContext localContext, CompilerContext compilerContext)
         {
-            foreach(var command in localContext.Actions)
+            foreach (var command in localContext.Actions)
                 command.Execute(localContext.Args, compilerContext);
         }
-        
-        
-        
-        
+
+
         private bool TryMatchSentence(List<IAstNode> sentence, IDslDictionary dictionary, LocalContext localContext)
         {
             return false;
