@@ -51,8 +51,9 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> <add_base_type_action> | <create_type_action> | <skip_action>
+<rule_action> -> <add_base_type_action> | <create_type_action> | <skip_action> | <log_action>
 
+<log_action> -> "log" <final_str_literal>
 <skip_action> -> "skip"
 <create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
 

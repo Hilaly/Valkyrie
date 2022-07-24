@@ -104,6 +104,11 @@ namespace Valkyrie.DSL.Dictionary
                         Type = CreateStringProvider(children[4], syntax),
                         BaseType = CreateStringProvider(children[2], syntax)
                     };
+                case "<log_action>":
+                    return new LogAction()
+                    {
+                        Text = CreateStringProvider(children[1], syntax)
+                    };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");
             }
