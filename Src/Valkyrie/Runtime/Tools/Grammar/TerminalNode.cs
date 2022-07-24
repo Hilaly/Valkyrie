@@ -12,7 +12,7 @@ namespace Valkyrie.Grammar
             yield return this;
         }
 
-        public List<IAstNode> GetChildren() => new List<IAstNode>();
+        public List<IAstNode> GetChildren(bool unpackGenerated) => new List<IAstNode>();
 
         public TerminalNode(Lexem lexem)
         {

@@ -5,9 +5,12 @@
 (true|false) -> BOOL
 (null|NULL|NIL) -> NULL
 ([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
-[A-Za-z][A-Za-z0-9_]* -> IDENTIFIER
+(\w|<|>)* -> IDENTIFIER
+
+\$ -> VAR_ID
 
 (=>) -> RULE_OP
+(:) -> COLON
 
 (<) -> TAG_OPEN
 (>) -> TAG_CLOSE
@@ -21,15 +24,18 @@
 
 #parser
 
-<root> -> <rules>
+<root> -> <rule>+
 
-<rules> -> <rule> <rules> | <rule>
-<rule> -> <rule_syntax> RULE_OP <rule_actions> SENTENCE_OP
+<rule> -> <rule_name> COLON RULE_OP <rule_bnf> RULE_OP <rule_actions> SENTENCE_OP | <rule_name> COLON RULE_OP <rule_bnf> SENTENCE_OP
 
-<rule_syntax> -> <rule_arg> <rule_syntax> | <rule_arg>
-<rule_arg> -> <rule_var> | <rule_op>
-<rule_var> -> <id>
+<rule_name> -> <id>
+
+<rule_bnf> -> <rule_bnf_entry>+
+<rule_bnf_entry> -> <rule_var> | <rule_op> | <rule_bnf_match>
+<rule_var> -> VAR_ID <id>
 <rule_op> -> STRING
+<rule_bnf_match> -> <id>
+
 <id> -> IDENTIFIER
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>

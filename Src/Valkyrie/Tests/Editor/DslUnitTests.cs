@@ -14,6 +14,8 @@ namespace Valkyrie.Language
         {
             var dictionary = new DslCompiler().Dictionary;
             dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
+
+            Debug.LogWarning(dictionary);
             return dictionary;
         }
 

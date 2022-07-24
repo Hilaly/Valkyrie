@@ -7,6 +7,6 @@ namespace Valkyrie.Grammar
         string Name { get; }
 
         IEnumerator<IAstNode> EnumerateTerminalNodes();
-        List<IAstNode> GetChildren();
+        List<IAstNode> GetChildren(bool unpackGenerated = true);
     }
 }

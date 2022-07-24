@@ -308,13 +308,13 @@ namespace Valkyrie.Grammar
             return bool.Parse(node.GetString());
         }
 
-        static Regex GeneratedUnpackRegex = new Regex("<generated-(zerocount)?list-(?<name><\\w*>)>");
+        static readonly Regex GeneratedUnpackRegex = new Regex("<generated-(zerocount)?list-(?<name><\\w*>)>");
         
         public static List<IAstNode> UnpackGeneratedLists(this IAstNode node)
         {
             var regex = GeneratedUnpackRegex;
             var result = new List<IAstNode>();
-            var children = node.GetChildren();
+            var children = node.GetChildren(false);
             foreach (var t in children)
             {
                 var m = regex.Match(t.Name);
