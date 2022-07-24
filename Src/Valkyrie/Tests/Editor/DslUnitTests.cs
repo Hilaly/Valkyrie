@@ -4,7 +4,6 @@ using UnityEngine;
 using Valkyrie.DSL;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
-using Valkyrie.Tools;
 
 namespace Valkyrie.Language
 {
@@ -33,25 +32,31 @@ namespace Valkyrie.Language
             var dictionary = LoadTestDictionary();
 
             var localContext = new LocalContext();
-
             Assert.AreEqual(false, TryParseText("", dictionary, localContext));
-            Assert.AreEqual(0, localContext.Args.Count);
+            Assert.AreEqual(0, localContext.GetArgs().Count);
 
+            localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("ASD is flag", dictionary, localContext));
-            Assert.AreEqual("ASD", localContext.Args["name"]);
+            Assert.AreEqual("ASD", localContext.GetArgs()["name"]);
+            
+            localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("GDB is flag", dictionary, localContext));
-            Assert.AreEqual("GDB", localContext.Args["name"]);
-            
-            Assert.AreEqual(true, TryParseText("GDB is ADB", dictionary, localContext));
-            Assert.AreEqual("GDB", localContext.Args["name"]);
-            Assert.AreEqual("ADB", localContext.Args["component"]);
-            
-            Assert.AreEqual(true, TryParseText("first second is struct", dictionary, localContext));
-            Assert.AreEqual("second", localContext.Args["name"]);
-            Assert.AreEqual("first", localContext.Args["treeName"]);
+            Assert.AreEqual("GDB", localContext.GetArgs()["name"]);
 
+            localContext = new LocalContext();
+            Assert.AreEqual(true, TryParseText("GDB is ADB", dictionary, localContext));
+            Assert.AreEqual("GDB", localContext.GetArgs()["name"]);
+            Assert.AreEqual("ADB", localContext.GetArgs()["component"]);
+
+            localContext = new LocalContext();
+            Assert.AreEqual(true, TryParseText("first second is struct", dictionary, localContext));
+            Assert.AreEqual(false, localContext.GetArgs().ContainsKey("name"));
+            Assert.AreEqual("first", localContext.GetArgs()["treeName"]);
+
+            localContext = new LocalContext();
             Assert.AreEqual(true,
                 TryParseText("ASD is flag , c is component : gg is struct", dictionary, localContext));
+            localContext = new LocalContext();
             Assert.AreEqual(false,
                 TryParseText("ASD is flag , c is component : gg is struct asddd", dictionary, localContext));
         }
@@ -59,8 +64,14 @@ namespace Valkyrie.Language
         bool TryParseText(string text, IDslDictionary dictionary, LocalContext localContext)
         {
             foreach (var entry in dictionary.GetEntries)
-                if (entry.TryMatch(text, localContext))
+            {
+                var t = new LocalContext();
+                if (entry.TryMatch(text, t))
+                {
+                    localContext.ReplaceFrom(t);
                     return true;
+                }
+            }
             return false;
         }
 
@@ -79,7 +90,7 @@ namespace Valkyrie.Language
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
             Debug.LogWarning(ctx);
         }
-        
+
         [Test]
         public void TestGameProgram()
         {
@@ -102,7 +113,7 @@ namespace Valkyrie.Language
             var compiler = new DslCompiler();
             var astConstructor = compiler.ProgramParser;
             Assert.IsNotNull(astConstructor);
-            
+
             using var filestream = File.OpenRead("Assets/GDD.md");
             var ast = astConstructor.Parse(filestream);
             Assert.IsNotNull(ast);

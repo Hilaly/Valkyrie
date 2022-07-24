@@ -81,12 +81,21 @@ namespace Valkyrie.DSL
         private void Apply(LocalContext localContext, CompilerContext compilerContext)
         {
             foreach (var command in localContext.Actions)
-                command.Execute(localContext.Args, compilerContext);
+                command.Execute(localContext.GetArgs(), compilerContext);
         }
 
 
         private bool TryMatchSentence(List<IAstNode> sentence, IDslDictionary dictionary, LocalContext localContext)
         {
+            foreach (var entry in dictionary.GetEntries)
+            {
+                var lc = new LocalContext();
+                if (entry.TryMatch(sentence, lc))
+                {
+                    localContext.ReplaceFrom(lc);
+                    return true;
+                }
+            }
             return false;
         }
     }

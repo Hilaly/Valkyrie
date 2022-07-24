@@ -38,7 +38,12 @@ namespace Valkyrie.DSL.Dictionary
             var sequenceIndex = 0;
 
             var index = Take(sentence, localContext, matchIndex, sequenceIndex);
-            return index == sentence.Count;
+            if (index != sentence.Count) 
+                return false;
+            
+            localContext.Actions = this.Actions;
+            return true;
+
         }
 
         int Take(List<IAstNode> sentence, LocalContext localContext, int matchIndex, int sequenceIndex)
@@ -71,7 +76,7 @@ namespace Valkyrie.DSL.Dictionary
                     }
                     case IdentifierFormatEntry loadId:
                     {
-                        localContext.Args[loadId.Text] = node.GetString();
+                        localContext.SetValue(loadId.Text, node.GetString());
                         sequenceIndex++;
                         break;
                     }
@@ -95,7 +100,7 @@ namespace Valkyrie.DSL.Dictionary
                             {
                                 anyMatch = true;
                                 sequenceIndex = newIndex;
-                                localContext.CopyArgsFrom(localCtxCopy);
+                                localContext.AddChild(treeName, localCtxCopy);
                                 break;
                             }
                         }
