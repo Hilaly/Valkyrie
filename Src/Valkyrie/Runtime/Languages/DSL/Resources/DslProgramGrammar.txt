@@ -4,7 +4,7 @@
 --- -> escape
 \*\*\* -> escape
 
-'(?<value>[^']*)' -> STRING
+# '(?<value>[^']*)' -> STRING
 "(?<value>[^"]*)" -> STRING
 
 \`\`\`([c|C]#)?(?<value>(\n|.)*?)\`\`\` -> CODE_BLOCK
