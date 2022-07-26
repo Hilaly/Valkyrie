@@ -62,5 +62,11 @@ namespace Valkyrie.DSL.Dictionary
 
         public IEnumerable<LocalContext> GetChildren(string treeName) => 
             _children.TryGetValue(treeName, out var list) ? list : Enumerable.Empty<LocalContext>();
+
+        public void PushVariableUp(string varName)
+        {
+            if(_parent != null && _args.TryGetValue(varName, out var value))
+                _parent.SetValue(varName, value);
+        }
     }
 }

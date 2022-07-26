@@ -54,14 +54,19 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> <add_base_type_action> | <create_type_action> | <skip_action> | <log_action> | <call_action>
+<rule_action> -> <skip_action> | <log_action> | <call_action> | <push_local_up_action>
+<rule_action> -> <add_base_type_action> | <create_type_action> | <add_attribute_action> | <add_method_action>
 
 <call_action> -> "call" <final_str_literal> 
 <skip_action> -> "skip"
 <log_action> -> "log" <final_str_literal>
 <create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
 
+<push_local_up_action> -> "push" "up" <final_str_literal>
+
 <add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>
+<add_attribute_action> -> "add" "attribute" <final_str_literal> to <final_str_literal>
+<add_method_action> -> "add" "method" <final_str_literal> to <final_str_literal>
 
 <final_str_literal> -> <add_words_op>
 <add_words_op> -> <word> ADD_OP <add_words_op> | <word>

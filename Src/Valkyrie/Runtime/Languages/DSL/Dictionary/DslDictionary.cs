@@ -104,6 +104,23 @@ namespace Valkyrie.DSL.Dictionary
                         Type = CreateStringProvider(children[4], syntax),
                         BaseType = CreateStringProvider(children[2], syntax)
                     };
+                case "<add_attribute_action>":
+                    return new AddAttributeToTypeAction()
+                    {
+                        Type = CreateStringProvider(children[4], syntax),
+                        Attribute = CreateStringProvider(children[2], syntax)
+                    };
+                case "<push_local_up_action>":
+                    return new PushLocalUpAction()
+                    {
+                        LocalVarName = CreateStringProvider(children[2], syntax)
+                    };
+                case "<add_method_action>":
+                    return new AddMethodToTypeAction()
+                    {
+                        Type = CreateStringProvider(children[4], syntax),
+                        Method = CreateStringProvider(children[2], syntax)
+                    };
                 case "<log_action>":
                     return new LogAction()
                     {
