@@ -28,7 +28,8 @@
     => log "Component " + $componentName + " of " + $valueType,
         create class $componentName + "Component",
         add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + $valueType + ">" to $componentName + "Component",
-        set global $componentName + "Component" = $componentName.
+        set global $componentName + "Component" = $componentName,
+        set global $componentName + "Value" = $valueType.
 
 
 ### Control sequences, this sequences skipped.
@@ -44,6 +45,16 @@
 ## X contains list(collection) of Y.
 
 ## X has Y.
+<has_component>:
+    => $entityName "has" $componentName
+    => 
+        if not global $entityName + "isEntity"
+            log $entityName + " is not entity"
+        else
+        {   
+            add property $componentName to $entityName,
+            add code "{return default;}" to property $componentName of $entityName
+        }.
 
 ## Every tick X Y.
 ## Every T seconds A.

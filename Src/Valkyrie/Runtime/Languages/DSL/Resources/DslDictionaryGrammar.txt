@@ -22,6 +22,9 @@
 \{ -> CURLY_BRACE_OPEN
 \} -> CURLY_BRACE_CLOSE
 
+\( -> BRACE_OPEN
+\) -> BRACE_CLOSE
+
 [ \n\r\t]+ -> escape
 
 (\.) -> SENTENCE_OP
@@ -57,9 +60,12 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
+<rule_action> -> CURLY_BRACE_OPEN <rule_actions> CURLY_BRACE_CLOSE
+
 <rule_action> -> <skip_action> | <log_action> | <call_action> | <push_local_up_action>
 <rule_action> -> <set_global_action> | <set_local_action> | <if_action>
-<rule_action> -> <add_base_type_action> | <create_type_action> | <add_attribute_action> | <add_method_action>
+<rule_action> -> <add_base_type_action> | <create_type_action> | <add_attribute_action> | <add_method_action> | <add_property_action>
+<rule_action> -> <add_code_to_property>
 
 <call_action> -> "call" <final_str_literal> 
 <skip_action> -> "skip"
@@ -70,14 +76,23 @@
 <set_global_action> -> "set" "global" <final_str_literal> "=" <final_str_literal>
 <set_local_action> -> "set" "local" <final_str_literal> "=" <final_str_literal>
 
-<if_action> -> "id" <expr> <rule_action> "else" <rule_action> | "id" <expr> <rule_action>
+<if_action> -> "if" <expr> <rule_action> "else" <rule_action> | "if" <expr> <rule_action>
 
 <add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>
 <add_attribute_action> -> "add" "attribute" <final_str_literal> to <final_str_literal>
 <add_method_action> -> "add" "method" <final_str_literal> to <final_str_literal>
+<add_property_action> -> "add" "property" <final_str_literal> to <final_str_literal>
+
+<add_code_to_property> -> "add" "code" <final_str_literal> "to" "property" <final_str_literal> "of" <final_str_literal>
 
 <final_str_literal> -> <add_words_op>
 <add_words_op> -> <word> ADD_OP <add_words_op> | <word>
 <word> -> <rule_var> | <global_var> | <string> | <id>
 
 <string> -> STRING
+
+<expr> -> \( <expr> \) | <not_expr>
+<not_expr> -> "not" <single_expr> | <single_expr>
+<single_expr> -> <global_expr> | <local_expr>
+<global_expr> -> "global" <final_str_literal>
+<local_expr> -> "local" <final_str_literal>
