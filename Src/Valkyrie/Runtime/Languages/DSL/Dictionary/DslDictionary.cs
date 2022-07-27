@@ -131,6 +131,18 @@ namespace Valkyrie.DSL.Dictionary
                     {
                         ChildName = CreateStringProvider(children[1], syntax)
                     };
+                case "<set_global_action>":
+                    return new SetGlobalVarAction
+                    {
+                        Value = CreateStringProvider(children[4], syntax),
+                        Name = CreateStringProvider(children[2], syntax)
+                    };
+                case "<set_local_action>":
+                    return new SetLocalVarAction
+                    {
+                        Value = CreateStringProvider(children[4], syntax),
+                        Name = CreateStringProvider(children[2], syntax)
+                    };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");
             }

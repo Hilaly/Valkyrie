@@ -28,6 +28,7 @@
 (,) -> COMMA
 
 (\+|\-) -> ADD_OP
+(=) -> EQUALS_OP
 
 #parser
 
@@ -57,6 +58,7 @@
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
 <rule_action> -> <skip_action> | <log_action> | <call_action> | <push_local_up_action>
+<rule_action> -> <set_global_action> | <set_local_action> | <if_action>
 <rule_action> -> <add_base_type_action> | <create_type_action> | <add_attribute_action> | <add_method_action>
 
 <call_action> -> "call" <final_str_literal> 
@@ -65,6 +67,10 @@
 <create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
 
 <push_local_up_action> -> "push" "up" <final_str_literal>
+<set_global_action> -> "set" "global" <final_str_literal> "=" <final_str_literal>
+<set_local_action> -> "set" "local" <final_str_literal> "=" <final_str_literal>
+
+<if_action> -> "id" <expr> <rule_action> "else" <rule_action> | "id" <expr> <rule_action>
 
 <add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>
 <add_attribute_action> -> "add" "attribute" <final_str_literal> to <final_str_literal>

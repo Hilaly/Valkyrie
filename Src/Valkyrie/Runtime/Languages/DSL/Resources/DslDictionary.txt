@@ -4,28 +4,31 @@
 ## Entities: X.
 <entities_creation>:
     => "Entities :" <entities_list>
-    => log "Parsing entities", 
-     call <entities_list>,
-     log "entities parsed".
+    => call <entities_list>.
 
 <entities_list>:
-    => <entity_define> <entities_list>
-    => call <entity_define>, call <entities_list>.
+    => <entity_list_define> <entities_list>
+    => call <entity_list_define>, call <entities_list>.
 <entities_list>:
-    => <entity_define>
+    => <entity_list_define>
+    => call <entity_list_define>.
+<entity_list_define>:
+    => <list_marker> <entity_define>
     => call <entity_define>.
 <entity_define>:
-    => <list_marker> $entityType
+    => $entityType
     => log "Entity " + $entityType,
      create class $entityType,
-     add base "NaiveEntity.GamePrototype.EntProto.EntityWrapper" to $entityType.
+     add base "NaiveEntity.GamePrototype.EntProto.EntityWrapper" to $entityType,
+     set global $entityType + "isEntity" = $entityType.
 
 ## X is Y property.
 <typed_component_creation>:
     => $componentName "is" $valueType "property"
     => log "Component " + $componentName + " of " + $valueType,
         create class $componentName + "Component",
-        add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + $valueType + ">" to $componentName + "Component".
+        add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + $valueType + ">" to $componentName + "Component",
+        set global $componentName + "Component" = $componentName.
 
 
 ### Control sequences, this sequences skipped.
