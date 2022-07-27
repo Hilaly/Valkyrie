@@ -44,9 +44,15 @@ namespace Valkyrie.DSL
                     Debug.LogWarning($"{text} doesn't present in dictionary");
                 }
             }
+            
+            Debug.Log($"===================");
+            Debug.Log($"Start compiling ...");
 
             foreach (var localContext in contexts)
                 Execute(localContext, compilerContext);
+            
+            Debug.Log($"Compile finished");
+            Debug.Log($"===================");
         }
 
         private void Parse(IAstNode ast, List<List<IAstNode>> sentences)

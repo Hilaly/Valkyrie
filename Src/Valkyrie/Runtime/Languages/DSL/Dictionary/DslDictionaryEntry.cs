@@ -101,6 +101,7 @@ namespace Valkyrie.DSL.Dictionary
                                 anyMatch = true;
                                 sequenceIndex = newIndex;
                                 localContext.AddChild(treeName, localCtxCopy);
+                                localCtxCopy.Actions = test.Actions;
                                 break;
                             }
                         }

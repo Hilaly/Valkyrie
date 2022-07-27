@@ -1,13 +1,20 @@
 ###### This is simple example of some expression.
+<!-- And this is HTML like comment -->
 
 <root>:
     => $name
     => log name.
 
-<!-- And this is HTML like comment -->
 <entities_creation>:
     => "Entities :" <entities_list>
     => log "entities parsed", call <entities_list>.
+
+<entities_list>:
+    => <list_marker> $entityType <entities_list>
+    => log "founded entity "+ entityType, call <entities_list>.
+<entities_list>:
+    => <list_marker> $entityType
+    => log "founded entity "+ entityType.
 
 ## Entities: X.
 
@@ -23,3 +30,13 @@
 
 ## A is change X to Y.
 ## A is change X by Y.
+
+
+
+### Control sequences, this sequences skipped.
+<list_marker>:
+    => "- [ ]"
+    => skip.
+<list_marker>:
+    => "-"
+    => skip.
