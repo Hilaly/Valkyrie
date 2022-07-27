@@ -1,24 +1,41 @@
 ###### This is simple example of some expression.
 <!-- And this is HTML like comment -->
 
-<root>:
-    => $name
-    => log name.
-
+## Entities: X.
 <entities_creation>:
     => "Entities :" <entities_list>
-    => log "entities parsed", call <entities_list>.
+    => log "Parsing entities", 
+     call <entities_list>,
+     log "entities parsed".
 
 <entities_list>:
-    => <list_marker> $entityType <entities_list>
-    => log "founded entity "+ entityType, call <entities_list>.
+    => <entity_define> <entities_list>
+    => call <entity_define>, call <entities_list>.
 <entities_list>:
+    => <entity_define>
+    => call <entity_define>.
+<entity_define>:
     => <list_marker> $entityType
-    => log "founded entity "+ entityType.
-
-## Entities: X.
+    => log "Entity " + entityType,
+     create class entityType,
+     add base "NaiveEntity.GamePrototype.EntProto.EntityWrapper" to entityType.
 
 ## X is Y property.
+<typed_component_creation>:
+    => $componentName "is" $valueType "property"
+    => log "Component " + componentName + " of " + valueType,
+        create class componentName + "Component",
+        add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + valueType + ">" to componentName + "Component".
+
+
+### Control sequences, this sequences skipped.
+<list_marker>:
+    => "- [ ]"
+    => skip.
+<list_marker>:
+    => "-"
+    => skip.
+    
 
 ## X contains Y.
 ## X contains list(collection) of Y.
@@ -31,12 +48,3 @@
 ## A is change X to Y.
 ## A is change X by Y.
 
-
-
-### Control sequences, this sequences skipped.
-<list_marker>:
-    => "- [ ]"
-    => skip.
-<list_marker>:
-    => "-"
-    => skip.

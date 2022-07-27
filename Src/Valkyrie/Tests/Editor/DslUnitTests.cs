@@ -87,8 +87,8 @@ namespace Valkyrie.Language
             };
             ctx.Usings.Add("System.Collections");
             compiler.Build(source, ctx);
+            Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
-            Debug.LogWarning(ctx);
         }
 
         [Test]
@@ -103,8 +103,8 @@ namespace Valkyrie.Language
             };
             ctx.Usings.Add("System.Collections");
             compiler.Build(source, ctx);
+            Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
-            Debug.LogWarning(ctx);
         }
 
         [Test]
@@ -118,7 +118,7 @@ namespace Valkyrie.Language
             var ast = astConstructor.Parse(filestream);
             Assert.IsNotNull(ast);
 
-            Debug.LogWarning(ast);
+            Debug.Log(ast);
         }
     }
 }

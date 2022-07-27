@@ -74,11 +74,15 @@ namespace Valkyrie.DSL.Dictionary
                         sequenceIndex++;
                         break;
                     }
-                    case IdentifierFormatEntry loadId:
+                    case LocalVariableEntry loadId:
                     {
-                        localContext.SetValue(loadId.Text, node.GetString());
+                        localContext.SetValue(loadId.Text, DslCompiler.ConvertToString(node));
                         sequenceIndex++;
                         break;
+                    }
+                    case GlobalVariableEntry globalId:
+                    {
+                        throw new NotImplementedException();
                     }
                     case ExtractTreeFormatEntry extractTree:
                     {
@@ -128,7 +132,7 @@ namespace Valkyrie.DSL.Dictionary
             {
                 return formatEntry switch
                 {
-                    IdentifierFormatEntry idEntry => ($"(?<{idEntry.Text}>[\\w]+)"),
+                    LocalVariableEntry idEntry => ($"(?<{idEntry.Text}>[\\w]+)"),
                     OperatorFormatEntry opEntry => (opEntry.Text),
                     _ => string.Empty
                 };

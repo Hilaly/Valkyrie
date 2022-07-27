@@ -1,8 +1,8 @@
 namespace Valkyrie.DSL.Dictionary
 {
-    class IdentifierFormatEntry : DslDictionaryFormatEntry
+    internal class LocalVariableEntry : DslDictionaryFormatEntry
     {
-        public IdentifierFormatEntry(string text) : base(text)
+        public LocalVariableEntry(string text) : base(text)
         {
         }
     }

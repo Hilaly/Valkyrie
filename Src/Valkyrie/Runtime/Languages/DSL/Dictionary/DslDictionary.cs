@@ -163,7 +163,7 @@ namespace Valkyrie.DSL.Dictionary
                     var value = ast.GetString();
                     var hasVar = syntax
                                      .Find(x =>
-                                         x is IdentifierFormatEntry idFormat && idFormat.Text == value)
+                                         x is LocalVariableEntry idFormat && idFormat.Text == value)
                                  != null;
                     if (hasVar)
                         return new LocalVariableStringProvider(value);
@@ -201,7 +201,7 @@ namespace Valkyrie.DSL.Dictionary
                         var value = ast.GetString();
                         var hasVar = syntax
                                          .Find(x =>
-                                             x is IdentifierFormatEntry idFormat && idFormat.Text == value)
+                                             x is LocalVariableEntry idFormat && idFormat.Text == value)
                                      != null;
                         if (hasVar)
                             return new LocalVariableStringProvider(value);
@@ -240,7 +240,7 @@ namespace Valkyrie.DSL.Dictionary
                 case "<rule_var>":
                 {
                     var text = innerNode.GetChildren(false)[1].GetString();
-                    yield return new IdentifierFormatEntry(text);
+                    yield return new LocalVariableEntry(text);
                     yield break;
                 }
                 case "<rule_bnf_match>":

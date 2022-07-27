@@ -108,5 +108,16 @@ namespace Valkyrie.DSL
             }
             return false;
         }
+
+        internal static string ConvertToString(IAstNode node)
+        {
+            switch (node.Name)
+            {
+                case "CODE_BLOCK":
+                    return node.GetString().Trim('`');
+                default:
+                    return node.GetString();
+            }
+        }
     }
 }
