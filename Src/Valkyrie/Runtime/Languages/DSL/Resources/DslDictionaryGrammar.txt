@@ -10,7 +10,8 @@
 ([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
 (\w|<|>)* -> IDENTIFIER
 
-\$ -> VAR_ID
+\$ -> LOCAL_VAR_ID
+\^ -> GLOBAL_VAR_ID
 
 (=>) -> RULE_OP
 (:) -> COLON
@@ -37,8 +38,9 @@
 <rule_name> -> <id>
 
 <rule_bnf> -> <rule_bnf_entry>+
-<rule_bnf_entry> -> <rule_var> | <rule_op> | <rule_bnf_match>
-<rule_var> -> VAR_ID <id>
+<rule_bnf_entry> -> <rule_var> | <rule_op> | <rule_bnf_match> | <global_var>
+<rule_var> -> LOCAL_VAR_ID <id>
+<global_var> -> GLOBAL_VAR_ID <id>
 <rule_op> -> STRING
 <rule_bnf_match> -> <id> \{ <min_count> "," <max_count> \}
 <rule_bnf_match> -> <id> \{ <min_count> "," \}
@@ -70,6 +72,6 @@
 
 <final_str_literal> -> <add_words_op>
 <add_words_op> -> <word> ADD_OP <add_words_op> | <word>
-<word> -> <id> | <string>
+<word> -> <rule_var> | <global_var> | <string> | <id>
 
 <string> -> STRING

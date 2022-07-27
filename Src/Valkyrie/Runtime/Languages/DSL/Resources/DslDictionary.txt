@@ -16,16 +16,16 @@
     => call <entity_define>.
 <entity_define>:
     => <list_marker> $entityType
-    => log "Entity " + entityType,
-     create class entityType,
-     add base "NaiveEntity.GamePrototype.EntProto.EntityWrapper" to entityType.
+    => log "Entity " + $entityType,
+     create class $entityType,
+     add base "NaiveEntity.GamePrototype.EntProto.EntityWrapper" to $entityType.
 
 ## X is Y property.
 <typed_component_creation>:
     => $componentName "is" $valueType "property"
-    => log "Component " + componentName + " of " + valueType,
-        create class componentName + "Component",
-        add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + valueType + ">" to componentName + "Component".
+    => log "Component " + $componentName + " of " + $valueType,
+        create class $componentName + "Component",
+        add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + $valueType + ">" to $componentName + "Component".
 
 
 ### Control sequences, this sequences skipped.

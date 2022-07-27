@@ -170,6 +170,22 @@ namespace Valkyrie.DSL.Dictionary
                     else
                         return new ConstantStringProvider(value);
                 }
+                case "<rule_var>":
+                {
+                    var value = ast.UnpackGeneratedLists()[1].GetString();
+                    var hasVar = syntax
+                                     .Find(x =>
+                                         x is LocalVariableEntry idFormat && idFormat.Text == value)
+                                 != null;
+                    if (hasVar)
+                        return new LocalVariableStringProvider(value);
+                    throw new GrammarCompileException(ast, $"Unknown local var {value}");
+                }
+                case "<global_var>":
+                {
+                    var value = ast.UnpackGeneratedLists()[1].GetString();
+                    return new GlobalVariableStringProvider(value);
+                }
                 default:
                     throw new GrammarCompileException(ast, $"Unimplemented STR LITERAL {ast.Name}");
             }
