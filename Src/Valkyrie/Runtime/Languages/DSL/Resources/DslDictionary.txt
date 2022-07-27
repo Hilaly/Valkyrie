@@ -8,3 +8,18 @@
 <entities_creation>:
     => "Entities :" <entities_list>
     => log "entities parsed", call <entities_list>.
+
+## Entities: X
+
+## X is Y property
+
+## X contains Y
+## X contains list(collection) of Y
+
+## X has Y
+
+## Every tick X Y
+## Every T seconds A
+
+## A is change X to Y
+## A is change X by Y
