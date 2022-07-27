@@ -11,9 +11,9 @@ namespace Valkyrie.DSL.Actions
 
         public void Execute(LocalContext lc, CompilerContext context)
         {
-            var args = lc.GetArgs();
-            var type = context.GetOrCreateType(Name.GetString(args));
-            type.TypeCategory = Type.GetString(args);
+            var args = lc.GetLocalVariables();
+            var type = context.GetOrCreateType(Name.GetString(args, context.GlobalVariables));
+            type.TypeCategory = Type.GetString(args, context.GlobalVariables);
         }
 
         public override string ToString() => $"Create {Type} {Name}";

@@ -11,8 +11,10 @@ namespace Valkyrie.DSL.Actions
 
         public void Add(IStringProvider provider) => _providers.Add(provider);
 
-        public string GetString(Dictionary<string, string> args) =>
-            _providers.Select(x => x.GetString(args)).Join(string.Empty);
+        public string GetString(Dictionary<string, string> localVariables, Dictionary<string, string> globalVariables) =>
+            _providers
+                .Select(x => x.GetString(localVariables, globalVariables))
+                .Join(string.Empty);
 
         public IEnumerator<IStringProvider> GetEnumerator() => _providers.GetEnumerator();
 

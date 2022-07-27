@@ -166,7 +166,7 @@ namespace Valkyrie.DSL.Dictionary
                                          x is IdentifierFormatEntry idFormat && idFormat.Text == value)
                                  != null;
                     if (hasVar)
-                        return new VariableStringProvider(value);
+                        return new LocalVariableStringProvider(value);
                     else
                         return new ConstantStringProvider(value);
                 }
@@ -204,7 +204,7 @@ namespace Valkyrie.DSL.Dictionary
                                              x is IdentifierFormatEntry idFormat && idFormat.Text == value)
                                      != null;
                         if (hasVar)
-                            return new VariableStringProvider(value);
+                            return new LocalVariableStringProvider(value);
                         else
                             return new ConstantStringProvider(value);
                     }

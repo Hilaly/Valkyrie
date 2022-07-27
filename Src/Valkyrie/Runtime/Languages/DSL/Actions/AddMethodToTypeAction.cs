@@ -10,9 +10,9 @@ namespace Valkyrie.DSL.Actions
 
         public void Execute(LocalContext lc, CompilerContext context)
         {
-            var args = lc.GetArgs();
-            var type = context.GetOrCreateType(Type.GetString(args));
-            var methodName = Method.GetString(args);
+            var args = lc.GetLocalVariables();
+            var type = context.GetOrCreateType(Type.GetString(args, context.GlobalVariables));
+            var methodName = Method.GetString(args, context.GlobalVariables);
             type.GetOrCreateMethod(methodName);
         }
 

@@ -33,25 +33,25 @@ namespace Valkyrie.Language
 
             var localContext = new LocalContext();
             Assert.AreEqual(false, TryParseText("", dictionary, localContext));
-            Assert.AreEqual(0, localContext.GetArgs().Count);
+            Assert.AreEqual(0, localContext.GetLocalVariables().Count);
 
             localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("ASD is flag", dictionary, localContext));
-            Assert.AreEqual("ASD", localContext.GetArgs()["name"]);
+            Assert.AreEqual("ASD", localContext.GetLocalVariables()["name"]);
             
             localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("GDB is flag", dictionary, localContext));
-            Assert.AreEqual("GDB", localContext.GetArgs()["name"]);
+            Assert.AreEqual("GDB", localContext.GetLocalVariables()["name"]);
 
             localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("GDB is ADB", dictionary, localContext));
-            Assert.AreEqual("GDB", localContext.GetArgs()["name"]);
-            Assert.AreEqual("ADB", localContext.GetArgs()["component"]);
+            Assert.AreEqual("GDB", localContext.GetLocalVariables()["name"]);
+            Assert.AreEqual("ADB", localContext.GetLocalVariables()["component"]);
 
             localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("first second is struct", dictionary, localContext));
-            Assert.AreEqual(false, localContext.GetArgs().ContainsKey("name"));
-            Assert.AreEqual("first", localContext.GetArgs()["treeName"]);
+            Assert.AreEqual(false, localContext.GetLocalVariables().ContainsKey("name"));
+            Assert.AreEqual("first", localContext.GetLocalVariables()["treeName"]);
 
             localContext = new LocalContext();
             Assert.AreEqual(true,

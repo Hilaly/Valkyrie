@@ -11,9 +11,9 @@ namespace Valkyrie.DSL.Actions
 
         public void Execute(LocalContext lc, CompilerContext context)
         {
-            var args = lc.GetArgs();
-            var type = context.GetOrCreateType(Type.GetString(args));
-            type.BaseTypes.Add(BaseType.GetString(args));
+            var args = lc.GetLocalVariables();
+            var type = context.GetOrCreateType(Type.GetString(args, context.GlobalVariables));
+            type.BaseTypes.Add(BaseType.GetString(args, context.GlobalVariables));
         }
 
         public override string ToString() => $"{Type} inherited from {BaseType}";

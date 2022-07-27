@@ -9,7 +9,7 @@ namespace Valkyrie.DSL.Actions
 
         public void Execute(LocalContext localContext, CompilerContext context)
         {
-            var ln = LocalVarName.GetString(localContext.GetArgs());
+            var ln = LocalVarName.GetString(localContext.GetLocalVariables(), context.GlobalVariables);
             localContext.PushVariableUp(ln);
         }
 

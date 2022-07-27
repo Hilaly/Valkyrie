@@ -10,8 +10,8 @@ namespace Valkyrie.DSL.Actions
         public void Execute(LocalContext lc, CompilerContext context)
         {
             var compiler = context.Compiler;
-            var args = lc.GetArgs();
-            foreach (var localContext in lc.GetChildren(ChildName.GetString(args)))
+            var args = lc.GetLocalVariables();
+            foreach (var localContext in lc.GetChildren(ChildName.GetString(args, context.GlobalVariables)))
                 compiler.Execute(localContext, context);
         }
     }

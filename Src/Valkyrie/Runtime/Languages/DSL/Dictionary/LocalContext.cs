@@ -32,11 +32,11 @@ namespace Valkyrie.DSL.Dictionary
                 Actions = new List<IDslAction>(other.Actions);
         }
 
-        public Dictionary<string, string> GetArgs()
+        public Dictionary<string, string> GetLocalVariables()
         {
             var r = new Dictionary<string, string>();
             if (_parent != null)
-                foreach (var arg in _parent.GetArgs())
+                foreach (var arg in _parent.GetLocalVariables())
                     r[arg.Key] = arg.Value;
             foreach (var arg in _args)
                 r[arg.Key] = arg.Value;

@@ -10,9 +10,9 @@ namespace Valkyrie.DSL.Actions
 
         public void Execute(LocalContext lc, CompilerContext context)
         {
-            var args = lc.GetArgs();
-            var type = context.GetOrCreateType(Type.GetString(args));
-            type.Attributes.Add(Attribute.GetString(args));
+            var args = lc.GetLocalVariables();
+            var type = context.GetOrCreateType(Type.GetString(args, context.GlobalVariables));
+            type.Attributes.Add(Attribute.GetString(args, context.GlobalVariables));
         }
 
         public override string ToString() => $"{Type} has attribute {Attribute}";
