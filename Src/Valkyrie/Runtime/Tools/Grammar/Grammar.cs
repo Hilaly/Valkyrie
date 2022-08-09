@@ -327,7 +327,7 @@ namespace Valkyrie.Grammar
                     result.Add(t);
             }
 
-            //UnityEngien.Debug.LogWarning($"{children.Select(x => x.Name).Join(",")} became {result.Select(x => x.Name).Join(",")}");
+            //UnityEngine.Debug.LogWarning($"{children.Select(x => x.Name).Join(",")} became {result.Select(x => x.Name).Join(",")}");
             return result;
         }
 
@@ -336,8 +336,9 @@ namespace Valkyrie.Grammar
             var r = new List<IAstNode>();
             if (filter(node))
                 r.Add(node);
-            foreach (var child in node.GetChildren())
-                r.AddRange(UnpackNodes(child, filter));
+            else
+                foreach (var child in node.GetChildren())
+                    r.AddRange(UnpackNodes(child, filter));
             return r;
         }
 

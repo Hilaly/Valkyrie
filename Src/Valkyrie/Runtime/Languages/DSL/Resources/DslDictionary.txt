@@ -51,9 +51,9 @@
         if not global $entityName + "isEntity"
             log $entityName + " is not entity"
         else
-        {   
-            add property $componentName to $entityName,
-            add code "{return default;}" to property $componentName of $entityName
+        {
+            log $entityName + " is entity"
+            ## add property $componentName to $entityName,            add code "{return default;}" to property $componentName of $entityName.
         }.
 
 ## Every tick X Y.

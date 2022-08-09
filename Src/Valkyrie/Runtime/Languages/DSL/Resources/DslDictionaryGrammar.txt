@@ -60,7 +60,7 @@
 
 <rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
 
-<rule_action> -> CURLY_BRACE_OPEN <rule_actions> CURLY_BRACE_CLOSE
+<rule_action> -> CURLY_BRACE_OPEN <rule_actions> CURLY_BRACE_CLOSE | CURLY_BRACE_OPEN CURLY_BRACE_CLOSE
 
 <rule_action> -> <skip_action> | <log_action> | <call_action> | <push_local_up_action>
 <rule_action> -> <set_global_action> | <set_local_action> | <if_action>

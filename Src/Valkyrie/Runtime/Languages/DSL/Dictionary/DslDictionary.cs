@@ -104,6 +104,8 @@ namespace Valkyrie.DSL.Dictionary
                 case "<rule_action>":
                     if(children.Count == 1)
                         return ParseRuleAction(children[0], syntax);
+                    if (children.Count == 2)
+                        return new SkipAction();
                     return ParseRuleAction(children[1], syntax);
                 case "<true_if_branch>":
                 case "<false_if_branch>":
