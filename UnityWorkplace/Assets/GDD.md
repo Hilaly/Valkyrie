@@ -45,8 +45,8 @@ move is change position by `input*dt`.
 - [x] Set local var action
 - [ ] Get global var action
 - [x] Push local up action
-- [ ] if action
-- [ ] if else action
+- [x] if action
+- [x] if else action
 - [ ] Blackboard
 - [ ] Code snippets
 - [ ] Alias

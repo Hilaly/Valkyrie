@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
+using Valkyrie.DSL.StringWorking;
 
 namespace Valkyrie.DSL.Actions
 {

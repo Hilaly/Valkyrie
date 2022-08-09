@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Valkyrie.DSL.Actions
+namespace Valkyrie.DSL.StringWorking
 {
     class GlobalVariableStringProvider : IStringProvider
     {

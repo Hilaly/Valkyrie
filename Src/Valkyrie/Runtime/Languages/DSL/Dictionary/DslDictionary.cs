@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Valkyrie.DSL.Actions;
+using Valkyrie.DSL.Expressions;
+using Valkyrie.DSL.StringWorking;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
 
@@ -84,11 +86,27 @@ namespace Valkyrie.DSL.Dictionary
 
         private IDslAction ParseRuleAction(IAstNode astNode, List<DslDictionaryFormatEntry> syntax)
         {
+            if (astNode == null)
+                return new SkipAction();
+            
             var name = astNode.Name;
             var children = astNode.UnpackGeneratedLists();
             switch (astNode.Name)
             {
+                case "<rule_actions>":
+                {
+                    var actions = astNode
+                        .UnpackNodes(x => x.Name == "<rule_action>")
+                        .Select(x => ParseRuleAction(x, syntax))
+                        .ToList();
+                    return new SequenceAction(actions);
+                }
                 case "<rule_action>":
+                    if(children.Count == 1)
+                        return ParseRuleAction(children[0], syntax);
+                    return ParseRuleAction(children[1], syntax);
+                case "<true_if_branch>":
+                case "<false_if_branch>":
                     return ParseRuleAction(children[0], syntax);
                 case "<skip_action>":
                     return new SkipAction();
@@ -143,8 +161,65 @@ namespace Valkyrie.DSL.Dictionary
                         Value = CreateStringProvider(children[4], syntax),
                         Name = CreateStringProvider(children[2], syntax)
                     };
+                case "<if_action>":
+                    return new IfAction()
+                    {
+                        Expr = ParseRuleExpr(children.Find(x => x.Name == "<expr>"), syntax),
+                        TrueAction = ParseRuleAction(children.Find(x => x.Name == "<true_if_branch>"), syntax),
+                        FalseAction = ParseRuleAction(children.Find(x => x.Name == "<false_if_branch>"), syntax)
+                    };
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");
+            }
+        }
+
+        private IDslExpr ParseRuleExpr(IAstNode astNode, List<DslDictionaryFormatEntry> syntax)
+        {
+            var name = astNode.Name;
+            var children = astNode.UnpackGeneratedLists();
+            switch (name)
+            {
+                case "<or_expr>":
+                    if (children.Count == 1)
+                        return ParseRuleExpr(children[0], syntax);
+                    return new OrExpr()
+                    {
+                        Left = ParseRuleExpr(children[0], syntax),
+                        Right = ParseRuleExpr(children[2], syntax)
+                    };
+                case "<and_expr>":
+                    if (children.Count == 1)
+                        return ParseRuleExpr(children[0], syntax);
+                    return new AndExpr()
+                    {
+                        Left = ParseRuleExpr(children[0], syntax),
+                        Right = ParseRuleExpr(children[2], syntax)
+                    };
+                case "<single_expr>":
+                    if(children.Count == 1)
+                        return ParseRuleExpr(children[0], syntax);
+                    return ParseRuleExpr(children[1], syntax);
+                case "<not_expr>":
+                    if (children.Count == 1)
+                        return ParseRuleExpr(children[0], syntax);
+                    return new NotExpr()
+                    {
+                        Expr = ParseRuleExpr(children[1], syntax)
+                    };
+                case "<global_expr>":
+                    return new GlobalExpr()
+                    {
+                        Name = CreateStringProvider(children[1], syntax)
+                    };
+                case "<local_expr>":
+                    return new LocalExpr()
+                    {
+                        Name = CreateStringProvider(children[1], syntax)
+                    };
+                case "<expr>":
+                    return ParseRuleExpr(children[0], syntax);
+                default:
+                    throw new GrammarCompileException(astNode, $"Unknown EXPR node {name}");
             }
         }
 

@@ -76,7 +76,9 @@
 <set_global_action> -> "set" "global" <final_str_literal> "=" <final_str_literal>
 <set_local_action> -> "set" "local" <final_str_literal> "=" <final_str_literal>
 
-<if_action> -> "if" <expr> <rule_action> "else" <rule_action> | "if" <expr> <rule_action>
+<if_action> -> "if" <expr> <true_if_branch> "else" <false_if_branch> | "if" <expr> <true_if_branch>
+<true_if_branch> -> <rule_action>
+<false_if_branch> -> <rule_action>
 
 <add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>
 <add_attribute_action> -> "add" "attribute" <final_str_literal> to <final_str_literal>
@@ -91,8 +93,10 @@
 
 <string> -> STRING
 
-<expr> -> \( <expr> \) | <not_expr>
+<expr> -> <or_expr>
+<or_expr> -> <and_expr> "or" <or_expr> | <and_expr>
+<and_expr> -> <not_expr> "and" <and_expr> | <not_expr>
 <not_expr> -> "not" <single_expr> | <single_expr>
-<single_expr> -> <global_expr> | <local_expr>
+<single_expr> -> <global_expr> | <local_expr> | \( <expr> \)
 <global_expr> -> "global" <final_str_literal>
 <local_expr> -> "local" <final_str_literal>

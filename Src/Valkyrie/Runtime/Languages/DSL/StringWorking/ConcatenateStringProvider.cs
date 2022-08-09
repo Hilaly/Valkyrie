@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Valkyrie.Tools;
 
-namespace Valkyrie.DSL.Actions
+namespace Valkyrie.DSL.StringWorking
 {
     class ConcatenateStringProvider : IStringProvider, IEnumerable<IStringProvider>
     {
