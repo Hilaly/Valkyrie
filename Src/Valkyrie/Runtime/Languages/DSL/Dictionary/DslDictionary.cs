@@ -170,6 +170,50 @@ namespace Valkyrie.DSL.Dictionary
                         TrueAction = ParseRuleAction(children.Find(x => x.Name == "<true_if_branch>"), syntax),
                         FalseAction = ParseRuleAction(children.Find(x => x.Name == "<false_if_branch>"), syntax)
                     };
+                case "<add_property_action>":
+                {
+                    return new AddPropertyToTypeAction()
+                    {
+                        Type = CreateStringProvider(children[4], syntax),
+                        Property = CreateStringProvider(children[2], syntax)
+                    };
+                }
+                case "<add_code_to_property_getter>":
+                {
+                    return new AddCodeToGetterAction()
+                    {
+                        Type = CreateStringProvider(children[7], syntax),
+                        Property = CreateStringProvider(children[5], syntax),
+                        Code = CreateStringProvider(children[2], syntax)
+                    };
+                }
+                case "<add_code_to_property_setter>":
+                {
+                    return new AddCodeToSetterAction()
+                    {
+                        Type = CreateStringProvider(children[7], syntax),
+                        Property = CreateStringProvider(children[5], syntax),
+                        Code = CreateStringProvider(children[2], syntax)
+                    };
+                }
+                case "<set_property_type>":
+                {
+                    return new SetPropertyTypeAction()
+                    {
+                        Type = CreateStringProvider(children[5], syntax),
+                        Property = CreateStringProvider(children[3], syntax),
+                        Code = CreateStringProvider(children[7], syntax)
+                    };
+                }
+                case "<set_method_return_type>":
+                {
+                    return new SetMethodTypeAction()
+                    {
+                        Type = CreateStringProvider(children[5], syntax),
+                        Method = CreateStringProvider(children[3], syntax),
+                        Code = CreateStringProvider(children[7], syntax)
+                    };
+                }
                 default:
                     throw new GrammarCompileException(astNode, $"Unknown action node {name}");
             }

@@ -65,7 +65,8 @@
 <rule_action> -> <skip_action> | <log_action> | <call_action> | <push_local_up_action>
 <rule_action> -> <set_global_action> | <set_local_action> | <if_action>
 <rule_action> -> <add_base_type_action> | <create_type_action> | <add_attribute_action> | <add_method_action> | <add_property_action>
-<rule_action> -> <add_code_to_property>
+<rule_action> -> <add_code_to_property_setter> | <add_code_to_property_getter>
+<rule_action> -> <set_property_type> | <set_method_return_type>
 
 <call_action> -> "call" <final_str_literal> 
 <skip_action> -> "skip"
@@ -85,7 +86,11 @@
 <add_method_action> -> "add" "method" <final_str_literal> to <final_str_literal>
 <add_property_action> -> "add" "property" <final_str_literal> to <final_str_literal>
 
-<add_code_to_property> -> "add" "code" <final_str_literal> "to" "property" <final_str_literal> "of" <final_str_literal>
+<add_code_to_property_setter> -> "add" "code" <final_str_literal> "to" "setter" <final_str_literal> "of" <final_str_literal>
+<add_code_to_property_getter> -> "add" "code" <final_str_literal> "to" "getter" <final_str_literal> "of" <final_str_literal>
+
+<set_property_type> -> "type" "of" "property" <final_str_literal> "of" <final_str_literal> "is" <final_str_literal>
+<set_method_return_type> -> "type" "of" "method" <final_str_literal> "of" <final_str_literal> "is" <final_str_literal>
 
 <final_str_literal> -> <add_words_op>
 <add_words_op> -> <word> ADD_OP <add_words_op> | <word>

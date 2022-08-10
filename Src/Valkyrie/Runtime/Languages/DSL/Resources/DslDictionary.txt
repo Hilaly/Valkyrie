@@ -52,8 +52,9 @@
             log $entityName + " is not entity"
         else
         {
-            log $entityName + " is entity"
-            ## add property $componentName to $entityName,            add code "{return default;}" to property $componentName of $entityName.
+            add property $componentName to $entityName,
+            add code "{return default;}" to getter $componentName of $entityName,
+            add code "//No code" to setter $componentName of $entityName
         }.
 
 ## Every tick X Y.
