@@ -85,7 +85,7 @@ namespace Valkyrie.Language
             {
                 Namespace = "Test"
             };
-            ctx.Usings.Add("System.Collections");
+            ctx.AddUsing("System.Collections");
             compiler.Build(source, ctx);
             Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
@@ -101,7 +101,7 @@ namespace Valkyrie.Language
             {
                 Namespace = "Test"
             };
-            ctx.Usings.Add("System.Collections");
+            ctx.AddUsing("System.Collections");
             compiler.Build(source, ctx);
             Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
@@ -119,6 +119,39 @@ namespace Valkyrie.Language
             Assert.IsNotNull(ast);
 
             Debug.Log(ast);
+        }
+
+        [Test]
+        public void TestCodeGenerating()
+        {
+            var context = new CompilerContext
+            {
+                Namespace = "Test"
+            };
+            context.AddUsing("System");
+            var testClass = context.GetOrCreateType("TestClass");
+            testClass.AddAttribute("CodeAttribute");
+            testClass.AddBase("System.Object");
+            testClass.AddBase("IComponent");
+            var field = testClass.GetOrCreateField("_floatValue");
+            field.Type = "float";
+            field.Modificator = "protected";
+
+            var autoProperty = testClass.GetOrCreateProperty("Auto");
+            autoProperty.Modificator = "protected";
+            autoProperty.Type = "int";
+
+            var onlyGet = testClass.GetOrCreateProperty("Getter");
+            onlyGet.Modificator = "public";
+            onlyGet.Type = "int";
+            onlyGet.GetGetter().AddCode("return Auto;");
+
+            var onlySet = testClass.GetOrCreateProperty("Setter");
+            onlySet.Modificator = "public";
+            onlySet.Type = "int";
+            onlySet.GetSetter().AddCode("Auto = value;");
+            
+            Debug.Log(context);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Valkyrie.DSL.Actions
         {
             var args = lc.GetLocalVariables();
             var type = context.GetOrCreateType(Type.GetString(args, context.GlobalVariables));
-            type.Attributes.Add(Attribute.GetString(args, context.GlobalVariables));
+            type.AddAttribute(Attribute.GetString(args, context.GlobalVariables));
         }
 
         public override string ToString() => $"{Type} has attribute {Attribute}";

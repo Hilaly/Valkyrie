@@ -49,5 +49,10 @@ namespace Valkyrie.DSL.Definitions
 
             return sb.ToString();
         }
+
+        public void AddUsing(string usingStr)
+        {
+            Usings.Add(usingStr);
+        }
     }
 }

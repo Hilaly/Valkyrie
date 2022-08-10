@@ -14,7 +14,7 @@ namespace Valkyrie.DSL.Actions
         {
             var args = lc.GetLocalVariables();
             var type = context.GetOrCreateType(Type.GetString(args, context.GlobalVariables));
-            type.BaseTypes.Add(BaseType.GetString(args, context.GlobalVariables));
+            type.AddBase(BaseType.GetString(args, context.GlobalVariables));
         }
 
         public override string ToString() => $"{Type} inherited from {BaseType}";
