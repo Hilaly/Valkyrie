@@ -119,5 +119,11 @@ namespace Valkyrie.DSL
                     return node.GetString();
             }
         }
+
+        public void PostProcess(CompilerContext ctx)
+        {
+            foreach (var dslMacro in Dictionary.GetMacros) 
+                ctx.Macros.Add(dslMacro);
+        }
     }
 }

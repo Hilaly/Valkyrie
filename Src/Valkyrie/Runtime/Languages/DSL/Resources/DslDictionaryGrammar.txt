@@ -35,7 +35,9 @@
 
 #parser
 
-<root> -> <rule>+
+<root> -> <some_entry>+
+
+<some_entry> -> <rule> | <macro>
 
 <rule> -> <rule_name> COLON RULE_OP <rule_bnf> RULE_OP <rule_actions> SENTENCE_OP | <rule_name> COLON RULE_OP <rule_bnf> SENTENCE_OP
 
@@ -105,3 +107,7 @@
 <single_expr> -> <global_expr> | <local_expr> | \( <expr> \)
 <global_expr> -> "global" <final_str_literal>
 <local_expr> -> "local" <final_str_literal>
+
+<macro> -> "macro" COLON <macro_source> RULE_OP <macro_sentence> SENTENCE_OP
+<macro_source> -> <string>
+<macro_sentence> -> <string>

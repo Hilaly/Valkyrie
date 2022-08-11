@@ -104,6 +104,7 @@ namespace Valkyrie.Language
             };
             ctx.AddUsing("System.Collections");
             compiler.Build(source, ctx);
+            compiler.PostProcess(ctx);
             Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
         }

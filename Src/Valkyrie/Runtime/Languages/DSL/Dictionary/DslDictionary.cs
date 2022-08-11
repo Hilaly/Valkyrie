@@ -10,22 +10,10 @@ using Valkyrie.Tools;
 
 namespace Valkyrie.DSL.Dictionary
 {
-    class DslDictionaryNode
-    {
-        public string Name { get; }
-
-        private readonly List<DslDictionaryEntry> _entries = new();
-
-        public IEnumerable<IDslDictionaryEntry> GetEntries => _entries;
-
-        public DslDictionaryNode(string name) => Name = name;
-
-        public void Add(DslDictionaryEntry dslDictionaryEntry) => _entries.Add(dslDictionaryEntry);
-    }
-
     class DslDictionary : IDslDictionary
     {
         private readonly List<DslDictionaryNode> _nodes = new();
+        private readonly List<DslMacro> _macros = new();
 
         internal DslDictionaryNode Get(string name, bool create = false)
         {
@@ -36,7 +24,8 @@ namespace Valkyrie.DSL.Dictionary
         }
 
         public IEnumerable<IDslDictionaryEntry> GetEntries => _nodes.SelectMany(x => x.GetEntries);
-
+        public IEnumerable<IDslMacro> GetMacros => _macros;
+        
         public void Load(string text)
         {
             var ast = AstProvider.DictionaryConstructor.Parse(text.ToStream());
@@ -51,8 +40,14 @@ namespace Valkyrie.DSL.Dictionary
             switch (name)
             {
                 case "<root>":
+                case "<some_entry>":
                     foreach (var astNode in children)
                         Parse(astNode);
+                    break;
+                case "<macro>":
+                    var macroSource = children.Find(x => x.Name == "<macro_source>");
+                    var macroSentence = children.Find(x => x.Name == "<macro_sentence>");
+                    CreateMacro(macroSource, macroSentence);
                     break;
                 case "<rule>":
                     var rn = children.Find(x => x.Name == "<rule_name>");
@@ -64,6 +59,11 @@ namespace Valkyrie.DSL.Dictionary
                 default:
                     throw new GrammarCompileException(ast, "Not implemented node type");
             }
+        }
+
+        private void CreateMacro(IAstNode macroSource, IAstNode macroSentence)
+        {
+            _macros.Add(new DslMacro(macroSource.GetString(), macroSentence.GetString()));
         }
 
         private void ParseRule(IAstNode rn, IAstNode bnf, IAstNode ra)
