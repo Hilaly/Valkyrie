@@ -1,6 +1,9 @@
 ###### This is simple example of some expression.
 <!-- And this is HTML like comment -->
 
+MACRO:
+    GET_VALUED_PROPERTY(type, value) => type value { get; set; }.
+
 ## Entities: X.
 <entities_creation>:
     => "Entities :" <entities_list>

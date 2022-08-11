@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using Valkyrie.DSL;
@@ -152,6 +153,20 @@ namespace Valkyrie.Language
             onlySet.GetSetter().AddCode("Auto = value;");
             
             Debug.Log(context);
+        }
+
+        [Test]
+        public void TestRegexReplace()
+        {
+            var source = "class Alpha{PROPERTY(int,M)PROPERTY(float,K)}";
+            var regex = "PROPERTY\\((?'type'\\w+),(?'name'\\w+)\\)";
+            var r = new Regex(regex);
+            while (r.IsMatch(source))
+            {
+                source = r.Replace(source, "${type} ${name} {get;set;}");
+            }
+
+            Debug.Log(source);
         }
     }
 }

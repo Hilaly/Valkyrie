@@ -38,9 +38,9 @@ move is change position by `input*dt`.
 - [x] Add attribute action
 - [x] Add method action
 - [ ] Add code to method action
-- [ ] Add property action
-- [ ] Add code to property set action
-- [ ] Add code to property get action
+- [x] Add property action
+- [x] Add code to property set action
+- [x] Add code to property get action
 - [x] Set global var action
 - [x] Set local var action
 - [ ] Get global var action
@@ -49,6 +49,7 @@ move is change position by `input*dt`.
 - [x] if else action
 - [ ] Blackboard
 - [ ] Code snippets
+- [ ] Add code to class direct
 - [ ] Alias
 
 .
