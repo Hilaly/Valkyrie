@@ -9,6 +9,7 @@ namespace Valkyrie.DSL.Definitions
     [Serializable]
     public class GeneratedTypeDefinition : GeneratedDefinition
     {
+        public List<string> Code = new();
         public string TypeCategory { get; set; } = "class";
         public List<string> BaseTypes { get; } = new();
         public List<GeneratedMethodDefinition> Methods { get; } = new();
@@ -23,6 +24,9 @@ namespace Valkyrie.DSL.Definitions
             WriteAttributes(sb);
             sb.BeginBlock($"{Modificator} {TypeCategory} {classDef}");
 
+            foreach (var code in Code) 
+                sb.AppendLine(code);
+            
             if(Fields.Any())
             {
                 sb.AppendLine("#region Fields");
@@ -83,6 +87,11 @@ namespace Valkyrie.DSL.Definitions
             if (result == null)
                 Properties.Add(result = new GeneratedPropertyDefinition() { Name = name });
             return result;
+        }
+
+        public void AddCode(string code)
+        {
+            Code.Add(code);
         }
     }
 }

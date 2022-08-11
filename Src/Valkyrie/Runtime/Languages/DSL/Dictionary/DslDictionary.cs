@@ -214,6 +214,14 @@ namespace Valkyrie.DSL.Dictionary
                         Code = CreateStringProvider(children[7], syntax)
                     };
                 }
+                case "<add_code_type>":
+                {
+                    return new AddCodeToTypeAction()
+                    {
+                        Type = CreateStringProvider(children[4], syntax),
+                        Code = CreateStringProvider(children[2], syntax)
+                    };
+                }
                 case "<add_code_global>":
                 {
                     return new AddCodeGlobalAction()

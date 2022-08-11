@@ -55,6 +55,7 @@ macro: "GET_VALUED_PROPERTY(type, value)" => "type value { get; set; }".
             log $entityName + " is not entity"
         else
         {
+            add code "GET_VALUED_PROPERTY(" + $componentName + "," + "int" + ")" to $entityName,
             add property $componentName to $entityName,
             add code "{return default;}" to getter $componentName of $entityName,
             add code "//No code" to setter $componentName of $entityName
