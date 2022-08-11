@@ -94,6 +94,9 @@
 <set_property_type> -> "type" "of" "property" <final_str_literal> "of" <final_str_literal> "is" <final_str_literal>
 <set_method_return_type> -> "type" "of" "method" <final_str_literal> "of" <final_str_literal> "is" <final_str_literal>
 
+<rule_action> -> <add_code_global>
+<add_code_global> -> "add" "code" <final_str_literal>
+
 <final_str_literal> -> <add_words_op>
 <add_words_op> -> <word> ADD_OP <add_words_op> | <word>
 <word> -> <rule_var> | <global_var> | <string> | <id>

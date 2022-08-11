@@ -63,7 +63,7 @@ namespace Valkyrie.DSL.Dictionary
 
         private void CreateMacro(IAstNode macroSource, IAstNode macroSentence)
         {
-            _macros.Add(new DslMacro(macroSource.GetString(), macroSentence.GetString()));
+            _macros.Add(new DslMacro(macroSource.GetString().Trim('"'), macroSentence.GetString().Trim('"')));
         }
 
         private void ParseRule(IAstNode rn, IAstNode bnf, IAstNode ra)
@@ -212,6 +212,13 @@ namespace Valkyrie.DSL.Dictionary
                         Type = CreateStringProvider(children[5], syntax),
                         Method = CreateStringProvider(children[3], syntax),
                         Code = CreateStringProvider(children[7], syntax)
+                    };
+                }
+                case "<add_code_global>":
+                {
+                    return new AddCodeGlobalAction()
+                    {
+                        Code = CreateStringProvider(children[2], syntax)
                     };
                 }
                 default:

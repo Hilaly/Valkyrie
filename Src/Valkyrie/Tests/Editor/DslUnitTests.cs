@@ -169,5 +169,18 @@ namespace Valkyrie.Language
 
             Debug.Log(source);
         }
+        [Test]
+        public void TestRegexReplace2()
+        {
+            var source = "sdjflksdaf\nadfhksdhf\n\t VALUE_COMPONENT(input,UnityEngine.Vector2Int)\n asdfljl\n";
+            var regex = @"VALUE_COMPONENT\((?<name>\w+),(?<type>(\w|\.)+)\)";
+            var r = new Regex(regex);
+            while (r.IsMatch(source))
+            {
+                source = r.Replace(source, "public class ${name}Component : NaiveEntity.GamePrototype.EntProto.ValueComponent<${type}> { }");
+            }
+
+            Debug.Log(source);
+        }
     }
 }

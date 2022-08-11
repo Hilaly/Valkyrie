@@ -13,6 +13,7 @@ namespace Valkyrie.DSL.Definitions
 
         public string Namespace;
         public readonly List<string> Usings = new();
+        public List<string> Code = new();
 
         public readonly List<GeneratedTypeDefinition> Types = new();
         public readonly List<string> UnparsedSentences = new();
@@ -48,11 +49,15 @@ namespace Valkyrie.DSL.Definitions
             if (Namespace.NotNullOrEmpty())
                 sb.BeginBlock($"namespace {Namespace}");
 
-            //3. Write all generated types
+            //3. Write all direct code
+            foreach (var code in Code) 
+                sb.AppendLine(code);
+            
+            //4. Write all generated types
             foreach (var typeDefinition in Types)
                 typeDefinition.Write(sb);
 
-            //4. Close namespace
+            //5. Close namespace
             if (Namespace.NotNullOrEmpty())
                 sb.EndBlock();
 
@@ -67,7 +72,7 @@ namespace Valkyrie.DSL.Definitions
                 var applied = false;
                 foreach (var dslMacro in Macros)
                 {
-                    if (dslMacro.IsMatch(input))
+                    while (dslMacro.IsMatch(input))
                     {
                         applied = true;
                         input = dslMacro.Apply(input);
@@ -78,6 +83,11 @@ namespace Valkyrie.DSL.Definitions
             }
 
             return input;
+        }
+
+        public void AddCode(string code)
+        {
+            Code.Add(code);
         }
     }
 }

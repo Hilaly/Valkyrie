@@ -1,6 +1,8 @@
 ###### This is simple example of some expression.
 <!-- And this is HTML like comment -->
 
+macro: "VALUE_COMPONENT\((?<name>\w+),(?<type>(\w|\.)+)\)" 
+    => "public class ${name}Component : NaiveEntity.GamePrototype.EntProto.ValueComponent<${type}> { }".
 macro: "GET_VALUED_PROPERTY(type, value)" => "type value { get; set; }".
 
 ## Entities: X.
@@ -28,8 +30,7 @@ macro: "GET_VALUED_PROPERTY(type, value)" => "type value { get; set; }".
 <typed_component_creation>:
     => $componentName "is" $valueType "property"
     => log "Component " + $componentName + " of " + $valueType,
-        create class $componentName + "Component",
-        add base "NaiveEntity.GamePrototype.EntProto.ValueComponent<" + $valueType + ">" to $componentName + "Component",
+        add code "VALUE_COMPONENT(" + $componentName + "," + $valueType + ")",
         set global $componentName + "Component" = $componentName,
         set global $componentName + "Value" = $valueType.
 
