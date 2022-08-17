@@ -48,9 +48,9 @@ move is change position by `input*dt`.
 - [x] if action
 - [x] if else action
 - [ ] Blackboard
-- [ ] Code snippets
-- [ ] Add code to class direct
-- [ ] Alias
+- [x] Code snippets
+- [x] Add code to class direct
+- [x] Alias
 
 .
 <!--

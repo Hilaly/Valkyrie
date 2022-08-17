@@ -3,7 +3,8 @@
 
 macro: "VALUE_COMPONENT\((?<name>\w+),(?<type>(\w|\.)+)\)" 
     => "public class ${name}Component : NaiveEntity.GamePrototype.EntProto.ValueComponent<${type}> { }".
-macro: "GET_VALUED_PROPERTY(type, value)" => "type value { get; set; }".
+macro: "GET_VALUED_PROPERTY\((?<type>(\w|\.)+),(?<name>\w+)\)" 
+    => "public ${type} ${name} { get { return Entity.GetComponent<${name}Component>().Value; } set { Entity.AddComponent(new ${name}Component() { Value = value }); } }".
 
 ## Entities: X.
 <entities_creation>:
@@ -55,10 +56,7 @@ macro: "GET_VALUED_PROPERTY(type, value)" => "type value { get; set; }".
             log $entityName + " is not entity"
         else
         {
-            add code "GET_VALUED_PROPERTY(" + $componentName + "," + "int" + ")" to $entityName,
-            add property $componentName to $entityName,
-            add code "{return default;}" to getter $componentName of $entityName,
-            add code "//No code" to setter $componentName of $entityName
+            add code "GET_VALUED_PROPERTY(int," + $componentName + ")" to $entityName
         }.
 
 ## Every tick X Y.
