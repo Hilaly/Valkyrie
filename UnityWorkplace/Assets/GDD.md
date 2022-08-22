@@ -6,7 +6,6 @@ Snake is a video game genre where the player maneuvers a growing line that becom
 - Wall
 - Food
 - Snake
-- Head
 - Body.
 
 ## Different properties.
@@ -14,10 +13,10 @@ Snake is a video game genre where the player maneuvers a growing line that becom
 position is `UnityEngine.Vector2Int` property.
 input is `UnityEngine.Vector2Int` property.
 
-Snake contains Head.
 Snake contains list of Body.
 
-Head has position.
+Snake has position.
+Snake has input.
 Body has position.
 
 ## Logic.
