@@ -1,4 +1,5 @@
 using Configs;
+using Meta.Commands;
 using Meta.PlayerInfo;
 using UnityEngine;
 using Valkyrie.Di;
@@ -13,6 +14,9 @@ namespace Meta
 
         [Header("Use Valkyrie Configs")] [SerializeField, Tooltip("Do we use configs")]
         private bool useConfigs = true;
+
+        [Header("Use commands")] [SerializeField, Tooltip("Do we need commands handling")]
+        private bool useCommands = true;
 
         public override void Register(IContainer container)
         {
@@ -33,6 +37,11 @@ namespace Meta
             
             if (_registerLocalStorageData)
                 container.Register(() => new LocalSaveDataStorage(_localSavePath))
+                    .AsInterfacesAndSelf()
+                    .SingleInstance();
+
+            if (useCommands)
+                container.Register<CommandsProcessor>()
                     .AsInterfacesAndSelf()
                     .SingleInstance();
         }

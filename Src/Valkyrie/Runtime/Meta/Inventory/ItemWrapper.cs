@@ -9,7 +9,7 @@ namespace Meta.Inventory
         public string Id => Item.Id;
         public string TypeId => Item.TypeId;
         
-        string GetTypeId() => GetType().Name;
+        protected virtual string GetTypeId() => GetType().Name;
 
         protected ItemWrapper()
         {

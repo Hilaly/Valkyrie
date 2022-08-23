@@ -8,14 +8,16 @@ using Valkyrie.Profile;
 
 namespace Meta.Commands
 {
-    public class CommandsProcessor : ICommandsProcessor
+    class CommandsProcessor : ICommandsProcessor
     {
         private readonly DbContext _dbContext;
         private readonly Dictionary<Type, object> _cached = new();
         private readonly List<ICommandHandler> _handlers;
+        private readonly CommandArgsResolver _argsResolver;
 
-        public CommandsProcessor(IEnumerable<ICommandHandler> commandHandlers, DbContext dbContext)
+        public CommandsProcessor(CommandArgsResolver argsResolver, IEnumerable<ICommandHandler> commandHandlers, DbContext dbContext)
         {
+            _argsResolver = argsResolver;
             _dbContext = dbContext;
             _handlers = new List<ICommandHandler>(commandHandlers);
         }
@@ -62,7 +64,7 @@ namespace Meta.Commands
 
         async Task Execute<TCommand>(TCommand command, ICommandHandler<TCommand> handler)
         {
-            var ctx = new CommandContext() { };
+            var ctx = _argsResolver.Create();
             await handler.Execute(ctx, command);
         }
     }
