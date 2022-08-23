@@ -18,6 +18,9 @@ namespace Meta
             container.Register<Inventory.InventoryProvider>()
                 .AsInterfacesAndSelf()
                 .SingleInstance();
+            container.Register<Inventory.Wallet>()
+                .AsInterfacesAndSelf()
+                .SingleInstance();
             
             if (_registerLocalStorageData)
                 container.Register(() => new LocalSaveDataStorage(_localSavePath))

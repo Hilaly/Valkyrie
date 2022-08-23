@@ -30,20 +30,4 @@ namespace Meta.Inventory
 
         public void Remove(string id) => _items.Remove(id);
     }
-
-    public class Currency : ItemWrapper
-    {
-        public Currency(Item item) : base(item)
-        {
-        }
-
-        public Currency(string id) : base(id)
-        {
-        }
-    }
-    
-    public interface IWallet
-    {
-        
-    }
 }

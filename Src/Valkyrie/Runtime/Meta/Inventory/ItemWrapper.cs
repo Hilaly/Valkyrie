@@ -4,10 +4,17 @@ namespace Meta.Inventory
 {
     public abstract class ItemWrapper
     {
-        public Item Item { get; }
+        public Item Item { get; set; }
 
-        string GetTypeId() => GetType().Name;
+        public string Id => Item.Id;
+        public string TypeId => Item.TypeId;
         
+        string GetTypeId() => GetType().Name;
+
+        protected ItemWrapper()
+        {
+        }
+
         protected ItemWrapper(Item item)
         {
             Assert.AreEqual(GetTypeId(), item.TypeId);
