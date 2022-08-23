@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Valkyrie.Profile.Commands.Commands
+namespace Meta.Commands
 {
     public interface ICommandHandler{}
 

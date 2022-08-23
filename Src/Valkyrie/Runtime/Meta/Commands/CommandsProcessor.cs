@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using Valkyrie.Profile;
 
-namespace Valkyrie.Profile.Commands.Commands
+namespace Meta.Commands
 {
     public class CommandsProcessor : ICommandsProcessor
     {
@@ -23,13 +24,13 @@ namespace Valkyrie.Profile.Commands.Commands
         {
             if (_cached.TryGetValue(typeof(TCommand), out var oHandler))
             {
-                return (ICommandHandler<TCommand>) oHandler;
+                return (ICommandHandler<TCommand>)oHandler;
             }
 
-            var handler = (ICommandHandler<TCommand>) _handlers.FirstOrDefault(x => x is ICommandHandler<TCommand>);
+            var handler = (ICommandHandler<TCommand>)_handlers.FirstOrDefault(x => x is ICommandHandler<TCommand>);
             if (handler == null)
                 throw new Exception($"Handler for {typeof(TCommand).Name} is not registered");
-            
+
             _cached.Add(typeof(TCommand), handler);
             return handler;
         }
@@ -42,12 +43,12 @@ namespace Valkyrie.Profile.Commands.Commands
                     $"[CMD]: start processing {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)}");
 
                 await Execute(command, GetHandler<TCommand>());
-            
+
                 Debug.Log(
                     $"[CMD]: {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)} processed, saving...");
 
                 await _dbContext.SaveAsync();
-            
+
                 Debug.Log(
                     $"[CMD]: saved");
             }
@@ -61,7 +62,7 @@ namespace Valkyrie.Profile.Commands.Commands
 
         async Task Execute<TCommand>(TCommand command, ICommandHandler<TCommand> handler)
         {
-            var ctx = new CommandContext(){};
+            var ctx = new CommandContext() { };
             await handler.Execute(ctx, command);
         }
     }
