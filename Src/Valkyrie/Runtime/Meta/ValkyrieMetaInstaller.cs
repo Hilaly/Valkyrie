@@ -1,3 +1,4 @@
+using Meta.PlayerInfo;
 using UnityEngine;
 using Valkyrie.Di;
 
@@ -11,6 +12,13 @@ namespace Meta
 
         public override void Register(IContainer container)
         {
+            container.Register<PlayerInfoProvider>()
+                .AsInterfacesAndSelf()
+                .SingleInstance();
+            container.Register<Inventory.InventoryProvider>()
+                .AsInterfacesAndSelf()
+                .SingleInstance();
+            
             if (_registerLocalStorageData)
                 container.Register(() => new LocalSaveDataStorage(_localSavePath))
                     .AsInterfacesAndSelf()
