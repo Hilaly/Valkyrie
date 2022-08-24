@@ -1,29 +1,12 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Valkyrie.MVVM
 {
-    public class DisposableUnityComponent : MonoBehaviour
-    {
-        readonly List<IDisposable> _compositeDisposable = new List<IDisposable>();
-
-        public void Add(IDisposable disposable)
-        {
-            _compositeDisposable.Add(disposable);
-        }
-
-        // ReSharper disable once UnusedMember.Local
-        private void OnDestroy()
-        {
-            _compositeDisposable.ForEach(x => x.Dispose());
-            _compositeDisposable.Clear();
-        }
-    }
-    
     public static class AsyncExtension
     {
         private static CoroutineRunner _coroutineSource;
@@ -78,6 +61,11 @@ namespace Valkyrie.MVVM
         {
             yield return toWait;
             tcs.TrySetResult(true);
+        }
+
+        public static Task LoadSceneAsync(string sceneName, LoadSceneMode loadSceneMode)
+        {
+            return CoroutineAwaiterToTask(SceneManager.LoadSceneAsync(sceneName, loadSceneMode));
         }
     }
 }
