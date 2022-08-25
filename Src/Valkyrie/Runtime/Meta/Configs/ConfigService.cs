@@ -8,9 +8,9 @@ namespace Configs
 {
     public class ConfigService : IConfigService
     {
-        private readonly Dictionary<string, IConfigData> _configData = new Dictionary<string, IConfigData>();
-        private readonly List<IConfigLoader> _loaders = new List<IConfigLoader>();
-        private readonly Dictionary<Type, object> _cache = new Dictionary<Type, object>();
+        private readonly Dictionary<string, IConfigData> _configData = new();
+        private readonly List<IConfigLoader> _loaders = new();
+        private readonly Dictionary<Type, object> _cache = new();
 
         public T Get<T>(string id) where T : IConfigData => (T)_configData[id];
         

@@ -12,7 +12,7 @@ namespace Meta
     class LocalSaveDataStorage : ISaveDataStorage, IDisposable
     {
         private readonly string _localPath;
-        private readonly HashSet<ISaveDataProvider> _dataProviders = new HashSet<ISaveDataProvider>();
+        private readonly HashSet<ISaveDataProvider> _dataProviders = new();
         private JObject _saveData;
 
         void Log(string msg)
@@ -61,6 +61,7 @@ namespace Meta
         public async Task SaveAsync()
         {
             Log($"saving data to {DataPath}");
+            _saveData ??= new JObject();
             
             foreach (var dataProvider in _dataProviders) 
                 _saveData[dataProvider.Key] = dataProvider.GetData();
@@ -82,7 +83,7 @@ namespace Meta
 
         public void Dispose()
         {
-            SaveAsync().Wait();
+            SaveAsync();
             
             Log("storage disposed");
         }
