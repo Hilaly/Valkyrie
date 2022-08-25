@@ -24,10 +24,7 @@ namespace Meta.Inventory
                 _items.Add(item.Key, item.Value);
         }
 
-        public void Add(IInventoryItem item)
-        {
-            throw new System.NotImplementedException();
-        }
+        public void Add(IInventoryItem item) => _items[item.Id] = item;
 
         public T Get<T>(string id) where T : IInventoryItem
         {

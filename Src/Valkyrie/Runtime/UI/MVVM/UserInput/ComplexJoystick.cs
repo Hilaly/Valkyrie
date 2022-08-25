@@ -2,7 +2,7 @@
 
 namespace Valkyrie.UserInput
 {
-    class ComplexJoystick : GenericInnerListOwner<IVirtualJoystick>, IVirtualJoystick
+   public class ComplexJoystick : GenericInnerListOwner<IVirtualJoystick>, IVirtualJoystick
     {
         public Vector2 Value
         {

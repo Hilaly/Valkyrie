@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace Valkyrie.UserInput
 {
-    class GenericInnerListOwner<T>
+    public class GenericInnerListOwner<T> : IEnumerable<T>
     {
         protected readonly List<T> Values = new List<T>();
 
@@ -15,5 +16,8 @@ namespace Valkyrie.UserInput
         {
             Values.Remove(instance);
         }
+
+        public IEnumerator<T> GetEnumerator() => Values.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
