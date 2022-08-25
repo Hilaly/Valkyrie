@@ -8,5 +8,8 @@ namespace Valkyrie.Ecs
                 ecsEntity.Add(new T());
             return ref ecsEntity.Get<T>();
         }
+
+        public static GroupWrapper Wrap(this IGroupBuilder groupBuilder) =>
+            GroupWrapper.Wrap(groupBuilder);
     }
 }
