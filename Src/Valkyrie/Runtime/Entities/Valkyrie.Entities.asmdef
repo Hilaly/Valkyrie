@@ -1,5 +1,5 @@
 {
-    "name": "Valkyrie.Entities",
+    "name": "Valkyrie.Entities.Complex",
     "rootNamespace": "Valkyrie",
     "references": [
         "GUID:06d683358a9bf1549974f36ef8fc5080",

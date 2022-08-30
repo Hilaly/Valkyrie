@@ -44,6 +44,6 @@ namespace Valkyrie.Entities
             _context.Destroy(e);
         }
 
-        public List<Entity> GetAll() => _context.GetEntities(false);
+        public IReadOnlyList<Entity> GetAll() => _context.GetEntities();
     }
 }
