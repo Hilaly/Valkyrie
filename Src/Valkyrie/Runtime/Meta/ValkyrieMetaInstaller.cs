@@ -41,9 +41,15 @@ namespace Meta
                     .SingleInstance();
 
             if (useCommands)
+            {
                 container.Register<CommandsProcessor>()
                     .AsInterfacesAndSelf()
                     .SingleInstance();
+                
+                container.Register<CommandArgsResolver>()
+                    .AsInterfacesAndSelf()
+                    .SingleInstance();
+            }
         }
     }
 }

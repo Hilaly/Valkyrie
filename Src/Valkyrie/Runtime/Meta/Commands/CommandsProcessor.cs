@@ -2,23 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Meta.PlayerInfo;
 using Newtonsoft.Json;
 using UnityEngine;
+using Valkyrie.Di;
 using Valkyrie.Profile;
 
 namespace Meta.Commands
 {
     class CommandsProcessor : ICommandsProcessor
     {
-        private readonly DbContext _dbContext;
+        [Inject] private readonly IPlayerInfoProvider _playerInfoProvider;
+
+        private readonly ISaveDataStorage _saveData;
         private readonly Dictionary<Type, object> _cached = new();
         private readonly List<ICommandHandler> _handlers;
         private readonly CommandArgsResolver _argsResolver;
 
-        public CommandsProcessor(CommandArgsResolver argsResolver, IEnumerable<ICommandHandler> commandHandlers, DbContext dbContext)
+        public CommandsProcessor(CommandArgsResolver argsResolver, IEnumerable<ICommandHandler> commandHandlers,
+            ISaveDataStorage saveDataStorage)
         {
             _argsResolver = argsResolver;
-            _dbContext = dbContext;
+            _saveData = saveDataStorage;
             _handlers = new List<ICommandHandler>(commandHandlers);
         }
 
@@ -46,10 +51,12 @@ namespace Meta.Commands
 
                 await Execute(command, GetHandler<TCommand>());
 
+                _playerInfoProvider.Info.Updated = DateTime.UtcNow;
+
                 Debug.Log(
                     $"[CMD]: {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)} processed, saving...");
 
-                await _dbContext.SaveAsync();
+                await _saveData.SaveAsync();
 
                 Debug.Log(
                     $"[CMD]: saved");
