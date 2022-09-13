@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Valkyrie.MVVM
@@ -7,7 +6,7 @@ namespace Valkyrie.MVVM
     {
         private void Awake()
         {
-            DataExtensions.InjectAutoBind(gameObject);
+            gameObject.InjectAutoBind();
         }
     }
 }

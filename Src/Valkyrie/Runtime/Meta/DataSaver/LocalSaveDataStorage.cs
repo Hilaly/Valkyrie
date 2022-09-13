@@ -36,6 +36,11 @@ namespace Meta
                 return false;
             
             var json = await File.ReadAllTextAsync(DataPath);
+            
+#if UNITY_EDITOR
+            Log(json);
+#endif
+            
             _saveData = JObject.Parse(json);
             foreach (var dataProvider in _dataProviders) 
                 ParseEntry(dataProvider);
@@ -65,8 +70,13 @@ namespace Meta
             
             foreach (var dataProvider in _dataProviders) 
                 _saveData[dataProvider.Key] = dataProvider.GetData();
+
+            var json = _saveData.ToString(Formatting.Indented);
+            await File.WriteAllTextAsync(DataPath, json);
             
-            await File.WriteAllTextAsync(DataPath, _saveData.ToString(Formatting.Indented));
+#if UNITY_EDITOR
+            Log(json);
+#endif
             
             Log("data saved");
         }
@@ -75,7 +85,8 @@ namespace Meta
         {
             if (_dataProviders.Add(provider))
             {
-                ParseEntry(provider);
+                if(_saveData != null)
+                    ParseEntry(provider);
                 return new ActionDisposable(() => _dataProviders.Remove(provider));
             }
             throw new Exception("Try to register ISaveDataProvider twice");

@@ -1,6 +1,6 @@
 using System;
 
-namespace Valkyrie.MVVM
+namespace Utils
 {
     [AttributeUsage(
         AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Interface,

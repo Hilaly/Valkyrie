@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Threading;
 using Valkyrie.Di;
 
-namespace Valkyrie.MVVM
+namespace Utils
 {
     public class Bind
     {

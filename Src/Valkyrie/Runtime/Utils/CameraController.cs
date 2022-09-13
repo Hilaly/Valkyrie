@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Hilaly
+namespace Utils
 {
     public class CameraController : MonoBehaviour
     {

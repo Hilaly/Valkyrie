@@ -1,6 +1,6 @@
 using System;
 
-namespace Valkyrie.MVVM
+namespace Utils
 {
     public interface IBindingAdapter
     {

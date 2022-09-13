@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Valkyrie.MVVM
+namespace Utils
 {
     public class DisposableUnityComponent : MonoBehaviour
     {

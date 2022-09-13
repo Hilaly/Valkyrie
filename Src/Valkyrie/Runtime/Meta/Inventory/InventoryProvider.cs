@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -5,38 +6,57 @@ using Newtonsoft.Json;
 namespace Meta.Inventory
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    class InventoryProvider : ISaveDataProvider, IInventory
+    class InventoryProvider : ISaveDataProvider, IInventory, IDisposable
     {
         private readonly Dictionary<string, IInventoryItem> _items = new();
+        private readonly IDisposable _disposable;
 
-        public string Key => "INTERNAL_INVENTORY";
+        private JsonSerializerSettings SerSettings { get; } = new() { TypeNameHandling = TypeNameHandling.All };
 
-        public string GetData()
+        public InventoryProvider(ISaveDataStorage dataStorage) => _disposable = dataStorage.RegisterProvider(this);
+
+        #region IDisposable
+
+        public void Dispose()
         {
-            return JsonConvert.SerializeObject(_items);
+            _disposable?.Dispose();
         }
 
-        public void SetData(string jsonData)
+        #endregion
+
+        #region ISaveDataProvider
+
+        string ISaveDataProvider.Key => "INTERNAL_INVENTORY";
+
+        string ISaveDataProvider.GetData() => JsonConvert.SerializeObject(_items.Values.ToArray(), SerSettings);
+
+        void ISaveDataProvider.SetData(string jsonData)
         {
-            var temp = JsonConvert.DeserializeObject<Dictionary<string, IInventoryItem>>(jsonData);
             _items.Clear();
-            foreach (var item in temp)
-                _items.Add(item.Key, item.Value);
+            var temp = JsonConvert.DeserializeObject<IInventoryItem[]>(jsonData, SerSettings);
+            if(temp == null)
+                return;
+            for (var index = 0; index < temp.Length; index++)
+            {
+                var item = temp[index];
+                _items.Add(item.Id, item);
+            }
         }
+
+        #endregion
+
+        #region IInventory
 
         public void Add(IInventoryItem item) => _items[item.Id] = item;
 
-        public T Get<T>(string id) where T : IInventoryItem
-        {
-            if (_items.TryGetValue(id, out var item) && item is T result)
-                return result;
-            return default;
-        }
+        public T Get<T>(string id) where T : IInventoryItem => _items.TryGetValue(id, out var item) && item is T result ? result : default;
 
         public IEnumerable<IInventoryItem> Get() => _items.Values;
 
         public IEnumerable<T> Get<T>() => Get().OfType<T>();
 
         public void Remove(string id) => _items.Remove(id);
+
+        #endregion
     }
 }

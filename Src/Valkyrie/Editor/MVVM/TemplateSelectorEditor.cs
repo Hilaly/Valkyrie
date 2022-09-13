@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Utils;
 using Valkyrie.MVVM.Bindings;
 
 namespace Valkyrie.MVVM.Editor
