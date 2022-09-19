@@ -12,6 +12,8 @@ namespace Valkyrie.Language.Description
         public List<MethodsScope> InitMethods { get; } = new List<MethodsScope>();
         public List<ISimPart> SimulationMethods { get; } = new List<ISimPart>();
         public List<ViewScope> Views { get; } = new List<ViewScope>();
+        
+        public string Namespace = "Test";
 
         public override string ToString()
         {
@@ -21,7 +23,7 @@ namespace Valkyrie.Language.Description
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine();
 
-            var rootNamespace = "Test";
+            var rootNamespace = Namespace;
             
             sb.BeginBlock($"namespace {rootNamespace}");
             WriteWorldSimulation(sb);
@@ -72,7 +74,7 @@ namespace Valkyrie.Language.Description
 
         private void WriteComponent(FormatWriter sb, ComponentDescription componentDescription)
         {
-            sb.BeginBlock($"public struct {componentDescription.GetTypeName()}");
+            sb.BeginBlock($"public partial struct {componentDescription.GetTypeName()}");
             foreach (var field in componentDescription.Fields)
                 sb.AppendLine($"public {field.Type ?? "object"} {field.Name};");
             sb.EndBlock();
