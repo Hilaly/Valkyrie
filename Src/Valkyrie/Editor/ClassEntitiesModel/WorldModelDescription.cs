@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Utils;
 using Valkyrie.Language.Description.Utils;
 
 namespace Editor.ClassEntitiesModel
@@ -9,7 +10,7 @@ namespace Editor.ClassEntitiesModel
         public string Name;
         public string Type;
     }
-    
+
     public class PropertyInfo : MemberInfo
     {
         public bool IsRequired;
@@ -28,6 +29,7 @@ namespace Editor.ClassEntitiesModel
         protected readonly List<string> Timers = new();
         protected readonly List<InfoGetter> Infos = new();
         protected readonly List<MemberInfo> Configs = new();
+        protected readonly List<MemberInfo> Slots = new();
 
         public abstract void Write(FormatWriter sb);
 
@@ -61,6 +63,21 @@ namespace Editor.ClassEntitiesModel
             return r;
         }
 
+        public IReadOnlyList<MemberInfo> GetAllSlots()
+        {
+            var r = new List<MemberInfo>();
+
+            foreach (var propertyInfo in BaseTypes.SelectMany(entityBase => entityBase.GetAllSlots()))
+                if (!r.Contains(propertyInfo))
+                    r.Add(propertyInfo);
+
+            foreach (var propertyInfo in Slots)
+                if (!r.Contains(propertyInfo))
+                    r.Add(propertyInfo);
+
+            return r;
+        }
+
         public IReadOnlyList<InfoGetter> GetAllInfos()
         {
             var r = new List<InfoGetter>();
@@ -76,7 +93,7 @@ namespace Editor.ClassEntitiesModel
             return r;
         }
 
-        public IEnumerable<string> GetAllTimers()
+        public IReadOnlyCollection<string> GetAllTimers()
         {
             var s = new HashSet<string>(Timers);
             foreach (var baseType in BaseTypes)
@@ -131,6 +148,20 @@ namespace Editor.ClassEntitiesModel
             });
             return this;
         }
+
+        public EntityBase AddSlot(string type, string name)
+        {
+            Slots.Add(new MemberInfo()
+            {
+                Name = name,
+                Type = type
+            });
+            return this;
+        }
+
+        public EntityBase AddSlot(EntityBase type, string name) => AddSlot(type.Name, name);
+
+        public virtual EntityBase Singleton() => this;
     }
 
     public class EntityInterface : EntityBase
@@ -151,10 +182,13 @@ namespace Editor.ClassEntitiesModel
                 sb.AppendLine($"void Stop{timer}();");
             }
 
-            foreach (var info in Configs) 
+            foreach (var info in Configs)
                 sb.AppendLine($"public {info.Type} {info.Name} {{ get; set; }}");
 
-            foreach (var info in Infos) 
+            foreach (var info in Slots)
+                sb.AppendLine($"public {info.Type} {info.Name} {{ get; set; }}");
+
+            foreach (var info in Infos)
                 sb.AppendLine($"public {info.Type} {info.Name} {{ get; }}");
 
             sb.EndBlock();
@@ -163,6 +197,14 @@ namespace Editor.ClassEntitiesModel
 
     public class EntityInfo : EntityBase
     {
+        public bool IsSingleton;
+
+        public override EntityBase Singleton()
+        {
+            IsSingleton = true;
+            return base.Singleton();
+        }
+
         public override void Write(FormatWriter sb)
         {
             var blockName = $"public partial class {Name} : IEntity";
@@ -174,26 +216,28 @@ namespace Editor.ClassEntitiesModel
                 sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
             foreach (var property in GetAllConfigs())
                 sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
+            foreach (var property in GetAllSlots())
+                sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
             foreach (var property in GetAllInfos())
                 sb.AppendLine($"public {property.Type} {property.Name} => {property.Code};");
-            
+
             var timers = GetAllTimers();
             foreach (var timer in timers)
             {
-                sb.AppendLine($"private EntityTimer _{timer};");
+                sb.AppendLine($"private EntityTimer {timer.ConvertToCamelCaseFieldName()};");
                 sb.AppendLine(
-                    $"public ITimer {timer} => _{timer} is {{ TimeLeft: > 0 }} ? _{timer} : _{timer} = default;");
+                    $"public ITimer {timer} => {timer.ConvertToCamelCaseFieldName()} is {{ TimeLeft: > 0 }} ? {timer.ConvertToCamelCaseFieldName()} : {timer.ConvertToCamelCaseFieldName()} = default;");
                 sb.BeginBlock($"public void Start{timer}(float time)");
                 sb.AppendLine($"if ({timer} != null) throw new Exception(\"Timer {timer} already exist\");");
-                sb.AppendLine($"_{timer} = new EntityTimer(time);");
+                sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()} = new EntityTimer(time);");
                 sb.EndBlock();
-                sb.AppendLine($"public void Stop{timer}() => _{timer} = default;");
+                sb.AppendLine($"public void Stop{timer}() => {timer.ConvertToCamelCaseFieldName()} = default;");
             }
 
             if (timers.Any())
             {
                 sb.BeginBlock("internal void AdvanceTimers(float dt)");
-                foreach (var timer in timers) sb.AppendLine($"_{timer}?.Advance(dt);");
+                foreach (var timer in timers) sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()}?.Advance(dt);");
                 sb.EndBlock();
             }
 
@@ -269,7 +313,7 @@ namespace Editor.ClassEntitiesModel
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
                 var args = entityInfo.GetAllProperties().Where(x => x.IsRequired);
-                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name}"));
+                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.AppendLine($"{entityInfo.Name} Create{entityInfo.Name}({argsStr});");
             }
 
@@ -279,7 +323,12 @@ namespace Editor.ClassEntitiesModel
             sb.BeginBlock("public interface IWorldView");
             sb.AppendLine($"IReadOnlyList<IEntity> All {{ get; }}");
             foreach (var entityInfo in Entities)
+            {
+                if (entityInfo is EntityInfo { IsSingleton: true })
+                    sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} {{ get; }}");
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} {{ get; }}");
+            }
+
             sb.EndBlock();
 
             sb.BeginBlock("public interface IWorldSimulation");
@@ -301,12 +350,17 @@ namespace Editor.ClassEntitiesModel
             sb.EndBlock();
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
-                var args = entityInfo.GetAllProperties().Where(x => x.IsRequired);
-                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name}"));
+                var args = entityInfo.GetAllProperties().Where(x => x.IsRequired).ToList();
+                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.Name}({argsStr})");
+                if (entityInfo.IsSingleton)
+                {
+                    sb.AppendLine(
+                        $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
+                }
                 sb.BeginBlock($"var result = new {entityInfo.Name}");
                 foreach (var propertyInfo in args)
-                    sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name},");
+                    sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
                 sb.EndBlock();
                 sb.AppendLine(";");
                 sb.AppendLine("_worldState.Entities.Add(result);");
@@ -326,6 +380,9 @@ namespace Editor.ClassEntitiesModel
             foreach (var entityInfo in Entities)
                 sb.AppendLine(
                     $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _worldState.Entities.OfType<{entityInfo.Name}>().ToList();");
+            foreach (var entityInfo in Entities.Where(x => x is EntityInfo { IsSingleton: true }))
+                sb.AppendLine(
+                    $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})_worldState.Entities.Find(x => x is {entityInfo.Name});");
             sb.EndBlock();
 
             sb.BeginBlock("class WorldSimulation : IWorldSimulation");
@@ -352,6 +409,7 @@ namespace Editor.ClassEntitiesModel
                     continue;
                 sb.AppendLine($"foreach (var e in _worldView.AllOf{entityInfo.Name}) e.AdvanceTimers(dt);");
             }
+
             sb.EndBlock();
             sb.BeginBlock("void DestroyEntities()");
             sb.AppendLine("foreach (var entity in _worldState.ToDestroy) _worldState.Entities.Remove(entity);");
@@ -394,7 +452,7 @@ namespace Editor.ClassEntitiesModel
 
         public static EntityBase Inherit(this EntityBase e, params EntityBase[] parents)
         {
-            foreach (var parent in parents) 
+            foreach (var parent in parents)
                 e.Inherit(parent);
             return e;
         }

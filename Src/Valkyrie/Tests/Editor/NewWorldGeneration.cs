@@ -29,12 +29,16 @@ public class NewWorldGeneration
             .AddProperty("Hilaly.Tools.IPooledInstance<Rigidbody>", "Physic", false)
             .AddInfo("float", "Speed", "1f");
 
+        var takenOrder = world.CreateEntity("Order")
+            ;
+
         var ep = world.CreateEntity("Player")
             .Inherit(visibleInterface, movableInterface)
             .AddProperty("Hilaly.Tools.INavPath", "Path", false)
             .AddTimer("NavigationTimer")
-            .AddProperty("IEntity", "Order", false)
-            .AddProperty<int>("Money", false);
+            .AddSlot("Order", "Order")
+            .AddProperty<int>("Money", false)
+            .Singleton();
 
         var freeOrder = world.CreateEntity("FreeOrder")
             .AddProperty<string>("SourcePoint")
@@ -47,6 +51,6 @@ public class NewWorldGeneration
         Debug.Log(world);
         // Use the Assert class to test conditions
 
-        File.WriteAllText(Path.Combine("Assets", "Scripts", "TryGenericArchitecture", "Gen.cs"), world.ToString());
+        File.WriteAllText(Path.Combine("Assets", "Scripts", "Gen.cs"), world.ToString());
     }
 }
