@@ -26,7 +26,7 @@ namespace Editor.ClassEntitiesModel
         public string Name;
         protected readonly List<EntityBase> BaseTypes = new();
         protected readonly List<PropertyInfo> Properties = new();
-        protected readonly List<string> Timers = new();
+        internal readonly List<string> Timers = new();
         protected readonly List<InfoGetter> Infos = new();
         protected readonly List<MemberInfo> Configs = new();
         protected readonly List<MemberInfo> Slots = new();
@@ -180,6 +180,7 @@ namespace Editor.ClassEntitiesModel
                 sb.AppendLine($"ITimer {timer} {{ get; }}");
                 sb.AppendLine($"void Start{timer}(float time);");
                 sb.AppendLine($"void Stop{timer}();");
+                sb.AppendLine($"bool {timer}JustFinished {{ get; }}");
             }
 
             foreach (var info in Configs)
@@ -232,12 +233,23 @@ namespace Editor.ClassEntitiesModel
                 sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()} = new EntityTimer(time);");
                 sb.EndBlock();
                 sb.AppendLine($"public void Stop{timer}() => {timer.ConvertToCamelCaseFieldName()} = default;");
+                sb.AppendLine($"public bool {timer}JustFinished {{ get; private set; }}");
             }
 
             if (timers.Any())
             {
                 sb.BeginBlock("internal void AdvanceTimers(float dt)");
-                foreach (var timer in timers) sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()}?.Advance(dt);");
+                foreach (var timer in timers)
+                {
+                    sb.AppendLine($"{timer}JustFinished = false;");
+                    sb.BeginBlock($"if({timer.ConvertToCamelCaseFieldName()} != null)");
+                    sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()}.Advance(dt);");
+                    sb.BeginBlock($"if({timer.ConvertToCamelCaseFieldName()}.TimeLeft <= 0)");
+                    sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()} = default;");
+                    sb.AppendLine($"{timer}JustFinished = true;");
+                    sb.EndBlock();
+                    sb.EndBlock();
+                }
                 sb.EndBlock();
             }
 
@@ -281,6 +293,23 @@ namespace Editor.ClassEntitiesModel
         {
             foreach (var entityInfo in Entities)
                 entityInfo.Write(sb);
+            
+            var allTimers = Entities.SelectMany(entityType =>
+            {
+                return entityType.Timers.Select(x =>
+                    new
+                    {
+                        timer = x,
+                        type = entityType
+                    });
+            }).ToList();
+            foreach (var timer in allTimers)
+            {
+                sb.BeginBlock($"public interface I{timer.type.Name}{timer.timer}Handler");
+                sb.AppendLine(
+                    $"void On{timer.type.Name}{timer.timer}Finish({timer.type.Name} {timer.type.Name.ConvertToUnityPropertyName()});");
+                sb.EndBlock();
+            }
         }
 
         private void WriteGeneral(FormatWriter sb)
@@ -309,6 +338,16 @@ namespace Editor.ClassEntitiesModel
             sb.EndBlock();
             sb.AppendLine();
 
+            var allTimers = Entities.SelectMany(entityType =>
+            {
+                return entityType.Timers.Select(x =>
+                    new
+                    {
+                        timer = x,
+                        type = entityType
+                    });
+            }).ToList();
+
             sb.BeginBlock("public interface IWorldController");
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
@@ -333,6 +372,8 @@ namespace Editor.ClassEntitiesModel
 
             sb.BeginBlock("public interface IWorldSimulation");
             sb.AppendLine("void AddSystem(ISimSystem simSystem);");
+            foreach (var timer in allTimers)
+                sb.AppendLine($"void AddTimerHandler(I{timer.type.Name}{timer.timer}Handler handler);");
             sb.AppendLine("void Simulate(float dt);");
             sb.EndBlock();
 
@@ -389,10 +430,18 @@ namespace Editor.ClassEntitiesModel
             sb.AppendLine("private readonly List<ISimSystem> _simSystems = new ();");
             sb.AppendLine("private readonly IWorldView _worldView;");
             sb.AppendLine("private readonly WorldState _worldState;");
+            foreach (var timer in allTimers)
+            {
+                sb.AppendLine($"private readonly List<I{timer.type.Name}{timer.timer}Handler> _{timer.type.Name}{timer.timer}Handlers = new ();");
+            }
             sb.BeginBlock("public WorldSimulation(IWorldView worldView, WorldState worldState)");
             sb.AppendLine("_worldView = worldView;");
             sb.AppendLine("_worldState = worldState;");
             sb.EndBlock();
+            foreach (var timer in allTimers)
+            {
+                sb.AppendLine($"public void AddTimerHandler(I{timer.type.Name}{timer.timer}Handler handler) => _{timer.type.Name}{timer.timer}Handlers.Add(handler);");
+            }
             sb.BeginBlock("public void AddSystem(ISimSystem simSystem)");
             sb.AppendLine("_simSystems.Add(simSystem);");
             sb.EndBlock();
@@ -409,7 +458,14 @@ namespace Editor.ClassEntitiesModel
                     continue;
                 sb.AppendLine($"foreach (var e in _worldView.AllOf{entityInfo.Name}) e.AdvanceTimers(dt);");
             }
-
+            foreach (var timer in allTimers)
+            {
+                sb.BeginBlock($"foreach (var e in _worldView.AllOf{timer.type.Name})");
+                sb.AppendLine($"if(!e.{timer.timer}JustFinished) continue;");
+                sb.AppendLine(
+                    $"foreach (var handler in _{timer.type.Name}{timer.timer}Handlers) handler.On{timer.type.Name}{timer.timer}Finish(e);");
+                sb.EndBlock();
+            }
             sb.EndBlock();
             sb.BeginBlock("void DestroyEntities()");
             sb.AppendLine("foreach (var entity in _worldState.ToDestroy) _worldState.Entities.Remove(entity);");
