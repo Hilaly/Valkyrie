@@ -24,7 +24,8 @@ namespace Valkyrie.Language
             var visibleInterface = world.CreateEntityInterface("IVisible")
                 .Inherit(trInterface)
                 .AddConfig("Valkyrie.Entities.IEntity", "Config")
-                .AddProperty("string", "AssetName");
+                .AddProperty("string", "AssetName")
+                .ViewWithPrefabByProperty("AssetName");
 
             var movableInterface = world.CreateEntityInterface("IMovable")
                 .Inherit(trInterface)
@@ -32,24 +33,28 @@ namespace Valkyrie.Language
                 .AddProperty("Hilaly.Tools.IPooledInstance<Rigidbody>", "Physic", false)
                 .AddInfo("float", "Speed", "1f");
 
+            var orderInterface = world.CreateEntityInterface("IOrder")
+                .AddProperty<string>("SourcePoint")
+                .AddProperty<string>("TargetPoint")
+                .AddProperty<string>("PersonName")
+                .AddProperty<string>("Goods")
+                .AddProperty<int>("Reward");
+
             var takenOrder = world.CreateEntity("Order")
-                ;
+                .Inherit(orderInterface)
+                .AddTimer("DeliveryTimer");
 
             var ep = world.CreateEntity("Player")
                 .Inherit(visibleInterface, movableInterface)
                 .AddProperty("Hilaly.Tools.INavPath", "Path", false)
                 .AddTimer("NavigationTimer")
-                .AddSlot("Order", "Order")
+                .AddSlot(takenOrder, "Order")
                 .AddProperty<int>("Money", false)
                 .Singleton();
 
             var freeOrder = world.CreateEntity("FreeOrder")
-                .AddProperty<string>("SourcePoint")
-                .AddProperty<string>("TargetPoint")
-                .AddProperty<string>("PersonName")
-                .AddTimer("AvailableTimer")
-                .AddProperty<string>("Goods")
-                .AddProperty<int>("Reward");
+                .Inherit(orderInterface)
+                .AddTimer("AvailableTimer");
 
             Debug.Log(world);
             // Use the Assert class to test conditions
