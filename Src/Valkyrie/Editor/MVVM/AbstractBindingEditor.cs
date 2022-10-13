@@ -49,7 +49,7 @@ namespace Valkyrie.MVVM.Editor
                     continue;
                 
                 var type = component.GetType();
-                if (CustomAttributeExtensions.GetCustomAttribute<BindingAttribute>(type, true) != null)
+                if (type.GetCustomAttribute<BindingAttribute>(true) != null)
                     yield return type;
                 
                 if (component is Template template)
@@ -57,6 +57,13 @@ namespace Valkyrie.MVVM.Editor
                     var templateType = template.GetTemplateType();
                     if (templateType != null)
                         yield return templateType;
+                }
+
+                if (component is FieldBinding fieldBinding)
+                {
+                    var fieldType = fieldBinding.GetTemplateType();
+                    if (fieldType != null)
+                        yield return fieldType;
                 }
             }
         }

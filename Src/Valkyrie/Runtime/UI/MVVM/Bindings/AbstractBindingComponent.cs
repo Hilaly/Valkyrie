@@ -21,6 +21,12 @@ namespace Valkyrie.MVVM.Bindings
                         return template.ViewModel;
                     }
 
+                    if (component is FieldBinding fieldBinding && fieldBinding.GetTemplateType().Name == modelTypeName)
+                    {
+                        disposeHandler = component.gameObject;
+                        return fieldBinding.Model;
+                    }
+
                     if (component.GetType().Name == modelTypeName)
                     {
                         disposeHandler = component.gameObject;
