@@ -50,7 +50,8 @@ namespace Valkyrie.Language
                 .AddTimer("NavigationTimer")
                 .AddSlot(takenOrder, "Order")
                 .AddProperty<int>("Money", false)
-                .Singleton();
+                .Singleton()
+                .ViewWithPrefabByProperty("AssetName");
 
             var freeOrder = world.CreateEntity("FreeOrder")
                 .Inherit(orderInterface)
