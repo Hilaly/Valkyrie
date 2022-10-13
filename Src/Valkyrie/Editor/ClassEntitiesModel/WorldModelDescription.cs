@@ -170,12 +170,12 @@ namespace Editor.ClassEntitiesModel
         public EntityBase ViewWithPrefabByProperty(string propertyName)
         {
             SyncWithPrefabs.Add(propertyName);
-            return this;
+            return View();
         }
 
         protected void WriteViewModels(FormatWriter sb)
         {
-            if (GetPrefabsProperties().Any())
+            if (HasView)
             {
                 sb.BeginBlock($"[Binding] public partial class {Name}ViewModel");
                 sb.AppendLine($"public {Name} Model {{ get; }}");
@@ -203,7 +203,13 @@ namespace Editor.ClassEntitiesModel
             }
         }
 
-        public bool HasView() => SyncWithPrefabs.Any();
+        public bool HasView { get; private set; }
+
+        public EntityBase View()
+        {
+            HasView = true;
+            return this;
+        }
     }
 
     public class EntityInterface : EntityBase
@@ -381,7 +387,7 @@ namespace Editor.ClassEntitiesModel
             sb.AppendLine();
 
             sb.BeginBlock("public interface IWorldView");
-            foreach (var entityInfo in Entities.Where(x => x.HasView()))
+            foreach (var entityInfo in Entities.Where(x => x.HasView))
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} {{ get; }}");
             sb.EndBlock();
             sb.AppendLine();
@@ -478,7 +484,7 @@ namespace Editor.ClassEntitiesModel
             sb.BeginBlock("public WorldView(WorldState worldState)");
             sb.AppendLine("_worldState = worldState;");
             sb.EndBlock();
-            foreach (var entityInfo in Entities.Where(x => x.HasView()))
+            foreach (var entityInfo in Entities.Where(x => x.HasView))
             {
                 sb.AppendLine($"private readonly Dictionary<{entityInfo.Name}, {entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}Dictionary = new ();");
                 sb.AppendLine($"private readonly List<{entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}List = new ();");
@@ -487,7 +493,7 @@ namespace Editor.ClassEntitiesModel
             }
 
             sb.BeginBlock("public void SyncViewModels()");
-            foreach (var entityInfo in Entities.Where(x => x.HasView()))
+            foreach (var entityInfo in Entities.Where(x => x.HasView))
             {
                 sb.BeginBlock($"//Sync {entityInfo.Name} view models");
                 sb.AppendLine($"var models = _worldState.AllOf{entityInfo.Name};");
