@@ -3,7 +3,7 @@ using System.Linq;
 using Utils;
 using Valkyrie.Language.Description.Utils;
 
-namespace Editor.ClassEntitiesModel
+namespace Languages.ClassEntitiesModel
 {
     public class MemberInfo
     {
