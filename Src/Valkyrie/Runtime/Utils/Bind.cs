@@ -11,7 +11,8 @@ namespace Utils
 
         private bool _bindingBuild;
 
-        private object _source;
+        private Func<object> _sourceFunc;
+        private object _source => _sourceFunc();
         private string _path;
         private object _target;
         private string _targetPath;
@@ -27,14 +28,14 @@ namespace Utils
         
         #region Source
 
-        public object Source
+        public Func<object> Source
         {
-            get { return _source; }
+            get { return _sourceFunc; }
             set
             {
-                if(value == _source)
+                if(value == _sourceFunc)
                     return;
-                _source = value;
+                _sourceFunc = value;
                 BuildSource();
                 BuildSourceEvents();
                 InnerUpdate();
@@ -192,6 +193,9 @@ namespace Utils
             if (!_bindingBuild)
                 return false;
 
+            if(_getValue == null)
+                BuildSource();
+            
             if (_getValue == null || _setValue == null)
                 return false;
 

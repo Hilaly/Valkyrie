@@ -1,37 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 using Utils;
 using Valkyrie.Tools;
-using Object = UnityEngine.Object;
 
 namespace Valkyrie.MVVM.Bindings
 {
-    public class FieldBinding : TemplateSelector
+    public class FieldBinding : AbstractBindingComponent
     {
-        public override bool IsValidViewModelProperty(PropertyInfo info) => info.PropertyType.GetCustomAttribute<BindingAttribute>() != null;
-
-        public object Model { get; private set; }
-
-        public override object ViewModelProperty
-        {
-            set => Model = value;
-        }
-
-        void Start()
-        {
-            var binding = BindViewModelProperty(_viewModelProperty, null, String.Empty, out var disposeHandler);
-            this.SetBinding(nameof(ViewModelProperty), binding);
-
-            if (_isPolling)
-                UiExtension.RunPolling(disposeHandler, () =>
-                {
-                    if (this != null && gameObject != null && gameObject.activeInHierarchy)
-                        binding.Update();
-                });
-        }
+#pragma warning disable 649
+        [SerializeField] protected string _viewModelProperty;
+#pragma warning restore 649
 
         static List<Type> _cachedTypes;
+        private Bind _binding;
+
+        public bool IsValidViewModelProperty(PropertyInfo info) =>
+            info.PropertyType.GetCustomAttribute<BindingAttribute>() != null;
+
+        private object _model;
+
+        public object GetModel()
+        {
+            if (_binding == null)
+            {
+                _binding = BindViewModelProperty(_viewModelProperty, null, string.Empty, out var disposeHandler);
+                this.SetBinding(nameof(ViewModelProperty), _binding);
+            }
+
+            _binding.Update();
+
+            return _model;
+        }
+
+        public object ViewModelProperty
+        {
+            set => _model = value;
+        }
 
         private List<Type> Types
         {

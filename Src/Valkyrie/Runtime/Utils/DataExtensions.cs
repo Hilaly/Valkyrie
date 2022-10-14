@@ -488,13 +488,13 @@ namespace Utils
             var type = _adapters[adapterType];
             return (IBindingAdapter)Activator.CreateInstance(type);
         }
-
-        public static Bind CreateBinding(this object model, string propertyName, string adapterType,
+        
+        public static Bind CreateBinding(Func<object> modelFunc, string propertyName, string adapterType,
             string modelChangeEventName)
         {
             var binding = new Bind
             {
-                Source = model,
+                Source = modelFunc,
                 Path = propertyName,
                 UpdatedEventName = modelChangeEventName,
                 AllowPrivateProperties = true,
@@ -503,6 +503,10 @@ namespace Utils
 
             return binding;
         }
+
+        public static Bind CreateBinding(this object model, string propertyName, string adapterType,
+            string modelChangeEventName) =>
+            CreateBinding(() => model, propertyName, adapterType, modelChangeEventName);
 
         public static Bind CreateBinding(this object model, string propertyName, string adapterType) =>
             model.CreateBinding(propertyName, adapterType, null);

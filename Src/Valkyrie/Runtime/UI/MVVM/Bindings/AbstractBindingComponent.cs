@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using Utils;
-using Valkyrie.Di;
+
 
 namespace Valkyrie.MVVM.Bindings
 {
     public abstract class AbstractBindingComponent : MonoBehaviour
     {
-        internal static object GetModel(GameObject go, string modelTypeName, out GameObject disposeHandler)
+        internal static Func<object> GetModelMethod(GameObject go, string modelTypeName, out GameObject disposeHandler)
         {
             try
             {
@@ -18,19 +17,19 @@ namespace Valkyrie.MVVM.Bindings
                     if (component is Template template && template.GetTemplateType().Name == modelTypeName)
                     {
                         disposeHandler = component.gameObject;
-                        return template.ViewModel;
+                        return () => template.ViewModel;
                     }
 
                     if (component is FieldBinding fieldBinding && fieldBinding.GetTemplateType().Name == modelTypeName)
                     {
                         disposeHandler = component.gameObject;
-                        return fieldBinding.Model;
+                        return fieldBinding.GetModel;
                     }
 
                     if (component.GetType().Name == modelTypeName)
                     {
                         disposeHandler = component.gameObject;
-                        return component;
+                        return () => component;
                     }
                 }
 
@@ -44,6 +43,8 @@ namespace Valkyrie.MVVM.Bindings
             }
         }
 
+        internal static object GetModel(GameObject go, string modelTypeName, out GameObject disposeHandler) => GetModelMethod(go, modelTypeName, out disposeHandler)();
+
         internal static bool SplitTypeProperty(string fullText, out string typeName, out string propertyName)
         {
             var colonIndex = fullText.IndexOf(':');
@@ -51,8 +52,8 @@ namespace Valkyrie.MVVM.Bindings
             var fullNameParts = text.Split(new[] {'/', '.'});
             if (fullNameParts.Length > 1)
             {
-                typeName = fullNameParts[fullNameParts.Length - 2];
-                propertyName = fullNameParts[fullNameParts.Length - 1];
+                typeName = fullNameParts[^2];
+                propertyName = fullNameParts[^1];
                 return true;
             }
             else
@@ -68,9 +69,9 @@ namespace Valkyrie.MVVM.Bindings
             string adapterType, out GameObject disposeHandler)
         {
             SplitTypeProperty(viewModelProperty, out var typeName, out var propertyName);
-            var viewModel = GetModel(gameObject, typeName, out disposeHandler);
+            var viewModelMethod = GetModelMethod(gameObject, typeName, out disposeHandler);
 
-            var binding = viewModel.CreateBinding(propertyName, adapterType, viewModelChangeEventName);
+            var binding = DataExtensions.CreateBinding(viewModelMethod, propertyName, adapterType, viewModelChangeEventName);
             return binding;
         }
     }
