@@ -330,6 +330,7 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("using Valkyrie.Di;");
             sb.AppendLine("using UnityEngine;");
             sb.AppendLine("using Utils;");
+            sb.AppendLine("using Utils.Pool;");
             sb.AppendLine();
 
             var rootNamespace = Namespace;
@@ -570,13 +571,62 @@ namespace Languages.ClassEntitiesModel
             sb.EndBlock();
             sb.AppendLine();
 
+            
+            sb.BeginBlock("class ResourcesViewsProvider : IViewsProvider");
+            sb.AppendLine("public void Release<TView>(TView value) where TView : Component => UnityEngine.Object.Destroy(value.gameObject);");
+            sb.AppendLine("public TView Spawn<TView>(string prefabName) where TView : Component => UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));");
+            sb.EndBlock();
+            sb.AppendLine();
 
+
+            sb.BeginBlock("class SimulationService : IDisposable");
+            sb.AppendLine("private readonly Valkyrie.Ecs.SimulationSettings _settings;");
+            sb.AppendLine("private readonly IWorldSimulation _worldSimulation;");
+            sb.AppendLine("private readonly System.Threading.CancellationTokenSource _cancellationTokenSource = new();");
+            sb.AppendLine("private float _simTime;");
+            sb.BeginBlock("public SimulationService(Valkyrie.Ecs.SimulationSettings settings, IWorldSimulation worldSimulation)");
+            sb.AppendLine("_settings = settings;");
+            sb.AppendLine("_worldSimulation = worldSimulation;");
+            sb.AppendLine("AsyncExtension.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
+            sb.EndBlock();
+            sb.BeginBlock("void SimulateIteration()");
+            sb.BeginBlock("if (_settings.IsSimulationPaused)");
+            sb.AppendLine("_simTime = 0;");
+            sb.AppendLine("return;");
+            sb.EndBlock();
+            sb.AppendLine("var dt = _settings.SimTickTime;");
+            sb.AppendLine("_simTime += _settings.SimulationSpeed * UnityEngine.Time.deltaTime;");
+            sb.BeginBlock("while (_simTime >= dt)");
+            sb.AppendLine("_simTime -= dt;");
+            sb.AppendLine("_worldSimulation.Simulate(dt);");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.BeginBlock("public void Dispose()");
+            sb.AppendLine("_cancellationTokenSource.Cancel();");
+            sb.AppendLine("_cancellationTokenSource.Dispose();");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
+    
+    
             sb.BeginBlock("public class WorldLibrary : ILibrary");
+            sb.AppendLine("private readonly bool _autoSimulate;");
+            sb.AppendLine("private readonly bool _useLoadingViewsFromResources;");
+            sb.BeginBlock("public WorldLibrary(bool autoSimulate, bool useLoadingViewsFromResources)");
+            sb.AppendLine("_autoSimulate = autoSimulate;");
+            sb.AppendLine("_useLoadingViewsFromResources = useLoadingViewsFromResources;");
+            sb.EndBlock();
             sb.BeginBlock("public void Register(IContainer container)");
             sb.AppendLine("container.Register<WorldState>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldController>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldView>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldSimulation>().AsInterfacesAndSelf().SingleInstance();");
+            sb.BeginBlock("if (_useLoadingViewsFromResources)");
+            sb.AppendLine("container.Register<ResourcesViewsProvider>().AsInterfacesAndSelf().SingleInstance();");
+            sb.EndBlock();
+            sb.BeginBlock("if (_autoSimulate)");
+            sb.AppendLine("container.Register<SimulationService>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
+            sb.EndBlock();
             sb.EndBlock();
             sb.EndBlock();
         }
@@ -586,34 +636,40 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("public interface IEntity { }");
             sb.AppendLine();
 
+            
             sb.BeginBlock("public interface ISimSystem");
             sb.AppendLine("void Simulate(float dt);");
             sb.EndBlock();
             sb.AppendLine();
 
+            
             sb.BeginBlock("public interface ITimer");
             sb.AppendLine("float FullTime { get; }");
             sb.AppendLine("float TimeLeft { get; }");
             sb.EndBlock();
             sb.AppendLine();
 
+            
             sb.BeginBlock("public interface IView<in TModel>");
             sb.AppendLine("void UpdateDate(TModel model);");
             sb.EndBlock();
             sb.AppendLine();
 
+            
             sb.BeginBlock("public interface IViewsProvider");
             sb.AppendLine("void Release<TView>(TView value) where TView : Component;");
             sb.AppendLine("TView Spawn<TView>(string prefabName) where TView : Component;");
             sb.EndBlock();
             sb.AppendLine();
 
+            
             sb.BeginBlock("public interface IWorldView");
             foreach (var entityInfo in Entities.Where(x => x.HasView))
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} {{ get; }}");
             sb.EndBlock();
             sb.AppendLine();
 
+            
             sb.BeginBlock("public interface IWorldController");
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
@@ -621,9 +677,10 @@ namespace Languages.ClassEntitiesModel
                 var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.AppendLine($"{entityInfo.Name} Create{entityInfo.Name}({argsStr});");
             }
-
             sb.AppendLine($"void Destroy(IEntity entity);");
             sb.EndBlock();
+            sb.AppendLine();
+            
 
             sb.BeginBlock("public interface IWorldState");
             sb.AppendLine($"IReadOnlyList<IEntity> All {{ get; }}");
@@ -633,8 +690,9 @@ namespace Languages.ClassEntitiesModel
                     sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} {{ get; }}");
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} {{ get; }}");
             }
-
             sb.EndBlock();
+            sb.AppendLine();
+            
 
             sb.BeginBlock("public interface IWorldSimulation");
             sb.AppendLine("void AddSystem(ISimSystem simSystem);");
@@ -642,6 +700,7 @@ namespace Languages.ClassEntitiesModel
                 sb.AppendLine($"void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler);");
             sb.AppendLine("void Simulate(float dt);");
             sb.EndBlock();
+            sb.AppendLine();
         }
 
         class TimerData

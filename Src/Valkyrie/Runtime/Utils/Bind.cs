@@ -241,7 +241,7 @@ namespace Utils
                 return _targetSubscription;
             
             var cts = new CancellationTokenSource();
-            AsyncExtension.RunEveryUpdate(InnerTargetUpdate, cts.Token);
+            AsyncExtension.RunEveryLateUpdate(InnerTargetUpdate, cts.Token);
             _targetSubscription = new ActionDisposable(() =>
             {
                 _targetSubscription = null;

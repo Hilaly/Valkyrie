@@ -16,27 +16,29 @@ namespace Utils
 
         class CoroutineRunner : MonoBehaviour
         {
-            public struct LateUpdateAction
+            public struct UpdateAction
             {
                 public Action Work;
                 public CancellationToken Token;
             }
 
-            public readonly List<LateUpdateAction> LateUpdateActions = new();
-            
-            private void LateUpdate()
+            public readonly List<UpdateAction> LateUpdateActions = new();
+            public readonly List<UpdateAction> UpdateActions = new();
+
+            static void UpdateUpdateActions(List<UpdateAction> list)
             {
-                for (var i = 0; i < LateUpdateActions.Count;)
-                {
-                    if (LateUpdateActions[i].Token.IsCancellationRequested)
-                        LateUpdateActions.RemoveAndReplaceWithLast(i);
+                for (var i = 0; i < list.Count;)
+                    if (list[i].Token.IsCancellationRequested)
+                        list.RemoveAndReplaceWithLast(i);
                     else
                     {
-                        LateUpdateActions[i].Work();
+                        list[i].Work();
                         ++i;
                     }
-                }
             }
+            
+            private void LateUpdate() => UpdateUpdateActions(LateUpdateActions);
+            private void Update() => UpdateUpdateActions(UpdateActions);
         }
 
         private static CoroutineRunner Runner
@@ -63,12 +65,24 @@ namespace Utils
         public static Task WaitForEndUpdate() => CoroutineAwaiterToTask(null);
         public static Task WaitForSeconds(float seconds) => CoroutineAwaiterToTask(new WaitForSeconds(seconds));
 
-        public static async void RunEveryUpdate(Action work, CancellationToken cancellationToken)
+        public static void RunEveryLateUpdate(Action work, CancellationToken cancellationToken)
         {
             if(cancellationToken.IsCancellationRequested)
                 return;
 
-            Runner.LateUpdateActions.Add(new CoroutineRunner.LateUpdateAction()
+            Runner.LateUpdateActions.Add(new CoroutineRunner.UpdateAction()
+            {
+                Token = cancellationToken,
+                Work = work
+            });
+        }
+
+        public static void RunEveryUpdate(Action work, CancellationToken cancellationToken)
+        {
+            if(cancellationToken.IsCancellationRequested)
+                return;
+
+            Runner.UpdateActions.Add(new CoroutineRunner.UpdateAction()
             {
                 Token = cancellationToken,
                 Work = work

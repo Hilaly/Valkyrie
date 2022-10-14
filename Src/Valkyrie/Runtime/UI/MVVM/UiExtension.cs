@@ -164,7 +164,7 @@ namespace Valkyrie.MVVM
         internal static void RunPolling(GameObject disposeHandler, Action work)
         {
             var tcs = new CancellationTokenSource();
-            AsyncExtension.RunEveryUpdate(work, tcs.Token);
+            AsyncExtension.RunEveryLateUpdate(work, tcs.Token);
             new ActionDisposable(() => tcs.Cancel()).AttachTo(disposeHandler);
         }
     }
