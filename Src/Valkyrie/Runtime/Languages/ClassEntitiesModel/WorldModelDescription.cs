@@ -385,11 +385,12 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("public readonly HashSet<IEntity> ToDestroy = new();");
             sb.AppendLine("public IReadOnlyList<IEntity> All => Entities;");
             foreach (var entityInfo in Entities)
-                sb.AppendLine(
-                    $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => Entities.OfType<{entityInfo.Name}>().ToList();");
+            {
+                sb.AppendLine($"public List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
+                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _allOf{entityInfo.Name}; // Entities.OfType<{entityInfo.Name}>().ToList();");
+            }
             foreach (var entityInfo in Entities.Where(x => x is EntityInfo { IsSingleton: true }))
-                sb.AppendLine(
-                    $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
+                sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -407,17 +408,18 @@ namespace Languages.ClassEntitiesModel
                 var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.Name}({argsStr})");
                 if (entityInfo.IsSingleton)
-                {
                     sb.AppendLine(
                         $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
-                }
-
                 sb.BeginBlock($"var result = new {entityInfo.Name}");
                 foreach (var propertyInfo in args)
                     sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
                 sb.EndBlock();
                 sb.AppendLine(";");
                 sb.AppendLine("_worldState.Entities.Add(result);");
+                sb.BeginBlock($"//Update Caches");
+                foreach (var entityBase in entityInfo.GetAllImplemented())
+                    sb.AppendLine($"_worldState._allOf{entityBase.Name}.Add(result);");
+                sb.EndBlock();
                 sb.BeginBlock($"//Spawn views");
                 foreach (var type in entityInfo.GetAllImplemented())
                 {
@@ -425,7 +427,6 @@ namespace Languages.ClassEntitiesModel
                         continue;
                     sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
                 }
-
                 sb.EndBlock();
                 sb.AppendLine("return result;");
                 sb.EndBlock();
@@ -486,6 +487,7 @@ namespace Languages.ClassEntitiesModel
                 sb.EndBlock();
             }
 
+            sb.AppendLine("/*");
             sb.BeginBlock("public void SyncViewModels()");
             foreach (var entityInfo in Entities.Where(x => x.HasView))
             {
@@ -502,13 +504,15 @@ namespace Languages.ClassEntitiesModel
                 sb.EndBlock();
                 sb.EndBlock();
             }
-
             sb.EndBlock();
+            sb.AppendLine("*/");
+            sb.AppendLine("/*");
             sb.BeginBlock($"public void DestroyViewModels(IEntity model)");
             foreach (var entityInfo in Entities.Where(x => x.HasView))
                 sb.AppendLine(
                     $"if(model is {entityInfo.Name} val{entityInfo.Name}) Destroy{entityInfo.Name}ViewModel(val{entityInfo.Name});");
             sb.EndBlock();
+            sb.AppendLine("*/");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -540,7 +544,7 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("AdvanceTimers(dt);");
             sb.AppendLine("foreach (var simSystem in _simSystems) simSystem.Simulate(dt);");
             sb.AppendLine("DestroyEntities();");
-            sb.AppendLine("_worldView.SyncViewModels();");
+            sb.AppendLine("//_worldView.SyncViewModels();");
             sb.EndBlock();
             sb.BeginBlock("void AdvanceTimers(float dt)");
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
@@ -563,10 +567,26 @@ namespace Languages.ClassEntitiesModel
             sb.EndBlock();
             sb.BeginBlock("void DestroyEntities()");
             sb.BeginBlock("foreach (var entity in _worldState.ToDestroy)");
-            sb.AppendLine($"_worldState.Entities.Remove(entity);");
-            sb.AppendLine($"_worldView.DestroyViewModels(entity);");
+            sb.AppendLine("Destroy(entity);");
             sb.EndBlock();
             sb.AppendLine("_worldState.ToDestroy.Clear();");
+            sb.EndBlock();
+            sb.BeginBlock($"void Destroy(IEntity entity)");
+            sb.AppendLine($"_worldState.Entities.Remove(entity);");
+            sb.BeginBlock($"switch (entity)");
+            foreach (var entityInfo in Entities.OfType<EntityInfo>())
+            {
+                sb.BeginBlock($"case {entityInfo.Name} val{entityInfo.Name}:");
+                sb.AppendLine("//Clean state cache");
+                foreach (var entityBase in entityInfo.GetAllImplemented())
+                    sb.AppendLine($"_worldState._allOf{entityBase.Name}.Remove(val{entityInfo.Name});");
+                sb.AppendLine("//Clean views");
+                foreach (var entityBase in entityInfo.GetAllImplemented().Where(x => x.HasView))
+                    sb.AppendLine($"_worldView.Destroy{entityBase.Name}ViewModel(val{entityInfo.Name});");
+                sb.AppendLine($"break;");
+                sb.EndBlock();
+            }
+            sb.EndBlock();
             sb.EndBlock();
             sb.EndBlock();
             sb.AppendLine();
