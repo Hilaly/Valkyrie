@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Tools;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,7 +16,27 @@ namespace Utils
 
         class CoroutineRunner : MonoBehaviour
         {
+            public struct LateUpdateAction
+            {
+                public Action Work;
+                public CancellationToken Token;
+            }
+
+            public readonly List<LateUpdateAction> LateUpdateActions = new();
             
+            private void LateUpdate()
+            {
+                for (var i = 0; i < LateUpdateActions.Count;)
+                {
+                    if (LateUpdateActions[i].Token.IsCancellationRequested)
+                        LateUpdateActions.RemoveAndReplaceWithLast(i);
+                    else
+                    {
+                        LateUpdateActions[i].Work();
+                        ++i;
+                    }
+                }
+            }
         }
 
         private static CoroutineRunner Runner
@@ -43,11 +65,14 @@ namespace Utils
 
         public static async void RunEveryUpdate(Action work, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            if(cancellationToken.IsCancellationRequested)
+                return;
+
+            Runner.LateUpdateActions.Add(new CoroutineRunner.LateUpdateAction()
             {
-                await WaitForEndUpdate();
-                work();
-            }
+                Token = cancellationToken,
+                Work = work
+            });
         }
 
         static Task CoroutineAwaiterToTask(object awaiter)
