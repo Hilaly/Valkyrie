@@ -194,9 +194,10 @@ namespace Languages.ClassEntitiesModel
                     sb.AppendLine($"[Binding] public float {timer}TimeLeft => Model.{timer}?.TimeLeft ?? 0f;");
                     sb.AppendLine($"[Binding] public float {timer}Time => {timer}FullTime - {timer}TimeLeft;");
                     sb.AppendLine($"[Binding] public float {timer}FullTime => Model.{timer}?.FullTime ?? 1f;");
-                    sb.AppendLine($"[Binding] public float {timer}Progress => Mathf.Clamp01({timer}Time / {timer}FullTime);");
+                    sb.AppendLine(
+                        $"[Binding] public float {timer}Progress => Mathf.Clamp01({timer}Time / {timer}FullTime);");
                 }
-                
+
                 foreach (var info in GetAllConfigs())
                     sb.AppendLine($"public {info.Type} {info.Name} => Model.{info.Name};");
                 sb.EndBlock();
@@ -210,6 +211,9 @@ namespace Languages.ClassEntitiesModel
             HasView = true;
             return this;
         }
+
+        public IEnumerable<EntityBase> GetAllImplemented() =>
+            new HashSet<EntityBase>(BaseTypes.SelectMany(entityBase => entityBase.GetAllImplemented())) { this };
     }
 
     public class EntityInterface : EntityBase
@@ -300,6 +304,7 @@ namespace Languages.ClassEntitiesModel
                     sb.EndBlock();
                     sb.EndBlock();
                 }
+
                 sb.EndBlock();
             }
 
@@ -360,7 +365,224 @@ namespace Languages.ClassEntitiesModel
         private void WriteGeneral(FormatWriter sb)
         {
             var allTimers = GetAllTimers();
-            
+
+            WriteInterfaces(sb, allTimers);
+
+            sb.BeginBlock("class EntityTimer : ITimer");
+            sb.AppendLine("public float FullTime { get; }");
+            sb.AppendLine("public float TimeLeft { get; private set; }");
+            sb.BeginBlock("public EntityTimer(float time)");
+            sb.AppendLine("FullTime = TimeLeft = time;");
+            sb.EndBlock();
+            sb.AppendLine("public void Advance(float dt) => TimeLeft -= dt;");
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("class WorldState : IWorldState");
+            sb.AppendLine("public readonly List<IEntity> Entities = new();");
+            sb.AppendLine("public readonly HashSet<IEntity> ToDestroy = new();");
+            sb.AppendLine("public IReadOnlyList<IEntity> All => Entities;");
+            foreach (var entityInfo in Entities)
+                sb.AppendLine(
+                    $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => Entities.OfType<{entityInfo.Name}>().ToList();");
+            foreach (var entityInfo in Entities.Where(x => x is EntityInfo { IsSingleton: true }))
+                sb.AppendLine(
+                    $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("class WorldController : IWorldController");
+            sb.AppendLine("private readonly WorldState _worldState;");
+            sb.AppendLine("private readonly WorldView _worldView;");
+            sb.BeginBlock("public WorldController(WorldState worldState, WorldView worldView)");
+            sb.AppendLine("_worldState = worldState;");
+            sb.AppendLine("_worldView = worldView;");
+            sb.EndBlock();
+            foreach (var entityInfo in Entities.OfType<EntityInfo>())
+            {
+                var args = entityInfo.GetAllProperties().Where(x => x.IsRequired).ToList();
+                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
+                sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.Name}({argsStr})");
+                if (entityInfo.IsSingleton)
+                {
+                    sb.AppendLine(
+                        $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
+                }
+
+                sb.BeginBlock($"var result = new {entityInfo.Name}");
+                foreach (var propertyInfo in args)
+                    sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
+                sb.EndBlock();
+                sb.AppendLine(";");
+                sb.AppendLine("_worldState.Entities.Add(result);");
+                sb.BeginBlock($"//Spawn views");
+                foreach (var type in entityInfo.GetAllImplemented())
+                {
+                    if (!type.HasView)
+                        continue;
+                    sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
+                }
+
+                sb.EndBlock();
+                sb.AppendLine("return result;");
+                sb.EndBlock();
+            }
+
+            sb.AppendLine("public void Destroy(IEntity entity) => _worldState.ToDestroy.Add(entity);");
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("class WorldView : IWorldView");
+            sb.AppendLine("//TODO: implement IDisposable");
+            sb.AppendLine("private readonly WorldState _worldState;");
+            sb.AppendLine("private readonly IViewsProvider _viewsProvider;");
+            foreach (var entity in Entities)
+            foreach (var property in entity.GetPrefabsProperties())
+                sb.AppendLine(
+                    $"private readonly Dictionary<{entity.Name}ViewModel, Valkyrie.MVVM.Bindings.Template> _views{entity.Name}{property} = new();");
+            sb.BeginBlock("public WorldView(WorldState worldState, IViewsProvider viewsProvider)");
+            sb.AppendLine("_worldState = worldState;");
+            sb.AppendLine("_viewsProvider = viewsProvider;");
+            sb.EndBlock();
+            foreach (var entityInfo in Entities.Where(x => x.HasView))
+            {
+                sb.AppendLine(
+                    $"private readonly Dictionary<{entityInfo.Name}, {entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}Dictionary = new ();");
+                sb.AppendLine(
+                    $"private readonly List<{entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}List = new ();");
+                sb.AppendLine($"private readonly List<{entityInfo.Name}> _toRemove{entityInfo.Name} = new ();");
+                sb.AppendLine(
+                    $"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} => _viewModels{entityInfo.Name}List;");
+                sb.BeginBlock($"public void Create{entityInfo.Name}ViewModel({entityInfo.Name} model)");
+                sb.AppendLine(
+                    $"if (_viewModels{entityInfo.Name}Dictionary.TryGetValue(model, out var viewModel)) return;");
+                sb.AppendLine(
+                    $"_viewModels{entityInfo.Name}Dictionary.Add(model, viewModel = new {entityInfo.Name}ViewModel(model));");
+                sb.AppendLine($"_viewModels{entityInfo.Name}List.Add(viewModel);");
+                foreach (var property in entityInfo.GetPrefabsProperties())
+                {
+                    sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property}");
+                    sb.AppendLine(
+                        $"var view = _viewsProvider.Spawn<Valkyrie.MVVM.Bindings.Template>(model.{property});");
+                    sb.AppendLine($"view.ViewModel = viewModel;");
+                    sb.AppendLine($"_views{entityInfo.Name}{property}.Add(viewModel, view);");
+                    sb.EndBlock();
+                }
+
+                sb.EndBlock();
+                sb.BeginBlock($"public void Destroy{entityInfo.Name}ViewModel({entityInfo.Name} model)");
+
+                sb.BeginBlock($"if (_viewModels{entityInfo.Name}Dictionary.Remove(model, out var viewModel))");
+                sb.AppendLine($"_viewModels{entityInfo.Name}List.Remove(viewModel);");
+                foreach (var property in entityInfo.GetPrefabsProperties())
+                    sb.AppendLine(
+                        $"if (_views{entityInfo.Name}{property}.Remove(viewModel, out var view)) _viewsProvider.Release(view);");
+                sb.EndBlock();
+
+                sb.EndBlock();
+            }
+
+            sb.BeginBlock("public void SyncViewModels()");
+            foreach (var entityInfo in Entities.Where(x => x.HasView))
+            {
+                sb.BeginBlock($"//Sync {entityInfo.Name} view models");
+                sb.AppendLine($"var models = _worldState.AllOf{entityInfo.Name};");
+                sb.AppendLine($"_toRemove{entityInfo.Name}.Clear();");
+                sb.AppendLine(
+                    $"foreach (var pair in _viewModels{entityInfo.Name}Dictionary.Where(pair => !models.Contains(pair.Key))) _toRemove{entityInfo.Name}.Add(pair.Key);");
+                sb.BeginBlock($"foreach (var model in _toRemove{entityInfo.Name})");
+                sb.AppendLine($"Destroy{entityInfo.Name}ViewModel(model);");
+                sb.EndBlock();
+                sb.BeginBlock($"foreach (var model in models)");
+                sb.AppendLine($"Create{entityInfo.Name}ViewModel(model);");
+                sb.EndBlock();
+                sb.EndBlock();
+            }
+
+            sb.EndBlock();
+            sb.BeginBlock($"public void DestroyViewModels(IEntity model)");
+            foreach (var entityInfo in Entities.Where(x => x.HasView))
+                sb.AppendLine(
+                    $"if(model is {entityInfo.Name} val{entityInfo.Name}) Destroy{entityInfo.Name}ViewModel(val{entityInfo.Name});");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("class WorldSimulation : IWorldSimulation");
+            sb.AppendLine("private readonly List<ISimSystem> _simSystems = new ();");
+            sb.AppendLine("private readonly WorldState _worldState;");
+            sb.AppendLine("private readonly WorldView _worldView;");
+            foreach (var timer in allTimers)
+            {
+                sb.AppendLine(
+                    $"private readonly List<I{timer.Type.Name}{timer.Timer}Handler> _{timer.Type.Name}{timer.Timer}Handlers = new ();");
+            }
+
+            sb.BeginBlock("public WorldSimulation(WorldState worldState, WorldView worldView)");
+            sb.AppendLine("_worldState = worldState;");
+            sb.AppendLine("_worldView = worldView;");
+            sb.EndBlock();
+            foreach (var timer in allTimers)
+            {
+                sb.AppendLine(
+                    $"public void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler) => _{timer.Type.Name}{timer.Timer}Handlers.Add(handler);");
+            }
+
+            sb.BeginBlock("public void AddSystem(ISimSystem simSystem)");
+            sb.AppendLine("_simSystems.Add(simSystem);");
+            sb.EndBlock();
+            sb.BeginBlock("public void Simulate(float dt)");
+            sb.AppendLine("AdvanceTimers(dt);");
+            sb.AppendLine("foreach (var simSystem in _simSystems) simSystem.Simulate(dt);");
+            sb.AppendLine("DestroyEntities();");
+            sb.AppendLine("_worldView.SyncViewModels();");
+            sb.EndBlock();
+            sb.BeginBlock("void AdvanceTimers(float dt)");
+            foreach (var entityInfo in Entities.OfType<EntityInfo>())
+            {
+                var args = entityInfo.GetAllTimers().ToList();
+                if (args.Count == 0)
+                    continue;
+                sb.AppendLine($"foreach (var e in _worldState.AllOf{entityInfo.Name}) e.AdvanceTimers(dt);");
+            }
+
+            foreach (var timer in allTimers)
+            {
+                sb.BeginBlock($"foreach (var e in _worldState.AllOf{timer.Type.Name})");
+                sb.AppendLine($"if(!e.{timer.Timer}JustFinished) continue;");
+                sb.AppendLine(
+                    $"foreach (var handler in _{timer.Type.Name}{timer.Timer}Handlers) handler.On{timer.Type.Name}{timer.Timer}Finish(e);");
+                sb.EndBlock();
+            }
+
+            sb.EndBlock();
+            sb.BeginBlock("void DestroyEntities()");
+            sb.BeginBlock("foreach (var entity in _worldState.ToDestroy)");
+            sb.AppendLine($"_worldState.Entities.Remove(entity);");
+            sb.AppendLine($"_worldView.DestroyViewModels(entity);");
+            sb.EndBlock();
+            sb.AppendLine("_worldState.ToDestroy.Clear();");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("public class WorldLibrary : ILibrary");
+            sb.BeginBlock("public void Register(IContainer container)");
+            sb.AppendLine("container.Register<WorldState>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine("container.Register<WorldController>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine("container.Register<WorldView>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine("container.Register<WorldSimulation>().AsInterfacesAndSelf().SingleInstance();");
+            sb.EndBlock();
+            sb.EndBlock();
+        }
+
+        private void WriteInterfaces(FormatWriter sb, List<TimerData> allTimers)
+        {
             sb.AppendLine("public interface IEntity { }");
             sb.AppendLine();
 
@@ -419,172 +641,6 @@ namespace Languages.ClassEntitiesModel
             foreach (var timer in allTimers)
                 sb.AppendLine($"void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler);");
             sb.AppendLine("void Simulate(float dt);");
-            sb.EndBlock();
-
-            sb.BeginBlock("class EntityTimer : ITimer");
-            sb.AppendLine("public float FullTime { get; }");
-            sb.AppendLine("public float TimeLeft { get; private set; }");
-            sb.BeginBlock("public EntityTimer(float time)");
-            sb.AppendLine("FullTime = TimeLeft = time;");
-            sb.EndBlock();
-            sb.AppendLine("public void Advance(float dt) => TimeLeft -= dt;");
-            sb.EndBlock();
-            sb.AppendLine();
-
-            sb.BeginBlock("class WorldState : IWorldState");
-            sb.AppendLine("public readonly List<IEntity> Entities = new();");
-            sb.AppendLine("public readonly HashSet<IEntity> ToDestroy = new();");
-            sb.AppendLine("public IReadOnlyList<IEntity> All => Entities;");
-            foreach (var entityInfo in Entities)
-                sb.AppendLine(
-                    $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => Entities.OfType<{entityInfo.Name}>().ToList();");
-            foreach (var entityInfo in Entities.Where(x => x is EntityInfo { IsSingleton: true }))
-                sb.AppendLine(
-                    $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
-            sb.BeginBlock("class WorldController : IWorldController");
-            sb.AppendLine("private readonly WorldState _worldState;");
-            sb.BeginBlock("public WorldController(WorldState worldState)");
-            sb.AppendLine("_worldState = worldState;");
-            sb.EndBlock();
-            foreach (var entityInfo in Entities.OfType<EntityInfo>())
-            {
-                var args = entityInfo.GetAllProperties().Where(x => x.IsRequired).ToList();
-                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
-                sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.Name}({argsStr})");
-                if (entityInfo.IsSingleton)
-                {
-                    sb.AppendLine(
-                        $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
-                }
-                sb.BeginBlock($"var result = new {entityInfo.Name}");
-                foreach (var propertyInfo in args)
-                    sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
-                sb.EndBlock();
-                sb.AppendLine(";");
-                sb.AppendLine("_worldState.Entities.Add(result);");
-                sb.AppendLine("return result;");
-                sb.EndBlock();
-            }
-
-            sb.AppendLine("public void Destroy(IEntity entity) => _worldState.ToDestroy.Add(entity);");
-            sb.EndBlock();
-
-            sb.BeginBlock("class WorldView : IWorldView");
-            sb.AppendLine("//TODO: implement IDisposable");
-            sb.AppendLine("private readonly WorldState _worldState;");
-            sb.AppendLine("[InjectOptional] private readonly IViewsProvider _viewsProvider;");
-            foreach (var entity in Entities)
-            foreach (var property in entity.GetPrefabsProperties())
-                sb.AppendLine(
-                    $"private readonly Dictionary<{entity.Name}ViewModel, Valkyrie.MVVM.Bindings.Template> _views{entity.Name}{property} = new();");
-            sb.BeginBlock("public WorldView(WorldState worldState)");
-            sb.AppendLine("_worldState = worldState;");
-            sb.EndBlock();
-            foreach (var entityInfo in Entities.Where(x => x.HasView))
-            {
-                sb.AppendLine($"private readonly Dictionary<{entityInfo.Name}, {entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}Dictionary = new ();");
-                sb.AppendLine($"private readonly List<{entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}List = new ();");
-                sb.AppendLine($"private readonly List<{entityInfo.Name}> _toRemove{entityInfo.Name} = new ();");
-                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} => _viewModels{entityInfo.Name}List;");
-            }
-
-            sb.BeginBlock("public void SyncViewModels()");
-            foreach (var entityInfo in Entities.Where(x => x.HasView))
-            {
-                sb.BeginBlock($"//Sync {entityInfo.Name} view models");
-                sb.AppendLine($"var models = _worldState.AllOf{entityInfo.Name};");
-                sb.AppendLine($"_toRemove{entityInfo.Name}.Clear();");
-                sb.AppendLine($"foreach (var pair in _viewModels{entityInfo.Name}Dictionary.Where(pair => !models.Contains(pair.Key))) _toRemove{entityInfo.Name}.Add(pair.Key);");
-                sb.BeginBlock($"foreach (var model in _toRemove{entityInfo.Name})");
-                sb.BeginBlock($"if (_viewModels{entityInfo.Name}Dictionary.Remove(model, out var viewModel))");
-                sb.AppendLine($"_viewModels{entityInfo.Name}List.Remove(viewModel);");
-                foreach (var property in entityInfo.GetPrefabsProperties())
-                    sb.AppendLine($"if (_views{entityInfo.Name}{property}.Remove(viewModel, out var view)) _viewsProvider.Release(view);");
-                sb.EndBlock();
-                sb.EndBlock();
-                sb.BeginBlock($"foreach (var model in models)");
-                sb.AppendLine($"if (_viewModels{entityInfo.Name}Dictionary.TryGetValue(model, out var viewModel)) continue;");
-                sb.AppendLine($"_viewModels{entityInfo.Name}Dictionary.Add(model, viewModel = new {entityInfo.Name}ViewModel(model));");
-                sb.AppendLine($"_viewModels{entityInfo.Name}List.Add(viewModel);");
-                foreach (var property in entityInfo.GetPrefabsProperties())
-                {
-                    sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property}");
-                    sb.AppendLine($"var view = _viewsProvider.Spawn<Valkyrie.MVVM.Bindings.Template>(model.{property});");
-                    sb.AppendLine($"view.ViewModel = viewModel;");
-                    sb.AppendLine($"_views{entityInfo.Name}{property}.Add(viewModel, view);");
-                    sb.EndBlock();
-                }
-                sb.EndBlock();
-                sb.EndBlock();
-            }
-            sb.EndBlock();
-
-            sb.BeginBlock("public void SyncPrefabs()");
-            sb.AppendLine("if(_viewsProvider == null) return;");
-            sb.EndBlock();
-            sb.EndBlock();
-            sb.AppendLine();
-
-            sb.BeginBlock("class WorldSimulation : IWorldSimulation");
-            sb.AppendLine("private readonly List<ISimSystem> _simSystems = new ();");
-            sb.AppendLine("private readonly WorldState _worldState;");
-            sb.AppendLine("private readonly WorldView _worldView;");
-            foreach (var timer in allTimers)
-            {
-                sb.AppendLine($"private readonly List<I{timer.Type.Name}{timer.Timer}Handler> _{timer.Type.Name}{timer.Timer}Handlers = new ();");
-            }
-            sb.BeginBlock("public WorldSimulation(WorldState worldState, WorldView worldView)");
-            sb.AppendLine("_worldState = worldState;");
-            sb.AppendLine("_worldView = worldView;");
-            sb.EndBlock();
-            foreach (var timer in allTimers)
-            {
-                sb.AppendLine($"public void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler) => _{timer.Type.Name}{timer.Timer}Handlers.Add(handler);");
-            }
-            sb.BeginBlock("public void AddSystem(ISimSystem simSystem)");
-            sb.AppendLine("_simSystems.Add(simSystem);");
-            sb.EndBlock();
-            sb.BeginBlock("public void Simulate(float dt)");
-            sb.AppendLine("AdvanceTimers(dt);");
-            sb.AppendLine("foreach (var simSystem in _simSystems) simSystem.Simulate(dt);");
-            sb.AppendLine("DestroyEntities();");
-            sb.AppendLine("_worldView.SyncViewModels();");
-            sb.EndBlock();
-            sb.BeginBlock("void AdvanceTimers(float dt)");
-            foreach (var entityInfo in Entities.OfType<EntityInfo>())
-            {
-                var args = entityInfo.GetAllTimers().ToList();
-                if (args.Count == 0)
-                    continue;
-                sb.AppendLine($"foreach (var e in _worldState.AllOf{entityInfo.Name}) e.AdvanceTimers(dt);");
-            }
-            foreach (var timer in allTimers)
-            {
-                sb.BeginBlock($"foreach (var e in _worldState.AllOf{timer.Type.Name})");
-                sb.AppendLine($"if(!e.{timer.Timer}JustFinished) continue;");
-                sb.AppendLine(
-                    $"foreach (var handler in _{timer.Type.Name}{timer.Timer}Handlers) handler.On{timer.Type.Name}{timer.Timer}Finish(e);");
-                sb.EndBlock();
-            }
-            sb.EndBlock();
-            sb.BeginBlock("void DestroyEntities()");
-            sb.AppendLine("foreach (var entity in _worldState.ToDestroy) _worldState.Entities.Remove(entity);");
-            sb.AppendLine("_worldState.ToDestroy.Clear();");
-            sb.EndBlock();
-            sb.EndBlock();
-
-
-            sb.BeginBlock("public class WorldLibrary : ILibrary");
-            sb.BeginBlock("public void Register(IContainer container)");
-            sb.AppendLine("container.Register<WorldState>().AsInterfacesAndSelf().SingleInstance();");
-            sb.AppendLine("container.Register<WorldController>().AsInterfacesAndSelf().SingleInstance();");
-            sb.AppendLine("container.Register<WorldView>().AsInterfacesAndSelf().SingleInstance();");
-            sb.AppendLine("container.Register<WorldSimulation>().AsInterfacesAndSelf().SingleInstance();");
-            sb.EndBlock();
             sb.EndBlock();
         }
 
