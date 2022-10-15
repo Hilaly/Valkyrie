@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Meta;
 using UnityEditor;
 using UnityEngine;
+using Utils;
 using Valkyrie.MVVM.Bindings;
+using Valkyrie.Tools;
 
 namespace Valkyrie.MVVM.Editor
 {
@@ -99,7 +102,8 @@ namespace Valkyrie.MVVM.Editor
         bool ViewModelPropertyFilter(PropertyInfo info)
         {
             return ViewPropertiesTypes.Contains(info.PropertyType)
-                   || typeof(UnityEngine.Object).IsAssignableFrom(info.PropertyType);
+                   || typeof(UnityEngine.Object).IsAssignableFrom(info.PropertyType)
+                   || info.PropertyType.GetCustomAttribute<IsValidBindingTypeAttribute>() != null;
         }
     }
 }

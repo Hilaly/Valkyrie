@@ -9,9 +9,14 @@ namespace Valkyrie.Entities
 {
     public interface IEntity : IConfigData, IDisposable
     {
+        public string Id { get; }
+
+        T GetComponent<T>() where T : IComponent;
+        T AddComponent<T>(T component) where T : IComponent;
+        bool RemoveComponent<T>() where T : IComponent;
     }
 
-    public class Entity : IConfigData, IDisposable, IEntity
+    public class Entity : IEntity
     {
         internal Action _finishLoadAction;
 
@@ -20,12 +25,14 @@ namespace Valkyrie.Entities
             _finishLoadAction?.Invoke();
             _finishLoadAction = null;
         }
-        
+
         #region IConfigData
 
         string IConfigData.GetId() => Id;
 
-        void IConfigData.PastLoad(IDictionary<string, IConfigData> configData) { }
+        void IConfigData.PastLoad(IDictionary<string, IConfigData> configData)
+        {
+        }
 
         #endregion
 
@@ -47,8 +54,7 @@ namespace Valkyrie.Entities
         public IEnumerable<T> CollectComponents<T>() where T : IComponent =>
             _components.OfType<T>();
 
-
-        public void AddComponent<T>(T c) where T : IComponent
+        public T AddComponent<T>(T c) where T : IComponent
         {
             for (var i = 0; i < _components.Count;)
             {
@@ -57,7 +63,17 @@ namespace Valkyrie.Entities
                 else
                     ++i;
             }
+
             _components.Add(c);
+            return c;
+        }
+
+        public bool RemoveComponent<T>() where T : IComponent
+        {
+            var c = GetComponent<T>();
+            if (c != null)
+                return RemoveComponent(c);
+            return false;
         }
 
         public bool RemoveComponent<T>(T c) where T : IComponent

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor.Callbacks;
 using UnityEngine;
+using Utils;
 using Valkyrie.Di;
 using Valkyrie.Ecs;
 
@@ -12,30 +13,6 @@ namespace Valkyrie.Editor
 {
     public static class SimulationCompiler
     {
-        static List<Type> GetAllSubTypes(this Type aBaseClass, Func<Type, bool> where)
-        {
-            var result = new List<Type>
-            {
-                aBaseClass
-            };
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                try
-                {
-                    var assemblyTypes = assembly.GetTypes();
-                    var selectedTypes = assemblyTypes
-                        .Where(typ => typ.IsSubclassOf(aBaseClass) || aBaseClass.IsAssignableFrom(typ)).ToArray();
-                    result.AddRange(selectedTypes);
-                }
-                catch
-                {
-                    //Do nothing if we got to assembly that probably not from this project
-                }
-            }
-
-            return where != null ? result.Where(where).ToList() : result;
-        }
-
         class Writer : IDisposable
         {
             private string _startStr;

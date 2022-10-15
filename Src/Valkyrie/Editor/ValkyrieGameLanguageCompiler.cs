@@ -12,6 +12,7 @@ namespace Editor
     {
         private const string PreferencesAutoRecompileEnabled = "ValkyrieUnity_LogicLanguage_Compiler_Enabled";
         private const string PreferencesSimulationPath = "ValkyrieUnity_LogicLanguage_Compiler_Path";
+        private const string PreferencesGeneratedNamespace = "ValkyrieUnity_LogicLanguage_Compiler_Namespace";
 
         internal static bool AutoCompilationEnabled
         {
@@ -26,6 +27,12 @@ namespace Editor
             private set => EditorPrefs.SetString(PreferencesSimulationPath, value);
         }
 
+        internal static string RootNamespace
+        {
+            get => EditorPrefs.GetString(PreferencesGeneratedNamespace, "Test");
+            private set => EditorPrefs.SetString(PreferencesGeneratedNamespace, value);
+        }
+
         [PreferenceItem("Valkyrie Logic Language")]
         static void PreferenceItem()
         {
@@ -36,6 +43,8 @@ namespace Editor
                     "This allow valkyrie to generate code, based on gdl file changes"),
                 AutoCompilationEnabled);
             EditorGUI.BeginDisabledGroup(!AutoCompilationEnabled);
+            RootNamespace = EditorGUILayout.TextField(
+                "Namespace for generated code", RootNamespace);
             CompilationPath = EditorGUILayout.TextField(
                 "Output file for generated code", CompilationPath);
             if (GUILayout.Button(new GUIContent("Generate Logic")))
@@ -61,7 +70,10 @@ namespace Editor
             var gdlFiles = Directory.EnumerateFiles("Assets", "*.gdl", SearchOption.AllDirectories).ToList();
             if (gdlFiles.Any())
             {
-                var world = new WorldDescription();
+                var world = new WorldDescription()
+                {
+                    Namespace = RootNamespace
+                };
                 foreach (var gdlFile in gdlFiles)
                     try
                     {

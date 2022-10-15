@@ -23,7 +23,12 @@ namespace Valkyrie.Grammar
             }
         }
 
-        public List<IAstNode> GetChildren() => Nodes;
+        public List<IAstNode> GetChildren(bool unpackGenerated)
+        {
+            if (unpackGenerated)
+                return this.UnpackGeneratedLists();
+            return Nodes;
+        }
 
         public List<IAstNode> Nodes { get; }
 

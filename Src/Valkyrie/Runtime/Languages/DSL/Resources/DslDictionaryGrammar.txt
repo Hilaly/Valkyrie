@@ -1,0 +1,117 @@
+#lexer
+
+(#(?<value>(\n|.)+?)\.) -> comment
+<!--(?<value>(\n|.)+?)--> -> comment
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+(\w|<|>)* -> IDENTIFIER
+
+\$ -> LOCAL_VAR_ID
+\^ -> GLOBAL_VAR_ID
+
+(=>) -> RULE_OP
+(:) -> COLON
+
+(<) -> TAG_OPEN
+(>) -> TAG_CLOSE
+
+\{ -> CURLY_BRACE_OPEN
+\} -> CURLY_BRACE_CLOSE
+
+\( -> BRACE_OPEN
+\) -> BRACE_CLOSE
+
+[ \n\r\t]+ -> escape
+
+(\.) -> SENTENCE_OP
+(,) -> COMMA
+
+(\+|\-) -> ADD_OP
+(=) -> EQUALS_OP
+
+#parser
+
+<root> -> <some_entry>+
+
+<some_entry> -> <rule> | <macro>
+
+<rule> -> <rule_name> COLON RULE_OP <rule_bnf> RULE_OP <rule_actions> SENTENCE_OP | <rule_name> COLON RULE_OP <rule_bnf> SENTENCE_OP
+
+<rule_name> -> <id>
+
+<rule_bnf> -> <rule_bnf_entry>+
+<rule_bnf_entry> -> <rule_var> | <rule_op> | <rule_bnf_match> | <global_var>
+<rule_var> -> LOCAL_VAR_ID <id>
+<global_var> -> GLOBAL_VAR_ID <id>
+<rule_op> -> STRING
+<rule_bnf_match> -> <id> \{ <min_count> "," <max_count> \}
+<rule_bnf_match> -> <id> \{ <min_count> "," \}
+<rule_bnf_match> -> <id> \{ "," <max_count> \}
+<rule_bnf_match> -> <id> \{ <exact_count> \}
+<rule_bnf_match> -> <id>
+
+<min_count> -> NUMBER
+<max_count> -> NUMBER
+<exact_count> -> NUMBER
+
+<id> -> IDENTIFIER
+
+<rule_actions> -> <rule_action> "," <rule_actions> | <rule_action>
+
+<rule_action> -> CURLY_BRACE_OPEN <rule_actions> CURLY_BRACE_CLOSE | CURLY_BRACE_OPEN CURLY_BRACE_CLOSE
+
+<rule_action> -> <skip_action> | <log_action> | <call_action> | <push_local_up_action>
+<rule_action> -> <set_global_action> | <set_local_action> | <if_action>
+<rule_action> -> <add_base_type_action> | <create_type_action> | <add_attribute_action> | <add_method_action> | <add_property_action>
+<rule_action> -> <add_code_to_property_setter> | <add_code_to_property_getter>
+<rule_action> -> <set_property_type> | <set_method_return_type>
+
+<call_action> -> "call" <final_str_literal> 
+<skip_action> -> "skip"
+<log_action> -> "log" <final_str_literal>
+<create_type_action> -> "create" "class" <final_str_literal> | "create" "struct" <final_str_literal>
+
+<push_local_up_action> -> "push" "up" <final_str_literal>
+<set_global_action> -> "set" "global" <final_str_literal> "=" <final_str_literal>
+<set_local_action> -> "set" "local" <final_str_literal> "=" <final_str_literal>
+
+<if_action> -> "if" <expr> <true_if_branch> "else" <false_if_branch> | "if" <expr> <true_if_branch>
+<true_if_branch> -> <rule_action>
+<false_if_branch> -> <rule_action>
+
+<add_base_type_action> -> "add" "base" <final_str_literal> to <final_str_literal>
+<add_attribute_action> -> "add" "attribute" <final_str_literal> to <final_str_literal>
+<add_method_action> -> "add" "method" <final_str_literal> to <final_str_literal>
+<add_property_action> -> "add" "property" <final_str_literal> to <final_str_literal>
+
+<add_code_to_property_setter> -> "add" "code" <final_str_literal> "to" "setter" <final_str_literal> "of" <final_str_literal>
+<add_code_to_property_getter> -> "add" "code" <final_str_literal> "to" "getter" <final_str_literal> "of" <final_str_literal>
+
+<set_property_type> -> "type" "of" "property" <final_str_literal> "of" <final_str_literal> "is" <final_str_literal>
+<set_method_return_type> -> "type" "of" "method" <final_str_literal> "of" <final_str_literal> "is" <final_str_literal>
+
+<rule_action> -> <add_code_type> | <add_code_global>
+<add_code_type> -> "add" "code" <final_str_literal> "to" <final_str_literal>
+<add_code_global> -> "add" "code" <final_str_literal>
+
+<final_str_literal> -> <add_words_op>
+<add_words_op> -> <word> ADD_OP <add_words_op> | <word>
+<word> -> <rule_var> | <global_var> | <string> | <id>
+
+<string> -> STRING
+
+<expr> -> <or_expr>
+<or_expr> -> <and_expr> "or" <or_expr> | <and_expr>
+<and_expr> -> <not_expr> "and" <and_expr> | <not_expr>
+<not_expr> -> "not" <single_expr> | <single_expr>
+<single_expr> -> <global_expr> | <local_expr> | \( <expr> \)
+<global_expr> -> "global" <final_str_literal>
+<local_expr> -> "local" <final_str_literal>
+
+<macro> -> "macro" COLON <macro_source> RULE_OP <macro_sentence> SENTENCE_OP
+<macro_source> -> <string>
+<macro_sentence> -> <string>

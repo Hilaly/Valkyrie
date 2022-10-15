@@ -170,7 +170,7 @@ namespace Valkyrie.Entities
             if (templates != null)
                 entity._templates.AddRange(templates.Values<string>().Select(x =>
                 {
-                    var r = entitiesContext.GetEntity(x, true);
+                    var r = entitiesContext.GetEntity(x);
                     if (r == null)
                         throw new Exception($"Couldn't found template {x}");
                     return r;
@@ -182,7 +182,7 @@ namespace Valkyrie.Entities
             {
                 var d = slots.ToObject<Dictionary<string, string>>();
                 foreach (var pair in d) 
-                    entity.AddSlot(pair.Key, entitiesContext.GetEntity(pair.Value, true));
+                    entity.AddSlot(pair.Key, entitiesContext.GetEntity(pair.Value));
             }
             
             foreach (var oEntity in entity._templates) oEntity.FinishLoading();

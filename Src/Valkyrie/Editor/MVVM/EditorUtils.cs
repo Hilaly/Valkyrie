@@ -14,6 +14,8 @@ namespace Valkyrie.MVVM.Editor
         public static void DeleteSave()
         {
             PlayerPrefs.DeleteAll();
+            foreach (var file in Directory.EnumerateFiles(Application.persistentDataPath)) 
+                File.Delete(file);
         }
 
         internal static string GetCoolName(string original)
