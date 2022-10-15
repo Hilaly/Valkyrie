@@ -386,7 +386,7 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("public IReadOnlyList<IEntity> All => Entities;");
             foreach (var entityInfo in Entities)
             {
-                sb.AppendLine($"public List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
+                sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _allOf{entityInfo.Name}; // Entities.OfType<{entityInfo.Name}>().ToList();");
             }
             foreach (var entityInfo in Entities.Where(x => x is EntityInfo { IsSingleton: true }))
@@ -455,7 +455,7 @@ namespace Languages.ClassEntitiesModel
                     $"private readonly Dictionary<{entityInfo.Name}, {entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}Dictionary = new ();");
                 sb.AppendLine(
                     $"private readonly List<{entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}List = new ();");
-                sb.AppendLine($"private readonly List<{entityInfo.Name}> _toRemove{entityInfo.Name} = new ();");
+                sb.AppendLine($"/* private readonly List<{entityInfo.Name}> _toRemove{entityInfo.Name} = new (); */");
                 sb.AppendLine(
                     $"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} => _viewModels{entityInfo.Name}List;");
                 sb.BeginBlock($"public void Create{entityInfo.Name}ViewModel({entityInfo.Name} model)");
@@ -494,12 +494,14 @@ namespace Languages.ClassEntitiesModel
                 sb.BeginBlock($"//Sync {entityInfo.Name} view models");
                 sb.AppendLine($"var models = _worldState.AllOf{entityInfo.Name};");
                 sb.AppendLine($"_toRemove{entityInfo.Name}.Clear();");
-                sb.AppendLine(
-                    $"foreach (var pair in _viewModels{entityInfo.Name}Dictionary.Where(pair => !models.Contains(pair.Key))) _toRemove{entityInfo.Name}.Add(pair.Key);");
-                sb.BeginBlock($"foreach (var model in _toRemove{entityInfo.Name})");
+                sb.BeginForEachIterationBlock("pair",
+                    $"_viewModels{entityInfo.Name}Dictionary.Where(pair => !models.Contains(pair.Key))");
+                sb.AppendLine($"_toRemove{entityInfo.Name}.Add(pair.Key);");
+                sb.EndBlock();
+                sb.BeginForIterationBlock("model", $"_toRemove{entityInfo.Name}");
                 sb.AppendLine($"Destroy{entityInfo.Name}ViewModel(model);");
                 sb.EndBlock();
-                sb.BeginBlock($"foreach (var model in models)");
+                sb.BeginForIterationBlock("model", "models");
                 sb.AppendLine($"Create{entityInfo.Name}ViewModel(model);");
                 sb.EndBlock();
                 sb.EndBlock();
@@ -521,10 +523,14 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("private readonly List<ISimSystem> _simSystems = new ();");
             sb.AppendLine("private readonly WorldState _worldState;");
             sb.AppendLine("private readonly WorldView _worldView;");
+
+            string GetTimersFieldName(TimerData timer) => 
+                $"{timer.Type.Name}{timer.Timer}Handlers".ConvertToCamelCaseFieldName();
+            
             foreach (var timer in allTimers)
             {
-                sb.AppendLine(
-                    $"private readonly List<I{timer.Type.Name}{timer.Timer}Handler> _{timer.Type.Name}{timer.Timer}Handlers = new ();");
+                var timerField = GetTimersFieldName(timer);
+                sb.AppendLine($"private readonly List<I{timer.Type.Name}{timer.Timer}Handler> {timerField} = new ();");
             }
 
             sb.BeginBlock("public WorldSimulation(WorldState worldState, WorldView worldView)");
@@ -533,8 +539,8 @@ namespace Languages.ClassEntitiesModel
             sb.EndBlock();
             foreach (var timer in allTimers)
             {
-                sb.AppendLine(
-                    $"public void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler) => _{timer.Type.Name}{timer.Timer}Handlers.Add(handler);");
+                var timerField = GetTimersFieldName(timer);
+                sb.AppendLine($"public void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler) => {timerField}.Add(handler);");
             }
 
             sb.BeginBlock("public void AddSystem(ISimSystem simSystem)");
@@ -542,7 +548,9 @@ namespace Languages.ClassEntitiesModel
             sb.EndBlock();
             sb.BeginBlock("public void Simulate(float dt)");
             sb.AppendLine("AdvanceTimers(dt);");
-            sb.AppendLine("foreach (var simSystem in _simSystems) simSystem.Simulate(dt);");
+            sb.BeginForIterationBlock("simSystem", "_simSystems");
+            sb.AppendLine("simSystem.Simulate(dt);");
+            sb.EndBlock();
             sb.AppendLine("DestroyEntities();");
             sb.AppendLine("//_worldView.SyncViewModels();");
             sb.EndBlock();
@@ -552,21 +560,29 @@ namespace Languages.ClassEntitiesModel
                 var args = entityInfo.GetAllTimers().ToList();
                 if (args.Count == 0)
                     continue;
-                sb.AppendLine($"foreach (var e in _worldState.AllOf{entityInfo.Name}) e.AdvanceTimers(dt);");
+                sb.BeginBlock();
+                sb.AppendLine($"var list = _worldState.AllOf{entityInfo.Name};");
+                sb.BeginForIterationBlock("e", "list");
+                sb.AppendLine($"e.AdvanceTimers(dt);");
+                sb.EndBlock();
+                sb.EndBlock();
             }
-
             foreach (var timer in allTimers)
             {
-                sb.BeginBlock($"foreach (var e in _worldState.AllOf{timer.Type.Name})");
+                sb.BeginBlock();
+                sb.AppendLine($"var list = _worldState.AllOf{timer.Type.Name};");
+                sb.BeginForIterationBlock("e", "list");
                 sb.AppendLine($"if(!e.{timer.Timer}JustFinished) continue;");
-                sb.AppendLine(
-                    $"foreach (var handler in _{timer.Type.Name}{timer.Timer}Handlers) handler.On{timer.Type.Name}{timer.Timer}Finish(e);");
+                sb.BeginForIterationBlock("handler", GetTimersFieldName(timer), "hIndex");
+                sb.AppendLine($"handler.On{timer.Type.Name}{timer.Timer}Finish(e);");
+                sb.EndBlock();
+                sb.EndBlock();
                 sb.EndBlock();
             }
 
             sb.EndBlock();
             sb.BeginBlock("void DestroyEntities()");
-            sb.BeginBlock("foreach (var entity in _worldState.ToDestroy)");
+            sb.BeginForEachIterationBlock("entity", "_worldState.ToDestroy");
             sb.AppendLine("Destroy(entity);");
             sb.EndBlock();
             sb.AppendLine("_worldState.ToDestroy.Clear();");
