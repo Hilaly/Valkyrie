@@ -1,5 +1,67 @@
-name "is flag" => create struct name.
-name "is" component => create class name + component.
+###### This is simple example of some expression.
+<!-- And this is HTML like comment -->
 
-name "is class" => create class name.
-name "is struct" => create struct name.
+macro: "VALUE_COMPONENT\((?<name>\w+),(?<type>(\w|\.)+)\)" 
+    => "public class ${name}Component : NaiveEntity.GamePrototype.EntProto.ValueComponent<${type}> { }".
+macro: "GET_VALUED_PROPERTY\((?<type>(\w|\.)+),(?<name>\w+)\)" 
+    => "public ${type} ${name} { get { return Entity.GetComponent<${name}Component>().Value; } set { Entity.AddComponent(new ${name}Component() { Value = value }); } }".
+
+## Entities: X.
+<entities_creation>:
+    => "Entities :" <entities_list>
+    => call <entities_list>.
+
+<entities_list>:
+    => <entity_list_define> <entities_list>
+    => call <entity_list_define>, call <entities_list>.
+<entities_list>:
+    => <entity_list_define>
+    => call <entity_list_define>.
+<entity_list_define>:
+    => <list_marker> <entity_define>
+    => call <entity_define>.
+<entity_define>:
+    => $entityType
+    => log "Entity " + $entityType,
+     create class $entityType,
+     add base "NaiveEntity.GamePrototype.EntProto.EntityWrapper" to $entityType,
+     set global $entityType + "isEntity" = $entityType.
+
+## X is Y property.
+<typed_component_creation>:
+    => $componentName "is" $valueType "property"
+    => log "Component " + $componentName + " of " + $valueType,
+        add code "VALUE_COMPONENT(" + $componentName + "," + $valueType + ")",
+        set global $componentName + "Component" = $componentName,
+        set global $componentName + "Value" = $valueType.
+
+
+### Control sequences, this sequences skipped.
+<list_marker>:
+    => "- [ ]"
+    => skip.
+<list_marker>:
+    => "-"
+    => skip.
+    
+
+## X contains Y.
+## X contains list(collection) of Y.
+
+## X has Y.
+<has_component>:
+    => $entityName "has" $componentName
+    => 
+        if not global $entityName + "isEntity"
+            log $entityName + " is not entity"
+        else
+        {
+            add code "GET_VALUED_PROPERTY(int," + $componentName + ")" to $entityName
+        }.
+
+## Every tick X Y.
+## Every T seconds A.
+
+## A is change X to Y.
+## A is change X by Y.
+

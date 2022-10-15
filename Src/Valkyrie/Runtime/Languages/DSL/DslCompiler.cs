@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
@@ -22,9 +23,11 @@ namespace Valkyrie.DSL
 
         public void Build(string source, CompilerContext compilerContext)
         {
+            compilerContext.Compiler = this;
+            
             var ast = ProgramParser.Parse(source.ToStream());
 
-            var sentences = new List<string>();
+            var sentences = new List<List<IAstNode>>();
 
             Parse(ast, sentences);
 
@@ -36,96 +39,91 @@ namespace Valkyrie.DSL
                     contexts.Add(ctx);
                 else
                 {
-                    compilerContext.UnparsedSentences.Add(sentence);
-                    Debug.LogWarning($"{sentence} doesn't present in dictionary");
+                    var text = ConvertToString(sentence);
+                    compilerContext.UnparsedSentences.Add(text);
+                    Debug.LogWarning($"{text} doesn't present in dictionary");
                 }
             }
+            
+            Debug.Log($"===================");
+            Debug.Log($"Start compiling ...");
 
-            foreach (var localContext in contexts) 
-                Apply(localContext, compilerContext);
+            foreach (var localContext in contexts)
+                Execute(localContext, compilerContext);
+            
+            Debug.Log($"Compile finished");
+            Debug.Log($"===================");
         }
 
-        bool TryMatchSentence(string text, IDslDictionary dictionary, LocalContext localContext)
-        {
-            foreach (var entry in dictionary.GetEntries)
-                if (entry.TryMatch(text, localContext))
-                    return true;
-            return false;
-        }
-
-
-        private void Parse(IAstNode ast, List<string> sentences)
+        private void Parse(IAstNode ast, List<List<IAstNode>> sentences)
         {
             var name = ast.Name;
-            var children = ast.GetChildren();
+            var children = ast.UnpackGeneratedLists();
             switch (name)
             {
                 case "<root>":
-                case "<generated-list-<sentence>>":
                     foreach (var astNode in children)
                         Parse(astNode, sentences);
-                    break;
+                    return;
                 case "<sentence>":
                 {
-                    var nodes = ast.UnpackNodes(x => x.Name == "<word>");
-                    sentences.AddRange(ConvertToString(nodes));
-                    break;
+                    sentences.Add(
+                        children
+                            .Where(x => x.Name == "<any>")
+                            .Select(x => x.GetChildren()[0])
+                            .ToList()
+                    );
+                    return;
                 }
                 default:
                     throw new GrammarCompileException(ast, $"Unknown node {name}");
             }
         }
 
-        IEnumerable<string> ConvertToString(List<IAstNode> nodes)
+        string ConvertToString(List<IAstNode> nodes)
         {
-            IEnumerable<string> EnumerateStrings(string str)
+            var sep = " ";
+            return nodes.Select(node => node.ConvertTreeToString(sep)).Join(sep);
+        }
+
+        internal void Execute(LocalContext localContext, CompilerContext compilerContext)
+        {
+            compilerContext.Compiler = this;
+
+            foreach (var command in localContext.Actions)
+                command.Execute(localContext, compilerContext);
+        }
+
+
+        private bool TryMatchSentence(List<IAstNode> sentence, IDslDictionary dictionary, LocalContext localContext)
+        {
+            foreach (var entry in dictionary.GetEntries)
             {
-                foreach (var tail in ConvertToString(nodes.GetRange(1, nodes.Count - 1)))
+                var lc = new LocalContext();
+                if (entry.TryMatch(sentence, lc))
                 {
-                    if (tail.NotNullOrEmpty())
-                        yield return $"{str} {tail}";
-                    else
-                        yield return str;
+                    localContext.ReplaceFrom(lc);
+                    return true;
                 }
             }
+            return false;
+        }
 
-            if (nodes.Count == 0)
+        internal static string ConvertToString(IAstNode node)
+        {
+            switch (node.Name)
             {
-                yield return string.Empty;
-                yield break;
-            }
-
-            var ast = nodes[0].GetChildren()[0];
-            var idNodes = ast.UnpackNodes(x => x.Name == "<id>");
-            switch (ast.Name)
-            {
-                case "<id>":
-                {
-                    var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";
-                    foreach (var p in EnumerateStrings(str)) yield return p;
-                    yield break;
-                }
-                case "<control>":
-                {
-                    var str = $"{idNodes.Select(x => x.GetString()).Join(" ")}";
-                    foreach (var p in EnumerateStrings(str)) yield return p;
-                    yield break;
-                }
-                case "<id_list>":
-                {
-                    foreach (var p in idNodes.SelectMany(astNode => EnumerateStrings(astNode.GetString())))
-                        yield return p;
-                    yield break;
-                }
+                case "CODE_BLOCK":
+                    return node.GetString().Trim('`');
                 default:
-                    throw new GrammarCompileException(ast, "Unsupported word type");
+                    return node.GetString();
             }
         }
-        
-        private void Apply(LocalContext localContext, CompilerContext compilerContext)
+
+        public void PostProcess(CompilerContext ctx)
         {
-            foreach(var command in localContext.Actions)
-                command.Execute(localContext.Args, compilerContext);
+            foreach (var dslMacro in Dictionary.GetMacros) 
+                ctx.Macros.Add(dslMacro);
         }
     }
 }

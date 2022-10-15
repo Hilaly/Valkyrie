@@ -307,14 +307,38 @@ namespace Valkyrie.Grammar
         {
             return bool.Parse(node.GetString());
         }
+
+        static readonly Regex GeneratedUnpackRegex = new Regex("<generated-(zerocount)?list-(?<name><\\w*>)>");
         
+        public static List<IAstNode> UnpackGeneratedLists(this IAstNode node)
+        {
+            var regex = GeneratedUnpackRegex;
+            var result = new List<IAstNode>();
+            var children = node.GetChildren(false);
+            foreach (var t in children)
+            {
+                var m = regex.Match(t.Name);
+                if (m.Success)
+                {
+                    var id = m.Groups["name"].Value;
+                    result.AddRange(t.UnpackNodes(x => x.Name == id));
+                }
+                else
+                    result.Add(t);
+            }
+
+            //UnityEngine.Debug.LogWarning($"{children.Select(x => x.Name).Join(",")} became {result.Select(x => x.Name).Join(",")}");
+            return result;
+        }
+
         public static List<IAstNode> UnpackNodes(this IAstNode node, Func<IAstNode, bool> filter)
         {
             var r = new List<IAstNode>();
             if (filter(node))
                 r.Add(node);
-            foreach (var child in node.GetChildren())
-                r.AddRange(UnpackNodes(child, filter));
+            else
+                foreach (var child in node.GetChildren())
+                    r.AddRange(UnpackNodes(child, filter));
             return r;
         }
 
@@ -323,7 +347,7 @@ namespace Valkyrie.Grammar
             return int.Parse(node.GetString(), CultureInfo.InvariantCulture);
         }
 
-        internal static string ConvertTreeToString(this IAstNode node, string del = " ")
+        public static string ConvertTreeToString(this IAstNode node, string del = " ")
         {
             var sList = new List<string>();
             var enumerator = node.EnumerateTerminalNodes();
@@ -403,6 +427,11 @@ namespace Valkyrie.Grammar
             }
 
             return result;
+        }
+
+        public static IAstNode CreateTerminalNode(string text)
+        {
+            return new TerminalNode(new Lexem() { Name = text, Value = text });
         }
     }
 }

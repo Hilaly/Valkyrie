@@ -65,6 +65,8 @@ namespace Valkyrie.UserInput.UnitySpecific
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+            IsPressed = true;
+            
             switch (_mode)
             {
                 case Mode.Normalized:
@@ -101,6 +103,8 @@ namespace Valkyrie.UserInput.UnitySpecific
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            IsPressed = false;
+            
             _xPrev = _yPrev = 0;
             Value = Vector2.zero;
         }
@@ -113,6 +117,7 @@ namespace Valkyrie.UserInput.UnitySpecific
             _dragged = false;
         }
 
+        public bool IsPressed { get; private set; }
         public Vector2 Value { get; private set; }
     }
 }

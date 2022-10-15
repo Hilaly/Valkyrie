@@ -1,5 +1,23 @@
-name "is flag" => create struct name.
-name "is" component => create class name + component.
+<define_flag> :
+    => $name "is flag" 
+    => create struct $name.
+   
+<define_component> :
+    => $name "is" $component 
+    => create class $name + $component.
 
-name "is class" => create class name.
-name "is struct" => create struct name.
+<define_class> :
+    => $name "is class" 
+    => create class $name.
+
+<define_struct> :
+    => $name "is struct"
+     => create struct $name.
+     
+<test_tree_parse> :
+    => $treeName <define_struct>
+    => skip.
+    
+<very_heavy_parsing> :
+    => <define_flag> "," <define_component> ":" <define_struct>
+    => skip.

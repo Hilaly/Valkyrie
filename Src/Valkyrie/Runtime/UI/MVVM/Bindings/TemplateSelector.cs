@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using Utils;
 
 namespace Valkyrie.MVVM.Bindings
 {
@@ -49,7 +50,7 @@ namespace Valkyrie.MVVM.Bindings
             this.SetBinding("ViewModelProperty", binding);
 
             if (_isPolling)
-                DataExtensions.RunPolling(disposeHandler, () =>
+                UiExtension.RunPolling(disposeHandler, () =>
                 {
                     if (this != null && gameObject != null && gameObject.activeInHierarchy)
                         binding.Update();

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Utils;
 
 namespace Valkyrie.MVVM.Bindings
 {
@@ -26,7 +27,7 @@ namespace Valkyrie.MVVM.Bindings
             if (_isTwoSided)
                 binding.SetTwoSided().AttachTo(disposeHandler);
             if (_isPolling)
-                DataExtensions.RunPolling(disposeHandler, () =>
+                UiExtension.RunPolling(disposeHandler, () =>
                 {
                     if (this != null && gameObject != null && gameObject.activeInHierarchy)
                         binding.Update();

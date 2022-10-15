@@ -36,9 +36,12 @@ namespace Valkyrie.Grammar
             var result = Parse(targetLexem, ref startLexemIndex, lexems, ref maxReachIndex, ref refDescs);
             if (startLexemIndex == lexems.Count)
                 return result;
-            var matchList = string.Join("[=]", refDescs.ToArray());
-            var ss = string.Join("[=]", lexems.GetRange(System.Math.Max(0, maxReachIndex),
-                System.Math.Min(10, lexems.Count - maxReachIndex)).Select(u => u.Name).ToArray());
+            var matchList =  string.Join("[=]", refDescs.ToArray());
+            var ss = string.Join("  ",
+                lexems.GetRange(Math.Max(0, maxReachIndex),
+                        Math.Min(10, lexems.Count - maxReachIndex))
+                    .Select(u => $"{u.Name}{(u is TerminalNode tn ? $"({tn.Lexem.Value})" : string.Empty)}")
+                    .ToArray());
             throw new Exception($"Can not match '{matchList}' near {ss}");
         }
 

@@ -6,11 +6,53 @@ Snake is a video game genre where the player maneuvers a growing line that becom
 - Wall
 - Food
 - Snake
-- Head
-- Tail
-- Body
-    * Tail
-    * Body.
+- Body.
+
+## Different properties.
+
+position is `UnityEngine.Vector2Int` property.
+input is `UnityEngine.Vector2Int` property.
+
+Snake contains list of Body.
+
+Snake has position.
+Snake has input.
+Body has position.
+
+## Logic.
+
+Every tick Snake readInput.
+Every 0.5 seconds we:
+- move Snake
+- check lose.
+
+readInput is change input to `new UnityEngine.Vector2Int(1,0)`.
+move is change position by `input*dt`.
+
+## Tasks that need to be done:
+- [x] Write log action
+- [x] Skip action
+- [x] Create type action
+- [x] Add base type action
+- [x] Add attribute action
+- [x] Add method action
+- [ ] Add code to method action
+- [x] Add property action
+- [x] Add code to property set action
+- [x] Add code to property get action
+- [x] Set global var action
+- [x] Set local var action
+- [ ] Get global var action
+- [x] Push local up action
+- [x] if action
+- [x] if else action
+- [ ] Blackboard
+- [x] Code snippets
+- [x] Add code to class direct
+- [x] Alias
+
+.
+<!--
 
 We have very little time:
 And if we use direct lines, then we have one paragraph.
@@ -19,7 +61,7 @@ And if we use direct lines, then we have one paragraph.
 ---
 
 
-<!--This is [an example] [id] reference-style link.
+This is [an example] [id] reference-style link.
 
 This is [an example](http://example.com/ "Title") inline link.
 
@@ -91,4 +133,20 @@ This allows you to have a footnote with multiple lines.
 [^note]:
 Named footnotes will still render with numbers instead of the text but allow easier identification and linking.  
 This footnote also has been made with a different syntax using 4 spaces for new lines.
+
+###### This is comment in language dictionary and we can see it in markdown.
+
+```
+<root>:
+  => $name
+  => log name.
+```
+
+```
+<entities_creation>:
+  => "Entities :" <entities_list>
+  => log "entities parsed", call <entities_list>.
+```
+
+.
 -->

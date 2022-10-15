@@ -22,6 +22,16 @@ namespace Valkyrie.Language.Description.Utils
             return this;
         }
 
+        public FormatWriter BeginForBlock(string indexName, string minValue, string maxValue) => 
+            BeginBlock($"for (var {indexName} = {minValue}; {indexName} < {maxValue}; ++{indexName})");
+
+        public FormatWriter BeginForIterationBlock(string varName, string collectionName, string indexerName = "index") =>
+            BeginForBlock(indexerName, "0", $"{collectionName}.Count")
+                .AppendLine($"var {varName} = {collectionName}[{indexerName}];");
+
+        public FormatWriter BeginForEachIterationBlock(string varName, string collectionName) =>
+            BeginBlock($"foreach (var {varName} in {collectionName})");
+
         public FormatWriter EndBlock()
         {
             RemoveTab();

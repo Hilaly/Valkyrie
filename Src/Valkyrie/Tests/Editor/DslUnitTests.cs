@@ -1,10 +1,10 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using Valkyrie.DSL;
 using Valkyrie.DSL.Definitions;
 using Valkyrie.DSL.Dictionary;
-using Valkyrie.Tools;
 
 namespace Valkyrie.Language
 {
@@ -14,6 +14,8 @@ namespace Valkyrie.Language
         {
             var dictionary = new DslCompiler().Dictionary;
             dictionary.Load(Resources.Load<TextAsset>("TestDictionary").text);
+
+            Debug.LogWarning(dictionary);
             return dictionary;
         }
 
@@ -31,25 +33,46 @@ namespace Valkyrie.Language
             var dictionary = LoadTestDictionary();
 
             var localContext = new LocalContext();
-
             Assert.AreEqual(false, TryParseText("", dictionary, localContext));
-            Assert.AreEqual(0, localContext.Args.Count);
+            Assert.AreEqual(0, localContext.GetLocalVariables().Count);
 
+            localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("ASD is flag", dictionary, localContext));
-            Assert.AreEqual("ASD", localContext.Args["name"]);
-            Assert.AreEqual(true, TryParseText("GDB is flag", dictionary, localContext));
-            Assert.AreEqual("GDB", localContext.Args["name"]);
+            Assert.AreEqual("ASD", localContext.GetLocalVariables()["name"]);
             
+            localContext = new LocalContext();
+            Assert.AreEqual(true, TryParseText("GDB is flag", dictionary, localContext));
+            Assert.AreEqual("GDB", localContext.GetLocalVariables()["name"]);
+
+            localContext = new LocalContext();
             Assert.AreEqual(true, TryParseText("GDB is ADB", dictionary, localContext));
-            Assert.AreEqual("GDB", localContext.Args["name"]);
-            Assert.AreEqual("ADB", localContext.Args["component"]);
+            Assert.AreEqual("GDB", localContext.GetLocalVariables()["name"]);
+            Assert.AreEqual("ADB", localContext.GetLocalVariables()["component"]);
+
+            localContext = new LocalContext();
+            Assert.AreEqual(true, TryParseText("first second is struct", dictionary, localContext));
+            Assert.AreEqual(false, localContext.GetLocalVariables().ContainsKey("name"));
+            Assert.AreEqual("first", localContext.GetLocalVariables()["treeName"]);
+
+            localContext = new LocalContext();
+            Assert.AreEqual(true,
+                TryParseText("ASD is flag , c is component : gg is struct", dictionary, localContext));
+            localContext = new LocalContext();
+            Assert.AreEqual(false,
+                TryParseText("ASD is flag , c is component : gg is struct asddd", dictionary, localContext));
         }
 
         bool TryParseText(string text, IDslDictionary dictionary, LocalContext localContext)
         {
             foreach (var entry in dictionary.GetEntries)
-                if (entry.TryMatch(text, localContext))
+            {
+                var t = new LocalContext();
+                if (entry.TryMatch(text, t))
+                {
+                    localContext.ReplaceFrom(t);
                     return true;
+                }
+            }
             return false;
         }
 
@@ -63,12 +86,12 @@ namespace Valkyrie.Language
             {
                 Namespace = "Test"
             };
-            ctx.Usings.Add("System.Collections");
+            ctx.AddUsing("System.Collections");
             compiler.Build(source, ctx);
+            Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
-            Debug.LogWarning(ctx);
         }
-        
+
         [Test]
         public void TestGameProgram()
         {
@@ -79,10 +102,11 @@ namespace Valkyrie.Language
             {
                 Namespace = "Test"
             };
-            ctx.Usings.Add("System.Collections");
+            ctx.AddUsing("System.Collections");
             compiler.Build(source, ctx);
+            compiler.PostProcess(ctx);
+            Debug.Log(ctx);
             Assert.AreEqual(0, ctx.UnparsedSentences.Count);
-            Debug.LogWarning(ctx);
         }
 
         [Test]
@@ -91,12 +115,72 @@ namespace Valkyrie.Language
             var compiler = new DslCompiler();
             var astConstructor = compiler.ProgramParser;
             Assert.IsNotNull(astConstructor);
-            
+
             using var filestream = File.OpenRead("Assets/GDD.md");
             var ast = astConstructor.Parse(filestream);
             Assert.IsNotNull(ast);
 
-            Debug.LogWarning(ast);
+            Debug.Log(ast);
+        }
+
+        [Test]
+        public void TestCodeGenerating()
+        {
+            var context = new CompilerContext
+            {
+                Namespace = "Test"
+            };
+            context.AddUsing("System");
+            var testClass = context.GetOrCreateType("TestClass");
+            testClass.AddAttribute("CodeAttribute");
+            testClass.AddBase("System.Object");
+            testClass.AddBase("IComponent");
+            var field = testClass.GetOrCreateField("_floatValue");
+            field.Type = "float";
+            field.Modificator = "protected";
+
+            var autoProperty = testClass.GetOrCreateProperty("Auto");
+            autoProperty.Modificator = "protected";
+            autoProperty.Type = "int";
+
+            var onlyGet = testClass.GetOrCreateProperty("Getter");
+            onlyGet.Modificator = "public";
+            onlyGet.Type = "int";
+            onlyGet.GetGetter().AddCode("return Auto;");
+
+            var onlySet = testClass.GetOrCreateProperty("Setter");
+            onlySet.Modificator = "public";
+            onlySet.Type = "int";
+            onlySet.GetSetter().AddCode("Auto = value;");
+            
+            Debug.Log(context);
+        }
+
+        [Test]
+        public void TestRegexReplace()
+        {
+            var source = "class Alpha{PROPERTY(int,M)PROPERTY(float,K)}";
+            var regex = "PROPERTY\\((?'type'\\w+),(?'name'\\w+)\\)";
+            var r = new Regex(regex);
+            while (r.IsMatch(source))
+            {
+                source = r.Replace(source, "${type} ${name} {get;set;}");
+            }
+
+            Debug.Log(source);
+        }
+        [Test]
+        public void TestRegexReplace2()
+        {
+            var source = "sdjflksdaf\nadfhksdhf\n\t VALUE_COMPONENT(input,UnityEngine.Vector2Int)\n asdfljl\n";
+            var regex = @"VALUE_COMPONENT\((?<name>\w+),(?<type>(\w|\.)+)\)";
+            var r = new Regex(regex);
+            while (r.IsMatch(source))
+            {
+                source = r.Replace(source, "public class ${name}Component : NaiveEntity.GamePrototype.EntProto.ValueComponent<${type}> { }");
+            }
+
+            Debug.Log(source);
         }
     }
 }

@@ -6,9 +6,15 @@ using UnityEngine;
 
 namespace Valkyrie.Entities
 {
-    public class EntitiesConfigService : EntitiesSerializer, IConfigLoader
+    public class EntitiesConfigService : EntitiesSerializer, IConfigLoader, IDisposable
     {
+        private readonly IDisposable _disposable;
         public EntitiesContext Context { get; } = new EntitiesContext(null);
+
+        public EntitiesConfigService(IConfigService configService)
+        {
+            _disposable = configService.Add(this);
+        }
 
         public Task<IEnumerable<IConfigData>> Load()
         {
@@ -22,10 +28,15 @@ namespace Valkyrie.Entities
             foreach (var action in actions)
                 action();
             
-            Debug.LogWarning(Serialize(Context.GetEntities(true)));
-            Debug.Log($"[LOAD]: {Context.Count} entities loaded");
+            Debug.LogWarning(Serialize(Context.GetEntities()));
+            Debug.Log($"[LOAD]: {Context.GetEntities().Count} entities loaded");
 
-            return Task.FromResult((IEnumerable<IConfigData>)Context.GetEntities(true));
+            return Task.FromResult((IEnumerable<IConfigData>)Context.GetEntities());
+        }
+
+        public void Dispose()
+        {
+            _disposable?.Dispose();
         }
     }
 }

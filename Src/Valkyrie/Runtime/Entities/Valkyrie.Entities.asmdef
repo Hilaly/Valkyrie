@@ -1,8 +1,9 @@
 {
-    "name": "Valkyrie.Entities",
+    "name": "Valkyrie.Entities.Complex",
     "rootNamespace": "Valkyrie",
     "references": [
-        "GUID:1b8194f0b56f1aa4baf1da0209ae182d"
+        "GUID:06d683358a9bf1549974f36ef8fc5080",
+        "GUID:17a8a95e059224347b2fcaca95be22e8"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

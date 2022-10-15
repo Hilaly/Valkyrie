@@ -1,9 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace Valkyrie.UserInput
 {
-    class ComplexJoystick : GenericInnerListOwner<IVirtualJoystick>, IVirtualJoystick
-    {
+   public class ComplexJoystick : GenericInnerListOwner<IVirtualJoystick>, IVirtualJoystick
+   {
+       public bool IsPressed => Values.Any(x => x.IsPressed);
+
         public Vector2 Value
         {
             get

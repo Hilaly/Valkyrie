@@ -31,12 +31,12 @@ namespace Valkyrie.Entities
             foreach (var type in types)
                 serializer.RegisterComponent(type);
         }
-        
+
         public static Entity AddTemplate(this EntitiesContext ctx, Entity entity, params string[] templates)
         {
             foreach (var template in templates)
             {
-                var et = ctx.GetEntity(template, true);
+                var et = ctx.GetEntity(template);
                 if (et != null)
                     entity._templates.Add(et);
                 else
@@ -46,19 +46,19 @@ namespace Valkyrie.Entities
             return entity;
         }
 
-        public static IComponent MakeCopy(this IComponent component) => 
+        public static IComponent MakeCopy(this IComponent component) =>
             (IComponent)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(component), component.GetType());
 
         public static Entity BuildFromTemplate(this EntitiesContext ctx, Entity template)
         {
             var r = new Entity(template.Id);
             r._templates.Add(template);
-            foreach (var slot in template._slots) 
+            foreach (var slot in template._slots)
                 r._slots.Add(slot.Key, slot.Value);
-            foreach (var component in template.CollectComponents()) 
+            foreach (var component in template.CollectComponents())
                 r.AddComponent(MakeCopy(component));
 
-            
+
             ctx.Add(r);
             return r;
         }
@@ -70,7 +70,8 @@ namespace Valkyrie.Entities
             return r;
         }
 
-        public static IEnumerable<Entity> GetOfType<TComponent>(this IConfigService configService) where TComponent : IComponent
+        public static IReadOnlyList<Entity> GetOfType<TComponent>(this IConfigService configService)
+            where TComponent : IComponent
         {
             return configService.Get<Entity>().Where(x => x.HasComponent<TComponent>()).ToList();
         }
