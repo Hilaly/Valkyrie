@@ -1,0 +1,181 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3940254368986408150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6620114359000719813}
+  - component: {fileID: 476357309848515426}
+  - component: {fileID: -3812849888736414095}
+  - component: {fileID: 5916321764332783490}
+  m_Layer: 0
+  m_Name: BuildingPrefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &6620114359000719813
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3940254368986408150}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 182021359309934577}
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &476357309848515426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3940254368986408150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ee1e1d60d074024ab1e4cdd0ac6e17a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _templateClass: GamePrototype.GameLogic.BuildingViewModel
+--- !u!114 &-3812849888736414095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3940254368986408150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abd7eac2e02548a08ac3db3f662d6782, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5916321764332783490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3940254368986408150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 273211b1bccf41abbab89de6fa7dba5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isTwoSided: 0
+  _viewProperty: GamePrototype.Mono.EntityHolder/Entity:IEntity
+  _viewModelProperty: GamePrototype.GameLogic.BuildingViewModel/Entity:IEntity
+  _changeEventName: 
+  _isPolling: 1
+  _sourceAdapterType: 
+--- !u!1 &8201077739453852952
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 182021359309934577}
+  - component: {fileID: 2862373206311078252}
+  - component: {fileID: 786256745349408639}
+  - component: {fileID: 6695306183603307794}
+  - component: {fileID: 8399711182126053325}
+  m_Layer: 0
+  m_Name: VIew
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &182021359309934577
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201077739453852952}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6620114359000719813}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2862373206311078252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201077739453852952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c095102bcf145a4a0ce67ba489bb0f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &786256745349408639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201077739453852952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 273211b1bccf41abbab89de6fa7dba5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isTwoSided: 0
+  _viewProperty: GamePrototype.Mono.SpawnChildBehaviour/PrefabName:String
+  _viewModelProperty: GamePrototype.GameLogic.BuildingViewModel/Prefab:String
+  _changeEventName: 
+  _isPolling: 1
+  _sourceAdapterType: 
+--- !u!114 &6695306183603307794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201077739453852952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 273211b1bccf41abbab89de6fa7dba5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isTwoSided: 0
+  _viewProperty: UnityEngine.Transform/position:Vector3
+  _viewModelProperty: GamePrototype.GameLogic.BuildingViewModel/Position:Vector3
+  _changeEventName: 
+  _isPolling: 1
+  _sourceAdapterType: 
+--- !u!114 &8399711182126053325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201077739453852952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 273211b1bccf41abbab89de6fa7dba5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isTwoSided: 0
+  _viewProperty: UnityEngine.Transform/rotation:Quaternion
+  _viewModelProperty: GamePrototype.GameLogic.BuildingViewModel/Rotation:Quaternion
+  _changeEventName: 
+  _isPolling: 1
+  _sourceAdapterType: 

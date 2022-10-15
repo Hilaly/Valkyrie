@@ -1,0 +1,54 @@
+#lexer
+
+<!--(?<value>(\n|.)+?)--> -> comment
+--- -> escape
+\*\*\* -> escape
+
+# '(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+
+\`\`\`([c|C]#)?(?<value>(\n|.)*?)\`\`\` -> CODE_BLOCK
+\`(?<value>.+?)\` -> CODE_BLOCK
+
+` -> BACKTICK
+
+(-) -> SIGN_MINUS
+(\*) -> SIGN_MUL
+
+\[\^\w+\] -> escape
+
+\[ -> SQ_BRACKET_OPEN
+\] -> SQ_BRACKET_CLOSE
+
+\\ -> BACK_SLASH
+\/ -> SLASH
+\: -> COLON
+\( -> BRACKET_OPEN
+\) -> BRACKET_CLOSE
+' -> SINGLE_QUOTE
+
+(true|false) -> BOOL
+
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+
+[A-Za-z]\w* -> IDENTIFIER
+
+(<) -> TAG_OPEN
+(>) -> TAG_CLOSE
+
+(\!) -> SENTENCE_OP
+(\.) -> SENTENCE_OP
+(,) -> COMMA
+
+`` -> escape
+__ -> escape
+\*\* -> escape
+_ -> escape
+[ \#\n\r\t]+ -> escape
+
+#parser
+
+<root> -> <sentence>+
+
+<sentence> -> <any>* SENTENCE_OP
+<any> -> STRING | CODE_BLOCK | CODE_BLOCK | BACKTICK | SIGN_MINUS | SIGN_MUL | SQ_BRACKET_OPEN | SQ_BRACKET_CLOSE | BACK_SLASH | SLASH | COLON | BRACKET_OPEN | BRACKET_CLOSE | SINGLE_QUOTE | BOOL | NUMBER | IDENTIFIER | TAG_OPEN | TAG_CLOSE | COMMA

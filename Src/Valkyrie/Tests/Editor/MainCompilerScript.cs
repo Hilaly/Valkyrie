@@ -3,8 +3,9 @@ using Editor;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Valkyrie.Language.Description;
 
-namespace Valkyrie.Language.Description.Tests
+namespace Valkyrie.Language
 {
     public class MainCompilerScript
     {

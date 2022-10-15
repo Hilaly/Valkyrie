@@ -154,14 +154,8 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.valkyrie.di": {
-      "version": "file:../../Src/Valkyrie.Di",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
-    "com.valkyrie.profile": {
-      "version": "file:../../Src/Valkyrie.Profile",
+    "com.valkyrie.core": {
+      "version": "file:../../Src/Valkyrie",
       "depth": 0,
       "source": "local",
       "dependencies": {
