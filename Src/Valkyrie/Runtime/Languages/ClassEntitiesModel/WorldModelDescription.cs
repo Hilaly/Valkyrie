@@ -615,6 +615,32 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine();
 
 
+            sb.BeginBlock("class PoolViewsProvider : IViewsProvider");
+            sb.AppendLine("private readonly Dictionary<object, IDisposable> _cache = new();");
+            sb.AppendLine("private readonly Valkyrie.Utils.Pool.IObjectsPool _objectsPool;");
+            sb.BeginBlock("public PoolViewsProvider(Valkyrie.Utils.Pool.IObjectsPool objectsPool)");
+            sb.AppendLine("_objectsPool = objectsPool;");
+            sb.EndBlock();
+            sb.BeginBlock("void IViewsProvider.Release<TView>(TView value)");
+            sb.AppendLine("if(_cache.Remove(value, out var disposable)) disposable.Dispose();");
+            sb.EndBlock();
+            sb.BeginBlock("TView IViewsProvider.Spawn<TView>(string prefabName)");
+            sb.AppendLine("var disposable = _objectsPool.Instantiate<TView>(prefabName);");
+            sb.AppendLine("_cache.Add(disposable.Instance, disposable);");
+            sb.AppendLine("return disposable.Instance;");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("public enum ViewsSpawnType");
+            sb.AppendLine("Custom,");
+            sb.AppendLine("Resources,");
+            sb.AppendLine("Pool");
+            sb.EndBlock();
+            sb.AppendLine();
+            
+            
             sb.BeginBlock("class SimulationService : IDisposable");
             sb.AppendLine("private readonly Valkyrie.Ecs.SimulationSettings _settings;");
             sb.AppendLine("private readonly IWorldSimulation _worldSimulation;");
@@ -647,18 +673,25 @@ namespace Languages.ClassEntitiesModel
     
             sb.BeginBlock("public class WorldLibrary : ILibrary");
             sb.AppendLine("private readonly bool _autoSimulate;");
-            sb.AppendLine("private readonly bool _useLoadingViewsFromResources;");
-            sb.BeginBlock("public WorldLibrary(bool autoSimulate, bool useLoadingViewsFromResources)");
+            sb.AppendLine("private readonly ViewsSpawnType _viewsHandlingType;");
+            sb.BeginBlock("public WorldLibrary(bool autoSimulate, ViewsSpawnType viewsHandlingType)");
             sb.AppendLine("_autoSimulate = autoSimulate;");
-            sb.AppendLine("_useLoadingViewsFromResources = useLoadingViewsFromResources;");
+            sb.AppendLine("_viewsHandlingType = viewsHandlingType;");
             sb.EndBlock();
             sb.BeginBlock("public void Register(IContainer container)");
             sb.AppendLine("container.Register<WorldState>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldController>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldView>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldSimulation>().AsInterfacesAndSelf().SingleInstance();");
-            sb.BeginBlock("if (_useLoadingViewsFromResources)");
+            sb.BeginBlock("switch (_viewsHandlingType)");
+            sb.BeginBlock("case ViewsSpawnType.Resources:");
             sb.AppendLine("container.Register<ResourcesViewsProvider>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine("break;");
+            sb.EndBlock();
+            sb.BeginBlock("case ViewsSpawnType.Pool:");
+            sb.AppendLine("container.Register<PoolViewsProvider>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine("break;");
+            sb.EndBlock();
             sb.EndBlock();
             sb.BeginBlock("if (_autoSimulate)");
             sb.AppendLine("container.Register<SimulationService>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
