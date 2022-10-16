@@ -36,7 +36,7 @@ namespace Valkyrie.Language
                 TypeNameHandling = TypeNameHandling.Auto,
             });
             
-            Assert.Equals(1, list.Count);
+            Assert.AreEqual(1, list.Count);
         }
     }
 }

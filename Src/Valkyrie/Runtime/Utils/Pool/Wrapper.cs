@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Utils.Pool
+namespace Valkyrie.Utils.Pool
 {
     class Wrapper<T> : IPooledInstance<T> where T : Component
     {

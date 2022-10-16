@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Utils.Pool
+namespace Valkyrie.Utils.Pool
 {
     public class ObjectsPool : IObjectsPool, IDisposable
     {

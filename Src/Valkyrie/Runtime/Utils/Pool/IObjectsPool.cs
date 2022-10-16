@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Utils.Pool
+namespace Valkyrie.Utils.Pool
 {
     public interface IObjectsPool
     {

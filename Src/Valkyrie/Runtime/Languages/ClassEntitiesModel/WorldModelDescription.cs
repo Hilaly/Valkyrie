@@ -330,7 +330,7 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("using Valkyrie.Di;");
             sb.AppendLine("using UnityEngine;");
             sb.AppendLine("using Utils;");
-            sb.AppendLine("using Utils.Pool;");
+            sb.AppendLine("using Valkyrie.Utils.Pool;");
             sb.AppendLine();
 
             var rootNamespace = Namespace;

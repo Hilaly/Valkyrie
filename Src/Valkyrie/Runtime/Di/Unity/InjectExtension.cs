@@ -7,6 +7,10 @@ namespace Valkyrie.Di
 {
     public static class InjectExtension
     {
+        public static ISingletonRegistration<T> RegisterSingleInstance<T>(this IContainer container) =>
+            container.Register<T>().AsInterfacesAndSelf().SingleInstance();
+
+
         public static IConcreteTypeFactoryRegistration<T> RegisterFromComponentOnNewPrefab<T>(this IContainer container,
             GameObject prefab) where T : Component
         {
@@ -122,7 +126,7 @@ namespace Valkyrie.Di
 
             return o;
         }
-        
+
         public static IContainer FindContainerInScene(this GameObject gameObject)
         {
             var scene = gameObject.scene;
