@@ -464,8 +464,7 @@ namespace Valkyrie
 
         public override void Write(FormatWriter sb)
         {
-            sb.AppendLine(
-                $"await System.Threading.Tasks.Task.Delay(1); //TODO: await _interpreter.Execute({_command}{_args.Select(x => $", {x}").Join(string.Empty)});");
+            sb.AppendLine($"await _interpreter.Execute({_command}{_args.Select(x => $", {x}").Join(string.Empty)});");
         }
     }
 
@@ -532,12 +531,14 @@ namespace Valkyrie
         {
             sb.BeginBlock("class GeneratedEventsHandler : IDisposable");
             sb.AppendLine($"private readonly {typeof(CompositeDisposable).FullName} _disposable = new();");
-            sb.AppendLine("private readonly IPlayerProfile _profile;");
             sb.AppendLine($"private readonly {typeof(IEventSystem).FullName} _events;");
+            sb.AppendLine($"private readonly {typeof(ICommandsInterpreter).FullName} _interpreter;");
+            sb.AppendLine("private readonly IPlayerProfile _profile;");
             sb.AppendLine();
-            sb.BeginBlock($"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem)");
+            sb.BeginBlock($"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter)");
             sb.AppendLine("_profile = profile;");
             sb.AppendLine("_events = eventSystem;");
+            sb.AppendLine("_interpreter = interpreter;");
             foreach (var handler in Handlers)
             {
                 sb.AppendLine(
