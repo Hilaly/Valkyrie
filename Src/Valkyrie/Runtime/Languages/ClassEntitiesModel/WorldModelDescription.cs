@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Configs;
+using Meta.Inventory;
 using Utils;
+using Valkyrie.Di;
+using Valkyrie.Ecs;
 using Valkyrie.Language.Description.Utils;
+using Valkyrie.MVVM.Bindings;
 using Valkyrie.Tools;
+using Valkyrie.Utils.Pool;
 
-namespace Languages.ClassEntitiesModel
+namespace Valkyrie
 {
     public class MemberInfo
     {
@@ -32,7 +38,7 @@ namespace Languages.ClassEntitiesModel
 
         public void Write(FormatWriter sb)
         {
-            var blockName = $"public sealed class {ClassName} : BaseEvent";
+            var blockName = $"public sealed class {ClassName} : {typeof(BaseEvent).FullName}";
             if (Args.Any())
                 blockName += $"<{Args.Join(", ")}>";
             sb.BeginBlock(blockName);
@@ -42,8 +48,8 @@ namespace Languages.ClassEntitiesModel
 
     public class ConfigEntity
     {
-        private const string BaseInterfaceName = "Configs.IConfigData";
-        
+        private string BaseInterfaceName => typeof(IConfigData).FullName;
+
         public string Name;
         protected readonly List<ConfigEntity> BaseTypes = new();
         protected readonly List<PropertyInfo> Properties = new();
@@ -52,7 +58,7 @@ namespace Languages.ClassEntitiesModel
         {
             var blockName = $"public class {Name} : ";
             if (BaseTypes.Count > 0)
-                blockName += string.Join(", ", BaseTypes.Select(x => x.Name)) +  ", ";
+                blockName += string.Join(", ", BaseTypes.Select(x => x.Name)) + ", ";
             blockName += BaseInterfaceName;
             sb.BeginBlock(blockName);
 
@@ -71,13 +77,14 @@ namespace Languages.ClassEntitiesModel
                 sb.BeginBlock($"public virtual void PastLoad(IDictionary<string, {BaseInterfaceName}> configData)");
                 sb.EndBlock();
             }
+
             sb.AppendLine();
             sb.AppendLine($"#endregion //{BaseInterfaceName}");
             sb.AppendLine();
-            
-            foreach (var property in Properties) 
+
+            foreach (var property in Properties)
                 sb.AppendLine($"public {property.Type} {property.Name};");
-            
+
             sb.EndBlock();
         }
 
@@ -255,25 +262,25 @@ namespace Languages.ClassEntitiesModel
         {
             if (HasView)
             {
-                sb.BeginBlock($"[Binding] public partial class {Name}ViewModel");
+                sb.BeginBlock($"[{typeof(BindingAttribute).FullName}] public partial class {Name}ViewModel");
                 sb.AppendLine($"public {Name} Model {{ get; }}");
                 sb.BeginBlock($"public {Name}ViewModel({Name} model)");
                 sb.AppendLine("Model = model;");
                 sb.EndBlock();
                 foreach (var property in GetAllProperties())
-                    sb.AppendLine($"[Binding] public {property.Type} {property.Name} => Model.{property.Name};");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public {property.Type} {property.Name} => Model.{property.Name};");
                 foreach (var info in GetAllInfos())
-                    sb.AppendLine($"[Binding] public {info.Type} {info.Name} => Model.{info.Name};");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public {info.Type} {info.Name} => Model.{info.Name};");
                 foreach (var info in GetAllSlots())
-                    sb.AppendLine($"[Binding] public {info.Type} {info.Name} => Model.{info.Name};");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public {info.Type} {info.Name} => Model.{info.Name};");
                 foreach (var timer in GetAllTimers())
                 {
-                    sb.AppendLine($"[Binding] public bool HasTimer{timer} => Model.{timer} != null;");
-                    sb.AppendLine($"[Binding] public float {timer}TimeLeft => Model.{timer}?.TimeLeft ?? 0f;");
-                    sb.AppendLine($"[Binding] public float {timer}Time => {timer}FullTime - {timer}TimeLeft;");
-                    sb.AppendLine($"[Binding] public float {timer}FullTime => Model.{timer}?.FullTime ?? 1f;");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public bool HasTimer{timer} => Model.{timer} != null;");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public float {timer}TimeLeft => Model.{timer}?.TimeLeft ?? 0f;");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public float {timer}Time => {timer}FullTime - {timer}TimeLeft;");
+                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public float {timer}FullTime => Model.{timer}?.FullTime ?? 1f;");
                     sb.AppendLine(
-                        $"[Binding] public float {timer}Progress => Mathf.Clamp01({timer}Time / {timer}FullTime);");
+                        $"[{typeof(BindingAttribute).FullName}] public float {timer}Progress => Mathf.Clamp01({timer}Time / {timer}FullTime);");
                 }
 
                 foreach (var info in GetAllConfigs())
@@ -391,9 +398,12 @@ namespace Languages.ClassEntitiesModel
             WriteViewModels(sb);
         }
     }
-    
-    class EventHandlerOperation
-    {}
+
+    abstract class EventHandlerOperation
+    {
+        public abstract bool IsAsync();
+        public abstract void Write(FormatWriter sb);
+    }
 
     class LogOperation : EventHandlerOperation
     {
@@ -403,13 +413,67 @@ namespace Languages.ClassEntitiesModel
         {
             _text = text;
         }
+
+        public override void Write(FormatWriter sb)
+        {
+            sb.AppendLine($"UnityEngine.Debug.Log(\"[GEN]: {_text}\");");
+        }
+
+        public override bool IsAsync() => false;
+    }
+
+    class RaiseEventOperation : EventHandlerOperation
+    {
+        private readonly EventEntity _raisedEvent;
+        private readonly string[] _args;
+
+        public RaiseEventOperation(EventEntity raisedEvent, string[] args)
+        {
+            _raisedEvent = raisedEvent;
+            _args = args;
+
+            if (_raisedEvent.Args.Count != args.Length)
+                throw new Exception($"To raise {raisedEvent.Name} need to use {raisedEvent.Args.Count} args");
+        }
+
+        public override bool IsAsync() => true;
+
+        public override void Write(FormatWriter sb)
+        {
+            var args = string.Empty;
+            for (var i = 0; i < _args.Length; ++i)
+                args += $", Arg{i} = {_args[i]}";
+            if (args.Length > 0)
+                args = args[2..];
+            sb.AppendLine($"await _events.Raise(new {_raisedEvent.ClassName} {{ {args} }});");
+        }
+    }
+
+    class CallCommandOperation : EventHandlerOperation
+    {
+        private readonly string _command;
+        private readonly List<string> _args;
+
+        public CallCommandOperation(string command, string[] args)
+        {
+            _command = command;
+            _args = new List<string>(args);
+        }
+
+        public override bool IsAsync() => true;
+
+        public override void Write(FormatWriter sb)
+        {
+            sb.AppendLine(
+                $"await System.Threading.Tasks.Task.Delay(1); //TODO: await _interpreter.Execute({_command}{_args.Select(x => $", {x}").Join(string.Empty)});");
+        }
     }
 
     public class EventHandlerModel
     {
         public readonly EventEntity Event;
         private readonly string _uid;
-        private List<EventHandlerOperation> _ops = new List<EventHandlerOperation>();
+        private readonly List<EventHandlerOperation> _ops = new List<EventHandlerOperation>();
 
         public EventHandlerModel(EventEntity @event)
         {
@@ -419,11 +483,19 @@ namespace Languages.ClassEntitiesModel
 
         public void Write(FormatWriter sb)
         {
-            sb.BeginBlock($"System.Threading.Tasks.Task {GetMethodName()}({Event.ClassName} ev)");
-            sb.AppendLine($"//TODO: here must be event handler for {Event.ClassName}");
-            if (_ops.Count == 0)
+            bool isAsync = _ops.Any(x => x.IsAsync());
+            sb.BeginBlock(
+                $"{(isAsync ? "async " : string.Empty)}System.Threading.Tasks.Task {GetMethodName()}({Event.ClassName} ev)");
+            foreach (var op in _ops)
+                op.Write(sb);
+            if (!isAsync)
                 sb.AppendLine("return System.Threading.Tasks.Task.CompletedTask;");
             sb.EndBlock();
+        }
+
+        public string GetMethodName()
+        {
+            return $"On{Event.ClassName}Handle{_uid}";
         }
 
         public EventHandlerModel LogOp(string text)
@@ -432,9 +504,16 @@ namespace Languages.ClassEntitiesModel
             return this;
         }
 
-        public string GetMethodName()
+        public EventHandlerModel RaiseOp(EventEntity raisedEvent, params string[] args)
         {
-            return $"On{Event.ClassName}Handle{_uid}";
+            _ops.Add(new RaiseEventOperation(raisedEvent, args));
+            return this;
+        }
+
+        public EventHandlerModel CommandOp(string command, params string[] args)
+        {
+            _ops.Add(new CallCommandOperation(command, args));
+            return this;
         }
     }
 
@@ -452,17 +531,19 @@ namespace Languages.ClassEntitiesModel
         public void WriteEvents(FormatWriter sb)
         {
             sb.BeginBlock("class GeneratedEventsHandler : IDisposable");
-            sb.AppendLine("private readonly Valkyrie.Di.CompositeDisposable _disposable = new();");
+            sb.AppendLine($"private readonly {typeof(CompositeDisposable).FullName} _disposable = new();");
             sb.AppendLine("private readonly IPlayerProfile _profile;");
-            sb.AppendLine("private readonly IEventSystem _events;");
+            sb.AppendLine($"private readonly {typeof(IEventSystem).FullName} _events;");
             sb.AppendLine();
-            sb.BeginBlock("public GeneratedEventsHandler(IPlayerProfile profile, IEventSystem eventSystem)");
+            sb.BeginBlock($"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem)");
             sb.AppendLine("_profile = profile;");
             sb.AppendLine("_events = eventSystem;");
             foreach (var handler in Handlers)
             {
-                sb.AppendLine($"_disposable.Add(_events.Subscribe<{handler.Event.ClassName}>({handler.GetMethodName()}));");
+                sb.AppendLine(
+                    $"_disposable.Add(_events.Subscribe<{handler.Event.ClassName}>({handler.GetMethodName()}));");
             }
+
             sb.EndBlock();
             sb.AppendLine();
             sb.AppendLine("public void Dispose() => _disposable.Dispose();");
@@ -473,6 +554,7 @@ namespace Languages.ClassEntitiesModel
             {
                 handler.Write(sb);
             }
+
             sb.AppendLine();
             sb.AppendLine("#endregion //Handlers");
             sb.EndBlock();
@@ -485,6 +567,7 @@ namespace Languages.ClassEntitiesModel
             {
                 sb.AppendLine($"public const string {counter}Name = \"{counter}\";");
             }
+
             sb.EndBlock();
 
             sb.AppendLine();
@@ -496,6 +579,7 @@ namespace Languages.ClassEntitiesModel
             {
                 sb.AppendLine($"public int {counter} {{ get; set; }}");
             }
+
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
@@ -504,11 +588,11 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine();
 
             sb.BeginBlock("class PlayerProfile : IPlayerProfile");
-            sb.AppendLine("readonly Meta.Inventory.IWallet _wallet;");
-            sb.AppendLine("readonly Meta.Inventory.IInventory _inventory;");
+            sb.AppendLine($"readonly {typeof(IWallet).FullName} _wallet;");
+            sb.AppendLine($"readonly {typeof(IInventory).FullName} _inventory;");
             //TODO: other references
             sb.AppendLine();
-            sb.BeginBlock("public PlayerProfile(Meta.Inventory.IWallet wallet, Meta.Inventory.IInventory inventory)");
+            sb.BeginBlock($"public PlayerProfile({typeof(IWallet).FullName} wallet, {typeof(IInventory).FullName} inventory)");
             sb.AppendLine("_wallet = wallet;");
             sb.AppendLine("_inventory = inventory;");
             sb.EndBlock();
@@ -522,6 +606,7 @@ namespace Languages.ClassEntitiesModel
                 sb.AppendLine($"set => _wallet.SetAmount(GeneratedConstants.{counter}Name, value);");
                 sb.EndBlock();
             }
+
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
@@ -529,10 +614,11 @@ namespace Languages.ClassEntitiesModel
 
             sb.AppendLine();
 
-            sb.BeginBlock("public class MetaLibrary : ILibrary");
-            sb.BeginBlock("public void Register(IContainer container)");
+            sb.BeginBlock($"public class MetaLibrary : {typeof(ILibrary).FullName}");
+            sb.BeginBlock($"public void Register({typeof(IContainer).FullName} container)");
             sb.AppendLine("container.Register<PlayerProfile>().AsInterfacesAndSelf().SingleInstance();");
-            sb.AppendLine("container.Register<GeneratedEventsHandler>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
+            sb.AppendLine(
+                "container.Register<GeneratedEventsHandler>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
             sb.EndBlock();
             sb.EndBlock();
         }
@@ -551,13 +637,9 @@ namespace Languages.ClassEntitiesModel
         {
             var sb = new FormatWriter();
 
-            sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using System;");
-            sb.AppendLine("using System.Linq;");
-            sb.AppendLine("using Valkyrie.Di;");
+            sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using UnityEngine;");
-            sb.AppendLine("using Utils;");
-            sb.AppendLine("using Valkyrie.Utils.Pool;");
             sb.AppendLine();
 
             var rootNamespace = Namespace;
@@ -581,7 +663,7 @@ namespace Languages.ClassEntitiesModel
             sb.EndBlock();
 
             sb.AppendLine();
-            
+
             sb.BeginBlock($"namespace {rootNamespace}");
             sb.AppendLine($"#region ConfigData");
             sb.AppendLine();
@@ -617,9 +699,9 @@ namespace Languages.ClassEntitiesModel
         {
             foreach (var entity in Events)
                 entity.Write(sb);
-            
+
             sb.AppendLine();
-            
+
             Profile.WriteEvents(sb);
         }
 
@@ -729,7 +811,7 @@ namespace Languages.ClassEntitiesModel
             foreach (var entity in Entities)
             foreach (var property in entity.GetPrefabsProperties())
                 sb.AppendLine(
-                    $"private readonly Dictionary<{entity.Name}ViewModel, Valkyrie.MVVM.Bindings.Template> _views{entity.Name}{property} = new();");
+                    $"private readonly Dictionary<{entity.Name}ViewModel, {typeof(Template).FullName}> _views{entity.Name}{property} = new();");
             sb.BeginBlock("public WorldView(WorldState worldState, IViewsProvider viewsProvider)");
             sb.AppendLine("_worldState = worldState;");
             sb.AppendLine("_viewsProvider = viewsProvider;");
@@ -753,7 +835,7 @@ namespace Languages.ClassEntitiesModel
                 {
                     sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property}");
                     sb.AppendLine(
-                        $"var view = _viewsProvider.Spawn<Valkyrie.MVVM.Bindings.Template>(model.{property});");
+                        $"var view = _viewsProvider.Spawn<{typeof(Template).FullName}>(model.{property});");
                     sb.AppendLine($"view.ViewModel = viewModel;");
                     sb.AppendLine($"_views{entityInfo.Name}{property}.Add(viewModel, view);");
                     sb.EndBlock();
@@ -908,8 +990,8 @@ namespace Languages.ClassEntitiesModel
 
             sb.BeginBlock("class PoolViewsProvider : IViewsProvider");
             sb.AppendLine("private readonly Dictionary<object, IDisposable> _cache = new();");
-            sb.AppendLine("private readonly Valkyrie.Utils.Pool.IObjectsPool _objectsPool;");
-            sb.BeginBlock("public PoolViewsProvider(Valkyrie.Utils.Pool.IObjectsPool objectsPool)");
+            sb.AppendLine($"private readonly {typeof(IObjectsPool).FullName} _objectsPool;");
+            sb.BeginBlock($"public PoolViewsProvider({typeof(IObjectsPool).FullName} objectsPool)");
             sb.AppendLine("_objectsPool = objectsPool;");
             sb.EndBlock();
             sb.BeginBlock("void IViewsProvider.Release<TView>(TView value)");
@@ -933,16 +1015,16 @@ namespace Languages.ClassEntitiesModel
 
 
             sb.BeginBlock("class SimulationService : IDisposable");
-            sb.AppendLine("private readonly Valkyrie.Ecs.SimulationSettings _settings;");
+            sb.AppendLine($"private readonly {typeof(SimulationSettings).FullName} _settings;");
             sb.AppendLine("private readonly IWorldSimulation _worldSimulation;");
             sb.AppendLine(
                 "private readonly System.Threading.CancellationTokenSource _cancellationTokenSource = new();");
             sb.AppendLine("private float _simTime;");
             sb.BeginBlock(
-                "public SimulationService(Valkyrie.Ecs.SimulationSettings settings, IWorldSimulation worldSimulation)");
+                $"public SimulationService({typeof(SimulationSettings).FullName} settings, IWorldSimulation worldSimulation)");
             sb.AppendLine("_settings = settings;");
             sb.AppendLine("_worldSimulation = worldSimulation;");
-            sb.AppendLine("AsyncExtension.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
+            sb.AppendLine($"{typeof(AsyncExtension).FullName}.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
             sb.EndBlock();
             sb.BeginBlock("void SimulateIteration()");
             sb.BeginBlock("if (_settings.IsSimulationPaused)");
@@ -964,14 +1046,14 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine();
 
 
-            sb.BeginBlock("public class WorldLibrary : ILibrary");
+            sb.BeginBlock($"public class WorldLibrary : {typeof(ILibrary).FullName}");
             sb.AppendLine("private readonly bool _autoSimulate;");
             sb.AppendLine("private readonly ViewsSpawnType _viewsHandlingType;");
             sb.BeginBlock("public WorldLibrary(bool autoSimulate, ViewsSpawnType viewsHandlingType)");
             sb.AppendLine("_autoSimulate = autoSimulate;");
             sb.AppendLine("_viewsHandlingType = viewsHandlingType;");
             sb.EndBlock();
-            sb.BeginBlock("public void Register(IContainer container)");
+            sb.BeginBlock($"public void Register({typeof(IContainer).FullName} container)");
             sb.AppendLine("container.Register<WorldState>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldController>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldView>().AsInterfacesAndSelf().SingleInstance();");
@@ -1106,8 +1188,8 @@ namespace Languages.ClassEntitiesModel
         public ConfigEntity GetConfig(string configId)
         {
             var r = Configs.Find(x => x.Name == configId);
-            if(r == null)
-                Configs.Add(r = new ConfigEntity() { Name = configId});
+            if (r == null)
+                Configs.Add(r = new ConfigEntity() { Name = configId });
             return r;
         }
 
