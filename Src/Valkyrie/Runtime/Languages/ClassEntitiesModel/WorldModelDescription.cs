@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Utils;
 using Valkyrie.Language.Description.Utils;
+using Valkyrie.Tools;
 
 namespace Languages.ClassEntitiesModel
 {
@@ -19,6 +20,80 @@ namespace Languages.ClassEntitiesModel
     public class InfoGetter : MemberInfo
     {
         public string Code;
+    }
+
+    public class EventEntity
+    {
+        public string Name;
+        public readonly List<string> Args = new List<string>();
+
+        public void Write(FormatWriter sb)
+        {
+            var blockName = $"public sealed class {Name}Event : BaseEvent";
+            if (Args.Any())
+                blockName += $"<{Args.Join(", ")}>";
+            sb.BeginBlock(blockName);
+            sb.EndBlock();
+        }
+    }
+
+    public class ConfigEntity
+    {
+        private const string BaseInterfaceName = "Configs.IConfigData";
+        
+        public string Name;
+        protected readonly List<ConfigEntity> BaseTypes = new();
+        protected readonly List<PropertyInfo> Properties = new();
+
+        public void Write(FormatWriter sb)
+        {
+            var blockName = $"public class {Name} : ";
+            if (BaseTypes.Count > 0)
+                blockName += string.Join(", ", BaseTypes.Select(x => x.Name)) +  ", ";
+            blockName += BaseInterfaceName;
+            sb.BeginBlock(blockName);
+
+            sb.AppendLine($"#region {BaseInterfaceName}");
+            sb.AppendLine();
+            if (BaseTypes.Any())
+            {
+                sb.BeginBlock($"public override void PastLoad(IDictionary<string, {BaseInterfaceName}> configData)");
+                sb.AppendLine("base.PastLoad(configData);");
+                sb.EndBlock();
+            }
+            else
+            {
+                sb.AppendLine("public string Id;");
+                sb.AppendLine($"public string GetId() => Id;");
+                sb.BeginBlock($"public virtual void PastLoad(IDictionary<string, {BaseInterfaceName}> configData)");
+                sb.EndBlock();
+            }
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //{BaseInterfaceName}");
+            sb.AppendLine();
+            
+            foreach (var property in Properties) 
+                sb.AppendLine($"public {property.Type} {property.Name};");
+            
+            sb.EndBlock();
+        }
+
+        public ConfigEntity AddProperty(string type, string name)
+        {
+            Properties.Add(new PropertyInfo()
+            {
+                Name = name,
+                Type = type
+            });
+
+            return this;
+        }
+
+        public ConfigEntity Inherit(ConfigEntity baseType)
+        {
+            BaseTypes.Add(baseType);
+            return this;
+        }
     }
 
     public abstract class EntityBase
@@ -318,7 +393,9 @@ namespace Languages.ClassEntitiesModel
     {
         public string Namespace = "Test";
 
-        public List<EntityBase> Entities = new List<EntityBase>();
+        public List<EntityBase> Entities = new();
+        public List<ConfigEntity> Configs = new();
+        public List<EventEntity> Events = new();
 
         public override string ToString()
         {
@@ -336,16 +413,56 @@ namespace Languages.ClassEntitiesModel
             var rootNamespace = Namespace;
 
             sb.BeginBlock($"namespace {rootNamespace}");
-            WriteEntities(sb);
+            sb.AppendLine($"#region ConfigData");
+            sb.AppendLine();
+            WriteConfigs(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //ConfigData");
             sb.EndBlock();
 
             sb.AppendLine();
 
             sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Events");
+            sb.AppendLine();
+            WriteEvents(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Events");
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Entities");
+            sb.AppendLine();
+            WriteEntities(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Entities");
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Simulation");
+            sb.AppendLine();
             WriteGeneral(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Simulation");
             sb.EndBlock();
 
             return sb.ToString();
+        }
+
+        private void WriteEvents(FormatWriter sb)
+        {
+            foreach (var entity in Events)
+                entity.Write(sb);
+        }
+
+        void WriteConfigs(FormatWriter sb)
+        {
+            foreach (var entity in Configs)
+                entity.Write(sb);
         }
 
         private void WriteEntities(FormatWriter sb)
@@ -387,10 +504,13 @@ namespace Languages.ClassEntitiesModel
             foreach (var entityInfo in Entities)
             {
                 sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
-                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _allOf{entityInfo.Name}; // Entities.OfType<{entityInfo.Name}>().ToList();");
+                sb.AppendLine(
+                    $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _allOf{entityInfo.Name}; // Entities.OfType<{entityInfo.Name}>().ToList();");
             }
+
             foreach (var entityInfo in Entities.Where(x => x is EntityInfo { IsSingleton: true }))
-                sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
+                sb.AppendLine(
+                    $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -427,6 +547,7 @@ namespace Languages.ClassEntitiesModel
                         continue;
                     sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
                 }
+
                 sb.EndBlock();
                 sb.AppendLine("return result;");
                 sb.EndBlock();
@@ -506,6 +627,7 @@ namespace Languages.ClassEntitiesModel
                 sb.EndBlock();
                 sb.EndBlock();
             }
+
             sb.EndBlock();
             sb.AppendLine("*/");
             sb.AppendLine("/*");
@@ -524,9 +646,9 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("private readonly WorldState _worldState;");
             sb.AppendLine("private readonly WorldView _worldView;");
 
-            string GetTimersFieldName(TimerData timer) => 
+            string GetTimersFieldName(TimerData timer) =>
                 $"{timer.Type.Name}{timer.Timer}Handlers".ConvertToCamelCaseFieldName();
-            
+
             foreach (var timer in allTimers)
             {
                 var timerField = GetTimersFieldName(timer);
@@ -540,7 +662,8 @@ namespace Languages.ClassEntitiesModel
             foreach (var timer in allTimers)
             {
                 var timerField = GetTimersFieldName(timer);
-                sb.AppendLine($"public void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler) => {timerField}.Add(handler);");
+                sb.AppendLine(
+                    $"public void AddTimerHandler(I{timer.Type.Name}{timer.Timer}Handler handler) => {timerField}.Add(handler);");
             }
 
             sb.BeginBlock("public void AddSystem(ISimSystem simSystem)");
@@ -567,6 +690,7 @@ namespace Languages.ClassEntitiesModel
                 sb.EndBlock();
                 sb.EndBlock();
             }
+
             foreach (var timer in allTimers)
             {
                 sb.BeginBlock();
@@ -602,15 +726,18 @@ namespace Languages.ClassEntitiesModel
                 sb.AppendLine($"break;");
                 sb.EndBlock();
             }
+
             sb.EndBlock();
             sb.EndBlock();
             sb.EndBlock();
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("class ResourcesViewsProvider : IViewsProvider");
-            sb.AppendLine("public void Release<TView>(TView value) where TView : Component => UnityEngine.Object.Destroy(value.gameObject);");
-            sb.AppendLine("public TView Spawn<TView>(string prefabName) where TView : Component => UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));");
+            sb.AppendLine(
+                "public void Release<TView>(TView value) where TView : Component => UnityEngine.Object.Destroy(value.gameObject);");
+            sb.AppendLine(
+                "public TView Spawn<TView>(string prefabName) where TView : Component => UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -639,14 +766,16 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("Pool");
             sb.EndBlock();
             sb.AppendLine();
-            
-            
+
+
             sb.BeginBlock("class SimulationService : IDisposable");
             sb.AppendLine("private readonly Valkyrie.Ecs.SimulationSettings _settings;");
             sb.AppendLine("private readonly IWorldSimulation _worldSimulation;");
-            sb.AppendLine("private readonly System.Threading.CancellationTokenSource _cancellationTokenSource = new();");
+            sb.AppendLine(
+                "private readonly System.Threading.CancellationTokenSource _cancellationTokenSource = new();");
             sb.AppendLine("private float _simTime;");
-            sb.BeginBlock("public SimulationService(Valkyrie.Ecs.SimulationSettings settings, IWorldSimulation worldSimulation)");
+            sb.BeginBlock(
+                "public SimulationService(Valkyrie.Ecs.SimulationSettings settings, IWorldSimulation worldSimulation)");
             sb.AppendLine("_settings = settings;");
             sb.AppendLine("_worldSimulation = worldSimulation;");
             sb.AppendLine("AsyncExtension.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
@@ -669,8 +798,8 @@ namespace Languages.ClassEntitiesModel
             sb.EndBlock();
             sb.EndBlock();
             sb.AppendLine();
-    
-    
+
+
             sb.BeginBlock("public class WorldLibrary : ILibrary");
             sb.AppendLine("private readonly bool _autoSimulate;");
             sb.AppendLine("private readonly ViewsSpawnType _viewsHandlingType;");
@@ -705,40 +834,40 @@ namespace Languages.ClassEntitiesModel
             sb.AppendLine("public interface IEntity { }");
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("public interface ISimSystem");
             sb.AppendLine("void Simulate(float dt);");
             sb.EndBlock();
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("public interface ITimer");
             sb.AppendLine("float FullTime { get; }");
             sb.AppendLine("float TimeLeft { get; }");
             sb.EndBlock();
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("public interface IView<in TModel>");
             sb.AppendLine("void UpdateDate(TModel model);");
             sb.EndBlock();
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("public interface IViewsProvider");
             sb.AppendLine("void Release<TView>(TView value) where TView : Component;");
             sb.AppendLine("TView Spawn<TView>(string prefabName) where TView : Component;");
             sb.EndBlock();
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("public interface IWorldView");
             foreach (var entityInfo in Entities.Where(x => x.HasView))
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} {{ get; }}");
             sb.EndBlock();
             sb.AppendLine();
 
-            
+
             sb.BeginBlock("public interface IWorldController");
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
@@ -746,10 +875,11 @@ namespace Languages.ClassEntitiesModel
                 var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.AppendLine($"{entityInfo.Name} Create{entityInfo.Name}({argsStr});");
             }
+
             sb.AppendLine($"void Destroy(IEntity entity);");
             sb.EndBlock();
             sb.AppendLine();
-            
+
 
             sb.BeginBlock("public interface IWorldState");
             sb.AppendLine($"IReadOnlyList<IEntity> All {{ get; }}");
@@ -759,9 +889,10 @@ namespace Languages.ClassEntitiesModel
                     sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} {{ get; }}");
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} {{ get; }}");
             }
+
             sb.EndBlock();
             sb.AppendLine();
-            
+
 
             sb.BeginBlock("public interface IWorldSimulation");
             sb.AppendLine("void AddSystem(ISimSystem simSystem);");
@@ -806,6 +937,22 @@ namespace Languages.ClassEntitiesModel
             if (r == null)
                 Entities.Add(r = new EntityInterface() { Name = name });
             return (EntityInterface)r;
+        }
+
+        public ConfigEntity GetConfig(string configId)
+        {
+            var r = Configs.Find(x => x.Name == configId);
+            if(r == null)
+                Configs.Add(r = new ConfigEntity() { Name = configId});
+            return r;
+        }
+
+        public EventEntity CreateEvent(string eventName, params string[] args)
+        {
+            var r = new EventEntity { Name = eventName };
+            r.Args.AddRange(args);
+            Events.Add(r);
+            return r;
         }
     }
 
