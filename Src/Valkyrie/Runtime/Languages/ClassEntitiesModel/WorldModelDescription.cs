@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Utils;
@@ -27,9 +28,11 @@ namespace Languages.ClassEntitiesModel
         public string Name;
         public readonly List<string> Args = new List<string>();
 
+        public string ClassName => $"{Name}Event";
+
         public void Write(FormatWriter sb)
         {
-            var blockName = $"public sealed class {Name}Event : BaseEvent";
+            var blockName = $"public sealed class {ClassName} : BaseEvent";
             if (Args.Any())
                 blockName += $"<{Args.Join(", ")}>";
             sb.BeginBlock(blockName);
@@ -388,6 +391,152 @@ namespace Languages.ClassEntitiesModel
             WriteViewModels(sb);
         }
     }
+    
+    class EventHandlerOperation
+    {}
+
+    class LogOperation : EventHandlerOperation
+    {
+        private readonly string _text;
+
+        public LogOperation(string text)
+        {
+            _text = text;
+        }
+    }
+
+    public class EventHandlerModel
+    {
+        public readonly EventEntity Event;
+        private readonly string _uid;
+        private List<EventHandlerOperation> _ops = new List<EventHandlerOperation>();
+
+        public EventHandlerModel(EventEntity @event)
+        {
+            _uid = Guid.NewGuid().ToString().Replace("-", string.Empty);
+            Event = @event;
+        }
+
+        public void Write(FormatWriter sb)
+        {
+            sb.BeginBlock($"System.Threading.Tasks.Task {GetMethodName()}({Event.ClassName} ev)");
+            sb.AppendLine($"//TODO: here must be event handler for {Event.ClassName}");
+            if (_ops.Count == 0)
+                sb.AppendLine("return System.Threading.Tasks.Task.CompletedTask;");
+            sb.EndBlock();
+        }
+
+        public EventHandlerModel LogOp(string text)
+        {
+            _ops.Add(new LogOperation(text));
+            return this;
+        }
+
+        public string GetMethodName()
+        {
+            return $"On{Event.ClassName}Handle{_uid}";
+        }
+    }
+
+    public class ProfileModel
+    {
+        public HashSet<string> Counters = new();
+        public List<EventHandlerModel> Handlers = new();
+
+        public ProfileModel AddCounter(string name)
+        {
+            Counters.Add(name);
+            return this;
+        }
+
+        public void WriteEvents(FormatWriter sb)
+        {
+            sb.BeginBlock("class GeneratedEventsHandler : IDisposable");
+            sb.AppendLine("private readonly Valkyrie.Di.CompositeDisposable _disposable = new();");
+            sb.AppendLine("private readonly IPlayerProfile _profile;");
+            sb.AppendLine("private readonly IEventSystem _events;");
+            sb.AppendLine();
+            sb.BeginBlock("public GeneratedEventsHandler(IPlayerProfile profile, IEventSystem eventSystem)");
+            sb.AppendLine("_profile = profile;");
+            sb.AppendLine("_events = eventSystem;");
+            foreach (var handler in Handlers)
+            {
+                sb.AppendLine($"_disposable.Add(_events.Subscribe<{handler.Event.ClassName}>({handler.GetMethodName()}));");
+            }
+            sb.EndBlock();
+            sb.AppendLine();
+            sb.AppendLine("public void Dispose() => _disposable.Dispose();");
+            sb.AppendLine();
+            sb.AppendLine("#region Handlers");
+            sb.AppendLine();
+            foreach (var handler in Handlers)
+            {
+                handler.Write(sb);
+            }
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Handlers");
+            sb.EndBlock();
+        }
+
+        public void Write(FormatWriter sb)
+        {
+            sb.BeginBlock("public static class GeneratedConstants");
+            foreach (var counter in Counters)
+            {
+                sb.AppendLine($"public const string {counter}Name = \"{counter}\";");
+            }
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock("public interface IPlayerProfile");
+            sb.AppendLine("#region Counters");
+            sb.AppendLine();
+            foreach (var counter in Counters)
+            {
+                sb.AppendLine($"public int {counter} {{ get; set; }}");
+            }
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Counters");
+            sb.AppendLine();
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock("class PlayerProfile : IPlayerProfile");
+            sb.AppendLine("readonly Meta.Inventory.IWallet _wallet;");
+            sb.AppendLine("readonly Meta.Inventory.IInventory _inventory;");
+            //TODO: other references
+            sb.AppendLine();
+            sb.BeginBlock("public PlayerProfile(Meta.Inventory.IWallet wallet, Meta.Inventory.IInventory inventory)");
+            sb.AppendLine("_wallet = wallet;");
+            sb.AppendLine("_inventory = inventory;");
+            sb.EndBlock();
+            sb.AppendLine();
+            sb.AppendLine("#region Counters");
+            sb.AppendLine();
+            foreach (var counter in Counters)
+            {
+                sb.BeginBlock($"public int {counter}");
+                sb.AppendLine($"get => (int)_wallet.GetAmount(GeneratedConstants.{counter}Name);");
+                sb.AppendLine($"set => _wallet.SetAmount(GeneratedConstants.{counter}Name, value);");
+                sb.EndBlock();
+            }
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Counters");
+            sb.AppendLine();
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock("public class MetaLibrary : ILibrary");
+            sb.BeginBlock("public void Register(IContainer container)");
+            sb.AppendLine("container.Register<PlayerProfile>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine("container.Register<GeneratedEventsHandler>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
+            sb.EndBlock();
+            sb.EndBlock();
+        }
+    }
 
     public class WorldModelInfo
     {
@@ -396,6 +545,7 @@ namespace Languages.ClassEntitiesModel
         public List<EntityBase> Entities = new();
         public List<ConfigEntity> Configs = new();
         public List<EventEntity> Events = new();
+        public ProfileModel Profile = new();
 
         public override string ToString()
         {
@@ -413,21 +563,31 @@ namespace Languages.ClassEntitiesModel
             var rootNamespace = Namespace;
 
             sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region ConfigData");
-            sb.AppendLine();
-            WriteConfigs(sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //ConfigData");
-            sb.EndBlock();
-
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
             sb.AppendLine($"#region Events");
             sb.AppendLine();
             WriteEvents(sb);
             sb.AppendLine();
             sb.AppendLine($"#endregion //Events");
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Profile");
+            sb.AppendLine();
+            Profile.Write(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Profile");
+            sb.EndBlock();
+
+            sb.AppendLine();
+            
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region ConfigData");
+            sb.AppendLine();
+            WriteConfigs(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //ConfigData");
             sb.EndBlock();
 
             sb.AppendLine();
@@ -457,6 +617,10 @@ namespace Languages.ClassEntitiesModel
         {
             foreach (var entity in Events)
                 entity.Write(sb);
+            
+            sb.AppendLine();
+            
+            Profile.WriteEvents(sb);
         }
 
         void WriteConfigs(FormatWriter sb)
@@ -952,6 +1116,13 @@ namespace Languages.ClassEntitiesModel
             var r = new EventEntity { Name = eventName };
             r.Args.AddRange(args);
             Events.Add(r);
+            return r;
+        }
+
+        public EventHandlerModel CreateEventHandler(EventEntity evToHandle)
+        {
+            var r = new EventHandlerModel(evToHandle);
+            Profile.Handlers.Add(r);
             return r;
         }
     }
