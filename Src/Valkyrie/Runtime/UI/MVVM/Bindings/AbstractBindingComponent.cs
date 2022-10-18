@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Utils;
 
-
 namespace Valkyrie.MVVM.Bindings
 {
     public abstract class AbstractBindingComponent : MonoBehaviour
@@ -18,6 +17,13 @@ namespace Valkyrie.MVVM.Bindings
                     {
                         disposeHandler = component.gameObject;
                         return () => template.ViewModel;
+                    }
+
+                    if (component is TypeBinding typeBinding &&
+                        typeBinding.GetTemplateType().Name == modelTypeName)
+                    {
+                        disposeHandler = component.gameObject;
+                        return () => typeBinding.Model;
                     }
 
                     if (component is FieldBinding fieldBinding && fieldBinding.GetTemplateType().Name == modelTypeName)
@@ -43,13 +49,14 @@ namespace Valkyrie.MVVM.Bindings
             }
         }
 
-        internal static object GetModel(GameObject go, string modelTypeName, out GameObject disposeHandler) => GetModelMethod(go, modelTypeName, out disposeHandler)();
+        internal static object GetModel(GameObject go, string modelTypeName, out GameObject disposeHandler) =>
+            GetModelMethod(go, modelTypeName, out disposeHandler)();
 
         internal static bool SplitTypeProperty(string fullText, out string typeName, out string propertyName)
         {
             var colonIndex = fullText.IndexOf(':');
             var text = colonIndex >= 0 ? fullText.Substring(0, colonIndex) : fullText;
-            var fullNameParts = text.Split(new[] {'/', '.'});
+            var fullNameParts = text.Split(new[] { '/', '.' });
             if (fullNameParts.Length > 1)
             {
                 typeName = fullNameParts[^2];
@@ -71,7 +78,8 @@ namespace Valkyrie.MVVM.Bindings
             SplitTypeProperty(viewModelProperty, out var typeName, out var propertyName);
             var viewModelMethod = GetModelMethod(gameObject, typeName, out disposeHandler);
 
-            var binding = DataExtensions.CreateBinding(viewModelMethod, propertyName, adapterType, viewModelChangeEventName);
+            var binding =
+                DataExtensions.CreateBinding(viewModelMethod, propertyName, adapterType, viewModelChangeEventName);
             return binding;
         }
     }

@@ -68,5 +68,7 @@ namespace Valkyrie.Di
         {
             return _subs.GetEnumerator();
         }
+
+        public bool Any() => _subs.Any();
     }
 }

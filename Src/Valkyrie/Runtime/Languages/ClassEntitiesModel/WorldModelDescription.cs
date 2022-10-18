@@ -32,7 +32,7 @@ namespace Valkyrie
     public class EventEntity
     {
         public string Name;
-        public readonly List<string> Args = new List<string>();
+        public readonly List<string> Args = new();
 
         public string ClassName => $"{Name}Event";
 
@@ -472,7 +472,7 @@ namespace Valkyrie
     {
         public readonly EventEntity Event;
         private readonly string _uid;
-        private readonly List<EventHandlerOperation> _ops = new List<EventHandlerOperation>();
+        private readonly List<EventHandlerOperation> _ops = new();
 
         public EventHandlerModel(EventEntity @event)
         {
@@ -632,6 +632,7 @@ namespace Valkyrie
         public List<EntityBase> Entities = new();
         public List<ConfigEntity> Configs = new();
         public List<EventEntity> Events = new();
+        private List<WindowModelInfo> Windows = new();
         public ProfileModel Profile = new();
 
         public override string ToString()
@@ -644,6 +645,16 @@ namespace Valkyrie
             sb.AppendLine();
 
             var rootNamespace = Namespace;
+            
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Ui");
+            sb.AppendLine();
+            WriteUi(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Ui");
+            sb.EndBlock();
+
+            sb.AppendLine();
 
             sb.BeginBlock($"namespace {rootNamespace}");
             sb.AppendLine($"#region Events");
@@ -694,6 +705,12 @@ namespace Valkyrie
             sb.EndBlock();
 
             return sb.ToString();
+        }
+
+        private void WriteUi(FormatWriter sb)
+        {
+            foreach (var window in Windows) 
+                window.Write(sb);
         }
 
         private void WriteEvents(FormatWriter sb)
@@ -1207,6 +1224,24 @@ namespace Valkyrie
             var r = new EventHandlerModel(evToHandle);
             Profile.Handlers.Add(r);
             return r;
+        }
+
+        public WindowModelInfo GetWindow(string name)
+        {
+            var r = Windows.Find(x => x.Name == name);
+            if (r == null)
+                Windows.Add(r = new WindowModelInfo() { Name = name });
+            return r;
+        }
+    }
+
+    public class WindowModelInfo
+    {
+        public string Name;
+
+        public void Write(FormatWriter sb)
+        {
+            sb.AppendLine($"//TODO: here will be Window {Name}");
         }
     }
 

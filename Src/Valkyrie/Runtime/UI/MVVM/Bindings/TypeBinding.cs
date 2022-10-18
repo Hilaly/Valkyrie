@@ -2,24 +2,28 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Utils;
+using Valkyrie.Di;
 
 namespace Valkyrie.MVVM.Bindings
 {
-    public class Template : DisposableUnityComponent
+    public sealed class TypeBinding : MonoBehaviour
     {
 #pragma warning disable 649
         [SerializeField] private string _templateClass;
         private object _viewModel;
 #pragma warning restore 649
-
-        public object ViewModel
+        
+        [Inject] private IContainer _container;
+        
+        public object Model
         {
-            get => _viewModel;
+            get { return _viewModel ??= _container.Resolve(GetTemplateType()); }
             set
             {
-                _viewModel = value;
-                if (_viewModel is IDisposable disposable)
-                    Add(disposable);
+                if (value.GetType().IsSubclassOf(GetTemplateType())) 
+                    _viewModel = value;
+                else
+                    throw new Exception($"Type mismatch");
             }
         }
 
