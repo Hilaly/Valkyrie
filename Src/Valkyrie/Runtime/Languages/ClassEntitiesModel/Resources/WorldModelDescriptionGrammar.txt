@@ -1,0 +1,26 @@
+#lexer
+
+<!--(?<value>(\n|.)+?)--> -> comment
+\/\*(?<value>(\n|.)+?)\*\/ -> comment
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+(\w|<|>)* -> IDENTIFIER
+
+(\.) -> SENTENCE_OP
+
+[ \n\r\t]+ -> escape
+
+#parser
+
+<root> -> <full_sentence>+
+
+<full_sentence> -> <sentence> SENTENCE_OP
+<sentence> -> <define_namespace>
+
+<define_namespace> -> "namespace" <namespace_name>
+<namespace_name> -> IDENTIFIER

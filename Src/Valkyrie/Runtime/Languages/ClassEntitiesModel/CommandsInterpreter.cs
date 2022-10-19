@@ -36,6 +36,15 @@ namespace Valkyrie
                 return func((T0)args[0]);
             });
         }
+        public static IDisposable Register<T0,T1>(this ICommandsInterpreter interpreter, string name, Func<T0, T1, Task> func)
+        {
+            return interpreter.Register(name, args =>
+            {
+                if (args.Length != 2 || args[0] is not T0 || args[1] is not T1)
+                    throw new CommandArgsException();
+                return func((T0)args[0], (T1)args[1]);
+            });
+        }
     }
 
     public class CommandsInterpreter : Singleton<CommandsInterpreter>, ICommandsInterpreter
@@ -47,7 +56,12 @@ namespace Valkyrie
             if (!_commands.TryGetValue(commandName, out var list))
                 _commands.Add(commandName, list = new List<Func<object[], Task>>());
             list.Add(commandExecutor);
-            return new ActionDisposable(() => list.Remove(commandExecutor));
+            Debug.Log($"[GEN]: command '{commandName}' registered");
+            return new ActionDisposable(() =>
+            {
+                list.Remove(commandExecutor);
+                Debug.Log($"[GEN]: command '{commandName}' unregistered");
+            });
         }
 
         public async Task Execute(string command, params object[] args)

@@ -1326,6 +1326,8 @@ namespace Valkyrie
                 Windows.Add(r = new WindowModelInfo() { Name = name });
             return r;
         }
+
+        public void Parse(string source) => WorldModelCompiler.Parse(this, source);
     }
 
     public class WindowModelInfo
@@ -1353,7 +1355,6 @@ namespace Valkyrie
                 handler.Write(sb);
                 sb.EndBlock();
             }
-            sb.AppendLine($"//TODO: here will be handler");
             sb.EndBlock();
         }
 
