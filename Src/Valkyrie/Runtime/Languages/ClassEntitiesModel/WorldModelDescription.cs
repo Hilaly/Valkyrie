@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Configs;
 using Meta.Inventory;
 using UnityEngine;
@@ -408,10 +409,10 @@ namespace Valkyrie
         }
     }
 
-    abstract class EventHandlerOperation
+    public abstract class EventHandlerOperation
     {
         public abstract bool IsAsync();
-        public abstract void Write(FormatWriter sb);
+        public abstract void Write(FormatWriter sb, OpType opType);
     }
 
     class LogOperation : EventHandlerOperation
@@ -423,7 +424,7 @@ namespace Valkyrie
             _text = text;
         }
 
-        public override void Write(FormatWriter sb)
+        public override void Write(FormatWriter sb, OpType opType)
         {
             sb.AppendLine($"UnityEngine.Debug.Log(\"[GEN]: {_text}\");");
         }
@@ -447,14 +448,14 @@ namespace Valkyrie
 
         public override bool IsAsync() => true;
 
-        public override void Write(FormatWriter sb)
+        public override void Write(FormatWriter sb, OpType opType)
         {
             var args = string.Empty;
             for (var i = 0; i < _args.Length; ++i)
                 args += $", Arg{i} = {_args[i]}";
             if (args.Length > 0)
                 args = args[2..];
-            sb.AppendLine($"await _events.Raise(new {_raisedEvent.ClassName} {{ {args} }});");
+            sb.AppendLine($"await Raise(new {_raisedEvent.ClassName} {{ {args} }});");
         }
     }
 
@@ -471,17 +472,56 @@ namespace Valkyrie
 
         public override bool IsAsync() => true;
 
-        public override void Write(FormatWriter sb)
+        public override void Write(FormatWriter sb, OpType opType)
         {
             sb.AppendLine($"await _interpreter.Execute({_command}{_args.Select(x => $", {x}").Join(string.Empty)});");
         }
     }
 
-    public class EventHandlerModel
+    public class MethodImpl
+    {
+        protected readonly List<EventHandlerOperation> _ops = new();
+
+        public MethodImpl LogOp(string text)
+        {
+            _ops.Add(new LogOperation(text));
+            return this;
+        }
+
+        public MethodImpl RaiseOp(EventEntity raisedEvent, params string[] args)
+        {
+            _ops.Add(new RaiseEventOperation(raisedEvent, args));
+            return this;
+        }
+
+        public MethodImpl CommandOp(string command, params string[] args)
+        {
+            _ops.Add(new CallCommandOperation(command, args));
+            return this;
+        }
+    }
+
+    public class WindowHandler : MethodImpl
+    {
+        public string Name;
+
+        public void Write(FormatWriter sb)
+        {
+            foreach (var op in _ops)
+                op.Write(sb, OpType.Window);
+        }
+    }
+
+    public enum OpType
+    {
+        Window,
+        Handler
+    }
+
+    public class EventHandlerModel : MethodImpl
     {
         public readonly EventEntity Event;
         private readonly string _uid;
-        private readonly List<EventHandlerOperation> _ops = new();
 
         public EventHandlerModel(EventEntity @event)
         {
@@ -495,7 +535,7 @@ namespace Valkyrie
             sb.BeginBlock(
                 $"{(isAsync ? "async " : string.Empty)}System.Threading.Tasks.Task {GetMethodName()}({Event.ClassName} ev)");
             foreach (var op in _ops)
-                op.Write(sb);
+                op.Write(sb, OpType.Handler);
             if (!isAsync)
                 sb.AppendLine("return System.Threading.Tasks.Task.CompletedTask;");
             sb.EndBlock();
@@ -504,24 +544,6 @@ namespace Valkyrie
         public string GetMethodName()
         {
             return $"On{Event.ClassName}Handle{_uid}";
-        }
-
-        public EventHandlerModel LogOp(string text)
-        {
-            _ops.Add(new LogOperation(text));
-            return this;
-        }
-
-        public EventHandlerModel RaiseOp(EventEntity raisedEvent, params string[] args)
-        {
-            _ops.Add(new RaiseEventOperation(raisedEvent, args));
-            return this;
-        }
-
-        public EventHandlerModel CommandOp(string command, params string[] args)
-        {
-            _ops.Add(new CallCommandOperation(command, args));
-            return this;
         }
     }
 
@@ -558,6 +580,11 @@ namespace Valkyrie
             sb.EndBlock();
             sb.AppendLine();
             sb.AppendLine("public void Dispose() => _disposable.Dispose();");
+            sb.AppendLine();
+            sb.BeginBlock($"{typeof(Task).FullName} Raise<T>(T instance) where T : {typeof(BaseEvent).FullName}");
+            sb.AppendLine($"Debug.Log($\"[GEN]: Raise {{typeof(T).Name}} event from GeneratedEventsHandler\");");
+            sb.AppendLine("return _events.Raise(instance);");
+            sb.EndBlock();
             sb.AppendLine();
             sb.AppendLine("#region Handlers");
             sb.AppendLine();
@@ -1302,14 +1329,48 @@ namespace Valkyrie
     {
         public string Name;
 
+        public List<InfoGetter> Bindings = new();
+        private List<WindowHandler> Handlers = new();
+
         public string ClassName => $"{Name}Window";
 
         public void Write(FormatWriter sb)
         {
             sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
             sb.BeginBlock($"public class {ClassName} : {typeof(BaseWindow).FullName}");
-            sb.AppendLine($"//TODO: here will be Window {Name}");
+            sb.AppendLine($"[{typeof(InjectAttribute).FullName}] private readonly IPlayerProfile _profile;");
+            sb.AppendLine($"[{typeof(InjectAttribute).FullName}] private readonly {typeof(IConfigService).FullName} _config;");
+            sb.AppendLine();
+            foreach (var getter in Bindings)
+                sb.AppendLine(
+                    $"[{typeof(BindingAttribute).FullName}] public {getter.Type} {getter.Name} => {getter.Code};");
+            sb.AppendLine();
+            foreach (var handler in Handlers)
+            {
+                sb.BeginBlock($"[{typeof(BindingAttribute).FullName}] public async void {handler.Name}()");
+                handler.Write(sb);
+                sb.EndBlock();
+            }
+            sb.AppendLine($"//TODO: here will be handler");
             sb.EndBlock();
+        }
+
+        public WindowModelInfo AddBinding(string type, string name, string code)
+        {
+            Bindings.Add(new InfoGetter()
+            {
+                Code = code,
+                Name = name,
+                Type = type
+            });
+            return this;
+        }
+
+        public WindowHandler AddHandler(string name)
+        {
+            var r = new WindowHandler() { Name = name };
+            Handlers.Add(r);
+            return r;
         }
     }
 

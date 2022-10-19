@@ -11,12 +11,12 @@ namespace Valkyrie
     [Binding]
     public abstract class BaseWindow : MonoBehaviour
     {
-        [Inject] private IEventSystem _eventSystem;
+        [Inject] private IEventSystem _events;
 
         protected Task Raise<T>(T instance) where T : BaseEvent
         {
             Debug.Log($"[GEN]: Raise {typeof(T).Name} event from {GetType().Name}");
-            return _eventSystem.Raise(instance);
+            return _events.Raise(instance);
         }
     }
     
