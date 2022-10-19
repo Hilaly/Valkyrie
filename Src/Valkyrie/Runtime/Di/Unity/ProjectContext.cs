@@ -47,7 +47,9 @@ namespace Valkyrie.Di
             Container = new Container();
 
             BuildContainer();
-            
+
+            Container.InjectGameObject(gameObject);
+
             //TODO: for old process
             //Container.Inject(new GameObject("Valkyrie.Core").AddComponent<Core>());
         }

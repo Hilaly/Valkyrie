@@ -2,11 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using Utils;
 using Valkyrie.Di;
 using Valkyrie.MVVM.Bindings;
 
 namespace Valkyrie
 {
+    [Binding]
+    public abstract class BaseWindow : MonoBehaviour
+    {
+        [Inject] private IEventSystem _eventSystem;
+
+        protected Task Raise<T>(T instance) where T : BaseEvent
+        {
+            Debug.Log($"[GEN]: Raise {typeof(T).Name} event from {GetType().Name}");
+            return _eventSystem.Raise(instance);
+        }
+    }
+    
     public interface IUiElement<T> : IDisposable
     {
         T Model { get; set; }
@@ -14,7 +27,7 @@ namespace Valkyrie
 
     public interface IWindowManager
     {
-        Task<IUiElement<T>> ShowWindow<T>();
+        Task<IUiElement<T>> ShowWindow<T>() where T : BaseWindow;
     }
 
     public interface IPopupManager

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Configs;
 using Meta.Inventory;
+using UnityEngine;
 using Utils;
 using Valkyrie.Di;
 using Valkyrie.Ecs;
@@ -268,17 +270,24 @@ namespace Valkyrie
                 sb.AppendLine("Model = model;");
                 sb.EndBlock();
                 foreach (var property in GetAllProperties())
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public {property.Type} {property.Name} => Model.{property.Name};");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public {property.Type} {property.Name} => Model.{property.Name};");
                 foreach (var info in GetAllInfos())
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public {info.Type} {info.Name} => Model.{info.Name};");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public {info.Type} {info.Name} => Model.{info.Name};");
                 foreach (var info in GetAllSlots())
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public {info.Type} {info.Name} => Model.{info.Name};");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public {info.Type} {info.Name} => Model.{info.Name};");
                 foreach (var timer in GetAllTimers())
                 {
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public bool HasTimer{timer} => Model.{timer} != null;");
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public float {timer}TimeLeft => Model.{timer}?.TimeLeft ?? 0f;");
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public float {timer}Time => {timer}FullTime - {timer}TimeLeft;");
-                    sb.AppendLine($"[{typeof(BindingAttribute).FullName}] public float {timer}FullTime => Model.{timer}?.FullTime ?? 1f;");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public bool HasTimer{timer} => Model.{timer} != null;");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public float {timer}TimeLeft => Model.{timer}?.TimeLeft ?? 0f;");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public float {timer}Time => {timer}FullTime - {timer}TimeLeft;");
+                    sb.AppendLine(
+                        $"[{typeof(BindingAttribute).FullName}] public float {timer}FullTime => Model.{timer}?.FullTime ?? 1f;");
                     sb.AppendLine(
                         $"[{typeof(BindingAttribute).FullName}] public float {timer}Progress => Mathf.Clamp01({timer}Time / {timer}FullTime);");
                 }
@@ -535,7 +544,8 @@ namespace Valkyrie
             sb.AppendLine($"private readonly {typeof(ICommandsInterpreter).FullName} _interpreter;");
             sb.AppendLine("private readonly IPlayerProfile _profile;");
             sb.AppendLine();
-            sb.BeginBlock($"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter)");
+            sb.BeginBlock(
+                $"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter)");
             sb.AppendLine("_profile = profile;");
             sb.AppendLine("_events = eventSystem;");
             sb.AppendLine("_interpreter = interpreter;");
@@ -593,7 +603,8 @@ namespace Valkyrie
             sb.AppendLine($"readonly {typeof(IInventory).FullName} _inventory;");
             //TODO: other references
             sb.AppendLine();
-            sb.BeginBlock($"public PlayerProfile({typeof(IWallet).FullName} wallet, {typeof(IInventory).FullName} inventory)");
+            sb.BeginBlock(
+                $"public PlayerProfile({typeof(IWallet).FullName} wallet, {typeof(IInventory).FullName} inventory)");
             sb.AppendLine("_wallet = wallet;");
             sb.AppendLine("_inventory = inventory;");
             sb.EndBlock();
@@ -635,24 +646,56 @@ namespace Valkyrie
         private List<WindowModelInfo> Windows = new();
         public ProfileModel Profile = new();
 
-        public override string ToString()
+        public void WriteToDirectory(string dirPath, string mainCsFile = "Gen.cs")
+        {
+            //1. Serialize all
+            var rootNamespace = Namespace;
+            var methods = new List<KeyValuePair<string, string>>
+            {
+                new(mainCsFile, ToString(false))
+            };
+            foreach (var window in Windows)
+            {
+                var sb = new FormatWriter();
+                WriteFileStart(sb);
+                sb.BeginBlock($"namespace {rootNamespace}");
+                window.Write(sb);
+                sb.EndBlock();
+                methods.Add(new KeyValuePair<string, string>($"{window.ClassName}.cs", sb.ToString()));
+            }
+
+            //2. Prepare directory
+            if (!Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+            foreach (var filePath in Directory.EnumerateFiles(dirPath, "*.cs", SearchOption.AllDirectories))
+            {
+                if (filePath.EndsWith(".cs"))
+                    File.Delete(filePath);
+            }
+
+            //3. Write files
+            foreach (var (fileName, text) in methods) 
+                File.WriteAllText(Path.Combine(dirPath, fileName), text);
+        }
+
+        private string ToString(bool includeMono)
         {
             var sb = new FormatWriter();
 
-            sb.AppendLine("using System;");
-            sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using UnityEngine;");
-            sb.AppendLine();
+            WriteFileStart(sb);
 
             var rootNamespace = Namespace;
-            
-            sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region Ui");
-            sb.AppendLine();
-            WriteUi(sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //Ui");
-            sb.EndBlock();
+
+            if (includeMono)
+            {
+                sb.BeginBlock($"namespace {rootNamespace}");
+                sb.AppendLine($"#region Ui");
+                sb.AppendLine();
+                WriteUi(sb);
+                sb.AppendLine();
+                sb.AppendLine($"#endregion //Ui");
+                sb.EndBlock();
+            }
 
             sb.AppendLine();
 
@@ -707,9 +750,22 @@ namespace Valkyrie
             return sb.ToString();
         }
 
+        private static void WriteFileStart(FormatWriter sb)
+        {
+            sb.AppendLine("using System;");
+            sb.AppendLine("using System.Collections.Generic;");
+            sb.AppendLine("using UnityEngine;");
+            sb.AppendLine();
+        }
+
+        public override string ToString()
+        {
+            return ToString(true);
+        }
+
         private void WriteUi(FormatWriter sb)
         {
-            foreach (var window in Windows) 
+            foreach (var window in Windows)
                 window.Write(sb);
         }
 
@@ -1042,7 +1098,8 @@ namespace Valkyrie
                 $"public SimulationService({typeof(SimulationSettings).FullName} settings, IWorldSimulation worldSimulation)");
             sb.AppendLine("_settings = settings;");
             sb.AppendLine("_worldSimulation = worldSimulation;");
-            sb.AppendLine($"{typeof(AsyncExtension).FullName}.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
+            sb.AppendLine(
+                $"{typeof(AsyncExtension).FullName}.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
             sb.EndBlock();
             sb.BeginBlock("void SimulateIteration()");
             sb.BeginBlock("if (_settings.IsSimulationPaused)");
@@ -1239,9 +1296,14 @@ namespace Valkyrie
     {
         public string Name;
 
+        public string ClassName => $"{Name}Window";
+
         public void Write(FormatWriter sb)
         {
+            sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
+            sb.BeginBlock($"public class {ClassName} : {typeof(BaseWindow).FullName}");
             sb.AppendLine($"//TODO: here will be Window {Name}");
+            sb.EndBlock();
         }
     }
 

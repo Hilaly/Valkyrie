@@ -5,7 +5,7 @@ namespace Valkyrie
 {
     class WindowManager : UiElementsManagerBase, IWindowManager
     {
-        public Task<IUiElement<T>> ShowWindow<T>()
+        public Task<IUiElement<T>> ShowWindow<T>() where T : BaseWindow
         {
             var neededType = typeof(T);
             var window = FindWindow(neededType);

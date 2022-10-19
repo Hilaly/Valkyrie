@@ -65,6 +65,13 @@ namespace Valkyrie.MVVM.Editor
                     if (fieldType != null)
                         yield return fieldType;
                 }
+
+                if (component is TypeBinding typeBinding)
+                {
+                    var typeType = typeBinding.GetTemplateType();
+                    if (typeType != null)
+                        yield return typeType;
+                }
             }
         }
 
