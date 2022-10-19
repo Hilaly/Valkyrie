@@ -5,6 +5,15 @@ namespace Valkyrie
 {
     class WindowManager : UiElementsManagerBase<BaseWindow>, IWindowManager
     {
+        public Task ShowWindow(Type neededType)
+        {
+            var window = FindWindow(neededType);
+            if (window == null)
+                throw new ArgumentException($"Window of type {neededType.FullName} not registered in window manager");
+            _openedWindows.Dispose();
+            return Task.FromResult(PrepareElement(window));
+        }
+
         public Task<IUiElement<T>> ShowWindow<T>() where T : BaseWindow
         {
             var neededType = typeof(T);
@@ -12,7 +21,7 @@ namespace Valkyrie
             if (window == null)
                 throw new ArgumentException($"Window of type {neededType.FullName} not registered in window manager");
             _openedWindows.Dispose();
-            return Task.FromResult(PrepareElement<T>(window));
+            return Task.FromResult(PrepareElement(window));
         }
     }
 }

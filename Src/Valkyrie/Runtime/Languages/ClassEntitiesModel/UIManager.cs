@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
-using Valkyrie.MVVM.Bindings;
 
 namespace Valkyrie
 {
@@ -20,13 +20,14 @@ namespace Valkyrie
         }
     }
     
-    public interface IUiElement<T> : IDisposable
+    public interface IUiElement<out T> : IDisposable
     {
         T Model { get; }
     }
 
     public interface IWindowManager
     {
+        Task ShowWindow(Type type);
         Task<IUiElement<T>> ShowWindow<T>() where T : BaseWindow;
     }
 
@@ -92,6 +93,44 @@ namespace Valkyrie
             var r = new UiElement<T>(window);
             _openedWindows.Add(r);
             return r;
+        }
+    }
+
+    public class UiCommands : IDisposable
+    {
+        private readonly CompositeDisposable _compositeDisposable = new();
+        private readonly IWindowManager _windowManager;
+        private readonly IPopupManager _popupManager;
+        private readonly Dictionary<string,Type> _validWindows;
+
+        public UiCommands(IWindowManager windowManager, IPopupManager popupManager, ICommandsInterpreter interpreter)
+        {
+            _windowManager = windowManager;
+            _popupManager = popupManager;
+
+            _validWindows = typeof(BaseWindow).GetAllSubTypes(x => x.IsClass && !x.IsAbstract).ToDictionary(x => x.Name, x => x);
+            
+            _compositeDisposable.Add(interpreter.Register<string>("ShowWindow", ShowWindow));
+        }
+
+        async Task ShowWindow(string windowName)
+        {
+            if (_validWindows.TryGetValue(windowName, out var windowType))
+            {
+                Debug.Log($"[GEN]: opening {windowName}");
+                await _windowManager.ShowWindow(windowType);
+            }
+            else
+            {
+                var msg = $"[GEN]: {windowName} is not registered window type";
+                //Debug.LogError(msg);
+                throw new Exception(msg);
+            }
+        }
+
+        public void Dispose()
+        {
+            _compositeDisposable.Dispose();
         }
     }
 }

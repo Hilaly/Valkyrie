@@ -12,6 +12,7 @@ namespace Valkyrie
         {
             container.Register(windowManager).AsInterfacesAndSelf();
             container.Register(popupsManager).AsInterfacesAndSelf();
+            container.Register<UiCommands>().AsInterfacesAndSelf().SingleInstance().NonLazy();
         }
     }
 }
