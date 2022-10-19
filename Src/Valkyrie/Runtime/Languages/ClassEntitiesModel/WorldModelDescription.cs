@@ -665,17 +665,22 @@ namespace Valkyrie
             }
 
             //2. Prepare directory
+            Debug.Log($"[GENERATION]: Writing to directory {dirPath}");
             if (!Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
             foreach (var filePath in Directory.EnumerateFiles(dirPath, "*.cs", SearchOption.AllDirectories))
             {
-                if (filePath.EndsWith(".cs"))
-                    File.Delete(filePath);
+                Debug.Log($"[GENERATION]: remove file {filePath}");
+                File.Delete(filePath);
             }
 
             //3. Write files
-            foreach (var (fileName, text) in methods) 
-                File.WriteAllText(Path.Combine(dirPath, fileName), text);
+            foreach (var (fileName, text) in methods)
+            {
+                var fullPath = Path.Combine(dirPath, fileName);
+                Debug.Log($"[GENERATION]: writing to file {fullPath}");
+                File.WriteAllText(fullPath, text);
+            }
         }
 
         private string ToString(bool includeMono)
