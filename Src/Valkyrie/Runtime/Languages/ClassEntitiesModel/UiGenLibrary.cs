@@ -10,6 +10,8 @@ namespace Valkyrie
         
         public override void Register(IContainer container)
         {
+            container.RegisterSingleInstance<EventSystem>();
+            container.RegisterSingleInstance<CommandsInterpreter>();
             container.Register(windowManager).AsInterfacesAndSelf();
             container.Register(popupsManager).AsInterfacesAndSelf();
             container.Register<UiCommands>().AsInterfacesAndSelf().SingleInstance().NonLazy();
