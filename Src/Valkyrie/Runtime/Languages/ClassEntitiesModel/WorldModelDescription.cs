@@ -668,7 +668,7 @@ namespace Valkyrie
 
     public class WorldModelInfo
     {
-        public string Namespace = "Test";
+        public string Namespace = nameof(WorldModelInfo);
 
         public List<EntityBase> Entities = new();
         public List<ConfigEntity> Configs = new();

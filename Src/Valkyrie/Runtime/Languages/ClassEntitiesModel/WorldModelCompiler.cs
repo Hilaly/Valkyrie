@@ -38,10 +38,8 @@ namespace Valkyrie
             Parse(context, ast);
         }
 
-        private static void Log(string msg)
-        {
-            Debug.Log($"[GEN]: {msg}");
-        }
+        private static void Log(string msg) => Debug.Log($"[GEN]: {msg}");
+        private static void LogWarn(string msg) => Debug.LogWarning($"[GEN]: {msg}");
 
         private static void Parse(Context context, IAstNode ast)
         {
@@ -74,6 +72,8 @@ namespace Valkyrie
                 case "<define_namespace>":
                 {
                     var namespaceName = children.Find(x => x.Name == "<namespace_name>").GetString();
+                    if (context.World.Namespace != nameof(WorldModelInfo) && context.World.Namespace != namespaceName)
+                        LogWarn($"Changing namespace is bad practice, please use same namespace everywhere.");
                     context.World.Namespace = namespaceName;
                     Log($"Change namespace to {namespaceName}");
                     return;
