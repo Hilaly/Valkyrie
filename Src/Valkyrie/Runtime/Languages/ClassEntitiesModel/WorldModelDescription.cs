@@ -474,7 +474,7 @@ namespace Valkyrie
 
         public override void Write(FormatWriter sb, OpType opType)
         {
-            sb.AppendLine($"await _interpreter.Execute({_command}{_args.Select(x => $", {x}").Join(string.Empty)});");
+            sb.AppendLine($"await Interpreter.Execute({_command}{_args.Select(x => $", {x}").Join(string.Empty)});");
         }
     }
 
@@ -563,14 +563,16 @@ namespace Valkyrie
             sb.BeginBlock("class GeneratedEventsHandler : IDisposable");
             sb.AppendLine($"private readonly {typeof(CompositeDisposable).FullName} _disposable = new();");
             sb.AppendLine($"private readonly {typeof(IEventSystem).FullName} _events;");
-            sb.AppendLine($"private readonly {typeof(ICommandsInterpreter).FullName} _interpreter;");
             sb.AppendLine("private readonly IPlayerProfile _profile;");
+            sb.AppendLine($"private {typeof(ICommandsInterpreter).FullName} Interpreter {{ get; }}");
+            sb.AppendLine($"private {typeof(IConfigService).FullName} Config {{ get; }}");
             sb.AppendLine();
             sb.BeginBlock(
-                $"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter)");
+                $"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter, {typeof(IConfigService).FullName} config)");
             sb.AppendLine("_profile = profile;");
             sb.AppendLine("_events = eventSystem;");
-            sb.AppendLine("_interpreter = interpreter;");
+            sb.AppendLine("Interpreter = interpreter;");
+            sb.AppendLine("Config = config;");
             foreach (var handler in Handlers)
             {
                 sb.AppendLine(
@@ -1339,7 +1341,6 @@ namespace Valkyrie
             sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
             sb.BeginBlock($"public class {ClassName} : {typeof(BaseWindow).FullName}");
             sb.AppendLine($"[{typeof(InjectAttribute).FullName}] private readonly IPlayerProfile _profile;");
-            sb.AppendLine($"[{typeof(InjectAttribute).FullName}] private readonly {typeof(IConfigService).FullName} _config;");
             sb.AppendLine();
             foreach (var getter in Bindings)
                 sb.AppendLine(

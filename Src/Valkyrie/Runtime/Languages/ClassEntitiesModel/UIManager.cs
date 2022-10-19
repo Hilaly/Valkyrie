@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Configs;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
@@ -12,6 +13,9 @@ namespace Valkyrie
     public abstract class BaseWindow : MonoBehaviour
     {
         [Inject] private IEventSystem _events;
+
+        [field: Inject] public IConfigService Config { get; }
+        [field: Inject] public ICommandsInterpreter Interpreter { get; }
 
         protected Task Raise<T>(T instance) where T : BaseEvent
         {
