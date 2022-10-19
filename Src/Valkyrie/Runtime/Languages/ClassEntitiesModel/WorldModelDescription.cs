@@ -681,6 +681,7 @@ namespace Valkyrie
                 Debug.Log($"[GENERATION]: writing to file {fullPath}");
                 File.WriteAllText(fullPath, text);
             }
+            Debug.Log($"[GENERATION]: SUCCESS in {dirPath}");
         }
 
         private string ToString(bool includeMono)
