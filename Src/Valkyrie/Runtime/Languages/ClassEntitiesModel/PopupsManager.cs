@@ -5,16 +5,16 @@ using UnityEngine;
 
 namespace Valkyrie
 {
-    class PopupsManager : UiElementsManagerBase, IPopupManager
+    class PopupsManager : UiElementsManagerBase<BaseWindow>, IPopupManager
     {
         private readonly List<Func<Task>> _queue = new();
 
-        public Task OpenPopup<T>()
+        public Task OpenPopup<T>() where T : BaseWindow
         {
             if (!_openedWindows.Any())
             {
                 var neededType = typeof(T);
-                var window = FindWindow(neededType);
+                var window = (T)FindWindow(neededType);
                 if (window == null)
                 {
                     Debug.LogWarning($"Popup of type {neededType.FullName} not registered in window manager");

@@ -22,7 +22,7 @@ namespace Valkyrie
     
     public interface IUiElement<T> : IDisposable
     {
-        T Model { get; set; }
+        T Model { get; }
     }
 
     public interface IWindowManager
@@ -32,22 +32,23 @@ namespace Valkyrie
 
     public interface IPopupManager
     {
-        Task OpenPopup<T>();
+        Task OpenPopup<T>() where T : BaseWindow;
         Task ClosePopup();
     }
 
     class UiElement<T> : IUiElement<T>
+        where T : MonoBehaviour
     {
-        private readonly TypeBinding _instance;
+        private readonly T _instance;
         private IDisposable _disposable;
 
-        public UiElement(TypeBinding instance)
+        public UiElement(T instance)
         {
             _instance = instance;
             _disposable = new ActionDisposable(() => _instance.gameObject.SetActive(false));
         }
 
-        public UiElement(TypeBinding instance, IDisposable disposable)
+        public UiElement(T instance, IDisposable disposable)
         {
             _instance = instance;
             _disposable = disposable;
@@ -55,8 +56,7 @@ namespace Valkyrie
 
         public T Model
         {
-            get => (T)_instance.Model;
-            set => _instance.Model = value;
+            get => (T)_instance;
         }
 
         public void Dispose()
@@ -68,9 +68,10 @@ namespace Valkyrie
         }
     }
 
-    internal class UiElementsManagerBase : MonoBehaviour
+    internal class UiElementsManagerBase<TWindowComponent> : MonoBehaviour
+        where TWindowComponent : MonoBehaviour
     {
-        [SerializeField] protected List<TypeBinding> _windows = new();
+        [SerializeField] protected List<TWindowComponent> _windows = new();
         protected readonly CompositeDisposable _openedWindows = new();
 
         private void Awake()
@@ -79,13 +80,13 @@ namespace Valkyrie
                 window.gameObject.SetActive(false);
         }
 
-        protected TypeBinding FindWindow(Type neededType)
+        protected TWindowComponent FindWindow(Type neededType)
         {
-            var window = _windows.Find(x => x.GetTemplateType() == neededType);
+            var window = _windows.Find(x => x.GetType() == neededType);
             return window;
         }
 
-        protected IUiElement<T> PrepareElement<T>(TypeBinding window)
+        protected IUiElement<T> PrepareElement<T>(T window) where T : TWindowComponent
         {
             window.gameObject.SetActive(true);
             var r = new UiElement<T>(window);
