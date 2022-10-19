@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Configs;
 using Meta.Inventory;
@@ -617,7 +618,7 @@ namespace Valkyrie
             sb.AppendLine();
             foreach (var counter in Counters)
             {
-                sb.AppendLine($"public int {counter} {{ get; set; }}");
+                sb.AppendLine($"public {typeof(BigInteger).FullName} {counter} {{ get; set; }}");
             }
 
             sb.AppendLine();
@@ -642,8 +643,8 @@ namespace Valkyrie
             sb.AppendLine();
             foreach (var counter in Counters)
             {
-                sb.BeginBlock($"public int {counter}");
-                sb.AppendLine($"get => (int)_wallet.GetAmount(GeneratedConstants.{counter}Name);");
+                sb.BeginBlock($"public {typeof(BigInteger).FullName} {counter}");
+                sb.AppendLine($"get => _wallet.GetBigAmount(GeneratedConstants.{counter}Name);");
                 sb.AppendLine($"set => _wallet.SetAmount(GeneratedConstants.{counter}Name, value);");
                 sb.EndBlock();
             }
