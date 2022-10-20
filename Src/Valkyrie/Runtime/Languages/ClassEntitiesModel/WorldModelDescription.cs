@@ -618,7 +618,7 @@ namespace Valkyrie
             sb.AppendLine();
             sb.BeginBlock(
                 $"protected {typeof(Task).FullName} Raise<T>(T instance) where T : {typeof(BaseEvent).FullName}");
-            sb.AppendLine("Debug.Log($\"[GEN]: Raise {{typeof(T).Name}} event from {{GetType().Name}}\");");
+            sb.AppendLine("Debug.Log($\"[GEN]: Raise {typeof(T).Name} event from {GetType().Name}\");");
             sb.AppendLine("return _events.Raise(instance);");
             sb.EndBlock();
             sb.AppendLine($"protected void When<T>(Func<T, {typeof(Task).FullName}> handler) where T : {typeof(BaseEvent).FullName} => _disposable.Add(_events.Subscribe<T>(handler));");
@@ -659,11 +659,9 @@ namespace Valkyrie
             sb.BeginBlock("public interface IPlayerProfile");
             sb.AppendLine("#region Counters");
             sb.AppendLine();
+            sb.AppendLine($"public {typeof(BigInteger).FullName} this[string counterId] {{ get; set; }}");
             foreach (var counter in Counters)
-            {
                 sb.AppendLine($"public {typeof(BigInteger).FullName} {counter} {{ get; set; }}");
-            }
-
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
@@ -684,6 +682,10 @@ namespace Valkyrie
             sb.AppendLine();
             sb.AppendLine("#region Counters");
             sb.AppendLine();
+            sb.BeginBlock($"public {typeof(BigInteger).FullName} this[string counterId]");
+            sb.AppendLine($"get => _wallet.GetBigAmount(counterId);");
+            sb.AppendLine($"set => _wallet.SetAmount(counterId, value);");
+            sb.EndBlock();
             foreach (var counter in Counters)
             {
                 sb.BeginBlock($"public {typeof(BigInteger).FullName} {counter}");
@@ -691,7 +693,6 @@ namespace Valkyrie
                 sb.AppendLine($"set => _wallet.SetAmount(GeneratedConstants.{counter}Name, value);");
                 sb.EndBlock();
             }
-
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
@@ -1403,7 +1404,7 @@ namespace Valkyrie
         public void Write(FormatWriter sb)
         {
             sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
-            sb.BeginBlock($"public class {ClassName} : ProjectWindow");
+            sb.BeginBlock($"public partial class {ClassName} : ProjectWindow");
             foreach (var getter in Bindings)
                 sb.AppendLine(
                     $"[{typeof(BindingAttribute).FullName}] public {getter.Type} {getter.Name} => {getter.Code};");
