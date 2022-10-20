@@ -50,7 +50,12 @@ namespace Valkyrie
         }
     }
 
-    public class ConfigEntity
+    public interface IType
+    {
+        public IType AddProperty(string type, string name, bool isRequired);
+    }
+
+    public class ConfigEntity : IType
     {
         private string BaseInterfaceName => typeof(IConfigData).FullName;
 
@@ -108,9 +113,11 @@ namespace Valkyrie
             BaseTypes.Add(baseType);
             return this;
         }
+
+        IType IType.AddProperty(string type, string name, bool isRequired) => AddProperty(type, name);
     }
 
-    public abstract class EntityBase
+    public abstract class EntityBase : IType
     {
         public string Name;
         protected readonly List<EntityBase> BaseTypes = new();
@@ -202,6 +209,8 @@ namespace Valkyrie
             return this;
         }
 
+        IType IType.AddProperty(string type, string name, bool isRequired) => AddProperty(type, name, isRequired);
+        
         public EntityBase AddProperty(string type, string name, bool isRequired = true)
         {
             Properties.Add(new PropertyInfo()

@@ -30,7 +30,7 @@
 
 <full_sentence> -> <sentence> SENTENCE_OP
 <sentence> -> <define_namespace>
-<sentence> -> <define_counters> | <window_define>
+<sentence> -> <define_counters> | <window_define> | <config_define>
 <sentence> -> <event_handler_define>
 
 
@@ -70,7 +70,14 @@
 <show_window_op> -> "showWindow" <window_name> |  "ShowWindow" <window_name> |  "show_window" <window_name> | "show" <window_name>
 
 
-<window_define> -> [Ww]indow <window_name> ":" <window_body> | [Ww]indow <window_name>
+<config_define> -> [Cc]onfig <class_name> ":" <base_class_name> => <config_body> | [Cc]onfig <class_name> => <config_body>
+<class_name> -> <identifier>
+<base_class_name> -> <identifier>
+<config_body> -> <property_list>
+<property_list> -> <property_def> "," <property_list> | <property_def>
+<property_def> -> <type_name> <property_name>
+
+<window_define> -> [Ww]indow <window_name> => <window_body> | [Ww]indow <window_name>
 <window_name> -> IDENTIFIER
 <window_body> -> <window_element> "," <window_body> | <window_element>
 <window_element> -> <button_define> | <info_define>

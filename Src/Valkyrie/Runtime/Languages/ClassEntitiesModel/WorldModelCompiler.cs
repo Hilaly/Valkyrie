@@ -65,6 +65,8 @@ namespace Valkyrie
         
         private class Context
         {
+            public IType Type;
+            
             public WorldModelInfo World;
             public WindowModelInfo Window;
             public MethodImpl Method;
@@ -104,6 +106,7 @@ namespace Valkyrie
         private static readonly ParseSwitcher SentenceSwitcher;
         private static readonly ParseSwitcher MethodParseSwitcher;
         private static readonly ParseSwitcher CountersParseSwitcher;
+        private static readonly ParseSwitcher ConfigBodySwitcher;
 
         static WorldModelCompiler()
         {
@@ -144,7 +147,8 @@ namespace Valkyrie
                 .AddBranch("<define_namespace>", ParseNamespace)
                 .AddBranch("<define_counters>", ParseCounters)
                 .AddBranch("<window_define>", ParseWindow)
-                .AddBranch("<event_handler_define>", ParseEventHandler);
+                .AddBranch("<event_handler_define>", ParseEventHandler)
+                .AddBranch("<config_define>", ParseConfig);
 
             MethodParseSwitcher = new ParseSwitcher(nameof(ParseOp))
                 .AddBranch("<op_list>", (context, children) =>
@@ -157,6 +161,15 @@ namespace Valkyrie
                 .AddBranch("<cmd_op>", ParseCmdOp)
                 .AddBranch("<show_window_op>", ParseWindowOp)
                 .AddBranch("<assign_op>", ParseAssignOp);
+
+            ConfigBodySwitcher = new ParseSwitcher(nameof(ParseClassBody))
+                .AddRecursionAllChildren("<config_body>")
+                .AddBranch("<property_list>", (context, children) =>
+                {
+                    foreach (var astNode in children.Where(x => x.Name is "<property_list>" or "<property_def>"))
+                        ParseClassBody(context, astNode);
+                })
+                .AddBranch("<property_def>", ParseProperty);
         }
 
         #region Switchers Calls
@@ -166,6 +179,7 @@ namespace Valkyrie
         private static void ParseSentence(Context context, IAstNode ast) => SentenceSwitcher.Process(context, ast);
         private static void ParseOp(Context context, IAstNode ast) => MethodParseSwitcher.Process(context, ast);
         private static void ParseCounters(Context context, IAstNode ast) => CountersParseSwitcher.Process(context, ast);
+        private static void ParseClassBody(Context context, IAstNode ast) => ConfigBodySwitcher.Process(context, ast);
 
 
         #endregion
@@ -208,6 +222,31 @@ namespace Valkyrie
         #endregion
         
         #region Concrete node parsing
+
+        private static void ParseConfig(Context context, List<IAstNode> children)
+        {
+            var configDataName = children.Find(x => x.Name == "<class_name>").GetString();
+            Log($"Parsing config {configDataName}");
+            var config = context.World.GetConfig(configDataName);
+            var baseNode = children.Find(x => x.Name == "<base_class_name>");
+            if (baseNode != null)
+            {
+                var baseName = baseNode.GetString();
+                var baseData = context.World.Configs.Find(x => x.Name == baseName);
+                if (baseData == null)
+                {
+                    LogWarn($"Base config {baseName} not defined, it must be defined before {configDataName}");
+                    throw new GrammarCompileException(baseNode);
+                }
+                Log($"Config {configDataName} extends {baseName}");
+                config.Inherit(baseData);
+            }
+
+            context.Type = config;
+            var bodyNode = children.Find(x => x.Name == "<config_body>");
+            ParseClassBody(context, bodyNode);
+            context.Type = null;
+        }
 
         private static void ParseAssignOp(Context context, List<IAstNode> children)
         {
@@ -307,6 +346,15 @@ namespace Valkyrie
             var expr = WriteExpr(context, exprNode);
 
             context.Window.AddInfo(GetTypeName(context, typeNode), infoName, expr);
+        }
+
+        static void ParseProperty(Context context, List<IAstNode> children)
+        {
+            var typeNode = children.Find(x => x.Name == "<type_name>");
+            var infoName = children.Find(x => x.Name == "<property_name>").GetString();
+            Log($"Define property {infoName}");
+            //TODO: optional attribute?
+            context.Type.AddProperty(GetTypeName(context, typeNode), infoName, true);
         }
 
         static string GetTypeName(Context context, IAstNode typeNode)
