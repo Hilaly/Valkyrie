@@ -11,7 +11,9 @@
 ([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
 (\w|<|>)* -> IDENTIFIER
 
+(:) -> COLON
 (\.) -> SENTENCE_OP
+(,) -> COMMA
 
 [ \n\r\t]+ -> escape
 
@@ -20,7 +22,20 @@
 <root> -> <full_sentence>+
 
 <full_sentence> -> <sentence> SENTENCE_OP
-<sentence> -> <define_namespace>
+<sentence> -> <define_namespace> | <define_counters> | <window_define>
+
+<info_define> -> "info"
+
+<window_define> -> [Ww]indow <window_name> ":" <window_body> | [Ww]indow <window_name>
+<window_name> -> IDENTIFIER
+<window_body> -> <window_element> "," <window_body> | <window_element>
+<window_element> -> <button_define> | <info_define>
+<button_define> -> [Bb]utton <button_name>
+<button_name> -> IDENTIFIER
+
+<define_counters> -> [Cc]ounters ":" <counters_names_list>
+<counters_names_list> -> <counter_name> "," <counters_names_list> | <counter_name>
+<counter_name> -> IDENTIFIER
 
 <define_namespace> -> "namespace" <namespace_name>
 <namespace_name> -> IDENTIFIER
