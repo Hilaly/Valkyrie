@@ -18,9 +18,14 @@ using Valkyrie.Utils.Pool;
 
 namespace Valkyrie
 {
-    public class MemberInfo
+    public interface INamed
     {
-        public string Name;
+        public string Name { get; set; }
+    }
+    
+    public class MemberInfo : INamed
+    {
+        public string Name { get; set; }
         public string Type;
     }
 
@@ -34,9 +39,9 @@ namespace Valkyrie
         public string Code;
     }
 
-    public class EventEntity
+    public class EventEntity : INamed
     {
-        public string Name;
+        public string Name { get; set; }
         public readonly List<string> Args = new();
 
         public string ClassName => $"{Name}Event";
@@ -51,16 +56,63 @@ namespace Valkyrie
         }
     }
 
-    public interface IType
+    public interface IType : INamed
     {
         public IType AddProperty(string type, string name, bool isRequired);
     }
+    
+    public abstract class Named : INamed, IType
+    {
+        public string Name { get; set; }
+        public abstract IType AddProperty(string type, string name, bool isRequired);
 
-    public class ConfigEntity : IType
+        protected readonly List<PropertyInfo> Properties = new();
+    }
+
+    public class ItemEntity : Named, IType
+    {
+        protected readonly List<ItemEntity> BaseTypes = new();
+        private string BaseInterfaceName = typeof(BaseInventoryItem).FullName;
+
+        public ItemEntity AddProperty(string type, string name)
+        {
+            Properties.Add(new PropertyInfo()
+            {
+                Name = name,
+                Type = type
+            });
+
+            return this;
+        }
+
+        public ItemEntity Inherit(ItemEntity baseType)
+        {
+            BaseTypes.Add(baseType);
+            return this;
+        }
+
+        public override IType AddProperty(string type, string name, bool isRequired) => AddProperty(type, name);
+
+        public void Write(FormatWriter sb)
+        {
+            var blockName = $"public partial class {Name} : ";
+            if (BaseTypes.Count > 0)
+                blockName += BaseTypes.Select(x => x.Name).Join(", ");
+            else
+                blockName += BaseInterfaceName;
+            sb.BeginBlock(blockName);
+            
+            foreach (var property in Properties)
+                sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
+
+            sb.EndBlock();
+        }
+    }
+
+    public class ConfigEntity : Named, IType
     {
         private string BaseInterfaceName => typeof(IConfigData).FullName;
 
-        public string Name;
         protected readonly List<ConfigEntity> BaseTypes = new();
         protected readonly List<PropertyInfo> Properties = new();
 
@@ -115,12 +167,12 @@ namespace Valkyrie
             return this;
         }
 
-        IType IType.AddProperty(string type, string name, bool isRequired) => AddProperty(type, name);
+        public override IType AddProperty(string type, string name, bool isRequired) => AddProperty(type, name);
     }
 
     public abstract class EntityBase : IType
     {
-        public string Name;
+        public string Name { get; set; }
         protected readonly List<EntityBase> BaseTypes = new();
         protected readonly List<PropertyInfo> Properties = new();
         internal readonly List<string> Timers = new();
@@ -540,7 +592,7 @@ namespace Valkyrie
 
     public class WindowHandler : MethodImpl
     {
-        public string Name;
+        public string Name { get; set; }
 
         public void Write(FormatWriter sb)
         {
@@ -718,6 +770,7 @@ namespace Valkyrie
         public List<ConfigEntity> Configs = new();
         public List<EventEntity> Events = new();
         public List<WindowModelInfo> Windows = new();
+        public List<ItemEntity> Items = new();
         public ProfileModel Profile = new();
 
         public void WriteToDirectory(string dirPath, string mainCsFile = "Gen.cs")
@@ -785,6 +838,16 @@ namespace Valkyrie
             WriteEvents(sb);
             sb.AppendLine();
             sb.AppendLine($"#endregion //Events");
+            sb.EndBlock();
+
+            sb.AppendLine();
+
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Items");
+            sb.AppendLine();
+            WriteItems(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Items");
             sb.EndBlock();
 
             sb.AppendLine();
@@ -875,6 +938,12 @@ namespace Valkyrie
             sb.AppendLine();
 
             Profile.WriteEvents(sb);
+        }
+
+        void WriteItems(FormatWriter sb)
+        {
+            foreach (var entity in Items)
+                entity.Write(sb);
         }
 
         void WriteConfigs(FormatWriter sb)
@@ -1390,11 +1459,19 @@ namespace Valkyrie
         }
 
         public void Parse(string source) => WorldModelCompiler.Parse(this, source);
+
+        public ItemEntity GetItem(string name)
+        {
+            var r = Items.Find(x => x.Name == name);
+            if (r == default)
+                Items.Add(r = new ItemEntity() { Name = name });
+            return r;
+        }
     }
 
     public class WindowModelInfo
     {
-        public string Name;
+        public string Name { get; set; }
 
         public List<InfoGetter> Bindings = new();
         private List<WindowHandler> Handlers = new();

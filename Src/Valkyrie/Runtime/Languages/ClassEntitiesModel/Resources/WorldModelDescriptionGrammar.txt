@@ -30,8 +30,9 @@
 
 <full_sentence> -> <sentence> SENTENCE_OP
 <sentence> -> <define_namespace>
-<sentence> -> <define_counters> | <window_define> | <config_define>
+<sentence> -> <define_counters> | <window_define>
 <sentence> -> <event_handler_define> | <event_define>
+<sentence> -> <item_define> | <config_define>
 
 
 
@@ -68,6 +69,14 @@
 <cmd_name> -> IDENTIFIER
 
 <show_window_op> -> "showWindow" <window_name> |  "ShowWindow" <window_name> |  "show_window" <window_name> | "show" <window_name>
+
+<item_define> -> [Ii]tem <class_name> [<item_base>] [<item_tail>]
+<item_base> -> ":" <base_class_name>
+<item_tail> -> => <item_body>
+<item_body> -> <property_list>
+
+
+
 
 <event_define> -> event <class_name> [<event_fields_list>]
 <event_fields_list> -> <type_name> "," <event_fields_list> | <type_name>

@@ -106,7 +106,7 @@ namespace Valkyrie
         private static readonly ParseSwitcher SentenceSwitcher;
         private static readonly ParseSwitcher MethodParseSwitcher;
         private static readonly ParseSwitcher CountersParseSwitcher;
-        private static readonly ParseSwitcher ConfigBodySwitcher;
+        private static readonly ParseSwitcher ClassBodySwitcher;
 
         static WorldModelCompiler()
         {
@@ -149,7 +149,8 @@ namespace Valkyrie
                 .AddBranch("<window_define>", ParseWindow)
                 .AddBranch("<event_handler_define>", ParseEventHandler)
                 .AddBranch("<config_define>", ParseConfig)
-                .AddBranch("<event_define>", ParseEvent);
+                .AddBranch("<event_define>", ParseEvent)
+                .AddBranch("<item_define>", ParseItem);
 
             MethodParseSwitcher = new ParseSwitcher(nameof(ParseOp))
                 .AddBranch("<op_list>", (context, children) =>
@@ -163,8 +164,9 @@ namespace Valkyrie
                 .AddBranch("<show_window_op>", ParseWindowOp)
                 .AddBranch("<assign_op>", ParseAssignOp);
 
-            ConfigBodySwitcher = new ParseSwitcher(nameof(ParseClassBody))
+            ClassBodySwitcher = new ParseSwitcher(nameof(ParseClassBody))
                 .AddRecursionAllChildren("<config_body>")
+                .AddRecursionAllChildren("<item_body>")
                 .AddBranch("<property_list>", (context, children) =>
                 {
                     foreach (var astNode in children.Where(x => x.Name is "<property_list>" or "<property_def>"))
@@ -180,7 +182,7 @@ namespace Valkyrie
         private static void ParseSentence(Context context, IAstNode ast) => SentenceSwitcher.Process(context, ast);
         private static void ParseOp(Context context, IAstNode ast) => MethodParseSwitcher.Process(context, ast);
         private static void ParseCounters(Context context, IAstNode ast) => CountersParseSwitcher.Process(context, ast);
-        private static void ParseClassBody(Context context, IAstNode ast) => ConfigBodySwitcher.Process(context, ast);
+        private static void ParseClassBody(Context context, IAstNode ast) => ClassBodySwitcher.Process(context, ast);
 
 
         #endregion
@@ -224,11 +226,37 @@ namespace Valkyrie
         
         #region Concrete node parsing
 
+        private static void ParseItem(Context context, List<IAstNode> children)
+        {
+            var className = children.Find(x => x.Name == "<class_name>").GetString();
+            Log($"Parsing item {className}");
+            var classInstance = context.World.GetItem(className);
+            var baseNode = children.Find(x => x.Name == "<item_base>");
+            if (baseNode != null)
+            {
+                var baseName = baseNode.GetChildren()[1].GetString();
+                var baseData = context.World.Items.Find(x => x.Name == baseName);
+                if (baseData == null)
+                {
+                    LogWarn($"Base item {baseName} not defined, it must be defined before {className}");
+                    throw new GrammarCompileException(baseNode);
+                }
+                Log($"Item {className} extends {baseName}");
+                classInstance.Inherit(baseData);
+            }
+            
+            context.Type = classInstance;
+            var bodyNode = children.Find(x => x.Name == "<item_tail>");
+            if(bodyNode != null)
+                ParseClassBody(context, bodyNode.GetChildren()[1]);
+            context.Type = null;
+        }
+        
         private static void ParseConfig(Context context, List<IAstNode> children)
         {
-            var configDataName = children.Find(x => x.Name == "<class_name>").GetString();
-            Log($"Parsing config {configDataName}");
-            var config = context.World.GetConfig(configDataName);
+            var className = children.Find(x => x.Name == "<class_name>").GetString();
+            Log($"Parsing config {className}");
+            var classInstance = context.World.GetConfig(className);
             var baseNode = children.Find(x => x.Name == "<base_class_name>");
             if (baseNode != null)
             {
@@ -236,14 +264,14 @@ namespace Valkyrie
                 var baseData = context.World.Configs.Find(x => x.Name == baseName);
                 if (baseData == null)
                 {
-                    LogWarn($"Base config {baseName} not defined, it must be defined before {configDataName}");
+                    LogWarn($"Base config {baseName} not defined, it must be defined before {className}");
                     throw new GrammarCompileException(baseNode);
                 }
-                Log($"Config {configDataName} extends {baseName}");
-                config.Inherit(baseData);
+                Log($"Config {className} extends {baseName}");
+                classInstance.Inherit(baseData);
             }
 
-            context.Type = config;
+            context.Type = classInstance;
             var bodyNode = children.Find(x => x.Name == "<config_body>");
             ParseClassBody(context, bodyNode);
             context.Type = null;
@@ -380,7 +408,7 @@ namespace Valkyrie
                 MethodParseSwitcher.Process(context, methodBody.GetChildren()[0]);
             context.Method = default;
         }
-
+        
         private static void ParseEvent(Context context, List<IAstNode> children)
         {
             var eventName = children.Find(x => x.Name == "<class_name>").GetString();
