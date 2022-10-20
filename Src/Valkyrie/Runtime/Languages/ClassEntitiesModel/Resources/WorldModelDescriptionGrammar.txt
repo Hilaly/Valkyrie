@@ -13,6 +13,11 @@
 
 (=>) -> LAMBDA_OP
 
+(==) -> EQUALS_OP
+(=) -> ASSIGN_OP
+[\*\/] -> MUL_OP
+[\+\-] -> ADD_OP
+
 (:) -> COLON
 (\.) -> SENTENCE_OP
 (,) -> COMMA
@@ -36,6 +41,14 @@
 
 
 
+<expr> -> <comp_expr>
+<comp_expr> -> <add_expr> COMP_OP <comp_expr> | <add_expr>
+<add_expr> -> <mul_expr> ADD_OP <add_expr> | <mul_expr>
+<mul_expr> -> <single_expr> MUL_OP <mul_expr> | <single_expr>
+<single_expr> -> <const_expr> | <var_expr> | "\(" <expr> "\)"
+<var_expr> -> <identifier>
+<const_expr> -> STRING | "-" NUMBER | NUMBER | BOOL | NULL
+<identifier> -> IDENTIFIER
 
 
 <event_handler_define> -> [Ww]hen <event_id> => <method_body>
@@ -44,7 +57,10 @@
 
 
 <op_list> -> <op> "," <op_list> | <op>
-<op> -> <log_op> | <cmd_op> | <show_window_op>
+<op> -> <log_op> | <cmd_op> | <show_window_op> | <assign_op>
+
+<assign_op> -> <assign_target> ASSIGN_OP <expr>
+<assign_target> -> <identifier>
 
 <log_op> -> "log" <text_expr>
 <text_expr> -> STRING

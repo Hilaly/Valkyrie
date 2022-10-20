@@ -460,6 +460,26 @@ namespace Valkyrie
         }
     }
 
+    class WriteCodeLine : EventHandlerOperation
+    {
+        private string _code;
+        
+        public override bool IsAsync() => false;
+
+        public WriteCodeLine(string code)
+        {
+            if(code.EndsWith(";"))
+                _code = code;
+            else
+                _code = code + ";";
+        }
+
+        public override void Write(FormatWriter sb, OpType opType)
+        {
+            sb.AppendLine(_code);
+        }
+    }
+
     class CallCommandOperation : EventHandlerOperation
     {
         private readonly string _command;
@@ -498,6 +518,12 @@ namespace Valkyrie
         public MethodImpl CommandOp(string command, params string[] args)
         {
             _ops.Add(new CallCommandOperation(command, args));
+            return this;
+        }
+
+        public MethodImpl CodeOp(string code)
+        {
+            _ops.Add(new WriteCodeLine(code));
             return this;
         }
     }

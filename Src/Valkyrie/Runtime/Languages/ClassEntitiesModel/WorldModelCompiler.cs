@@ -157,7 +157,8 @@ namespace Valkyrie
                 .AddRecursionAllChildren("<op>")
                 .AddBranch("<log_op>", ParseLogOp)
                 .AddBranch("<cmd_op>", ParseCmdOp)
-                .AddBranch("<show_window_op>", ParseWindowOp);
+                .AddBranch("<show_window_op>", ParseWindowOp)
+                .AddBranch("<assign_op>", ParseAssignOp);
         }
 
         #region Switchers Calls
@@ -209,6 +210,66 @@ namespace Valkyrie
         #endregion
         
         #region Concrete node parsing
+
+        private static void ParseAssignOp(Context context, List<IAstNode> children)
+        {
+            var targetNode = children.Find(x => x.Name == "<assign_target>");
+            var exprNode = children.Find(x => x.Name == "<expr>");
+            var str = ConvertCmdArg(targetNode, context);
+            var expr = WriteExpr(context, exprNode);
+            context.Method.CodeOp($"{str} = {expr};");
+        }
+
+        private static string WriteExpr(Context c, IAstNode ast)
+        {
+            string r = default;
+            var switcher = new ParseSwitcher(nameof(WriteExpr))
+                .AddRecursionAllChildren("<expr>")
+                .AddBranch("<comp_expr>", (context, children) =>
+                {
+                    r = WriteExpr(context, children[0]);
+                    if (children.Count > 2)
+                    {
+                        var right = WriteExpr(context, children[2]);
+                        r += $" {children[1].GetString()} {right}";
+                    }
+                })
+                .AddBranch("<add_expr>", (context, children) =>
+                {
+                    r = WriteExpr(context, children[0]);
+                    if (children.Count > 2)
+                    {
+                        var right = WriteExpr(context, children[2]);
+                        r += $" {children[1].GetString()} {right}";
+                    }
+                })
+                .AddBranch("<mul_expr>", (context, children) =>
+                {
+                    r = WriteExpr(context, children[0]);
+                    if (children.Count > 2)
+                    {
+                        var right = WriteExpr(context, children[2]);
+                        r += $" {children[1].GetString()} {right}";
+                    }
+                })
+                .AddBranch("<single_expr>", (context, children) =>
+                {
+                    if (children.Count == 1)
+                        r = WriteExpr(context, children[0]);
+                    else
+                        r = WriteExpr(context, children[1]);
+                })
+                .AddBranch("<var_expr>", (context, children) =>
+                {
+                    r = ConvertCmdArg(children[0], context);
+                })
+                .AddBranch("<const_expr>", (context, children) =>
+                {
+                    r = children[0].GetString();
+                });
+            switcher.Process(c, ast);
+            return r;
+        }
 
         private static void ParseWindowOp(Context context, List<IAstNode> children)
         {
