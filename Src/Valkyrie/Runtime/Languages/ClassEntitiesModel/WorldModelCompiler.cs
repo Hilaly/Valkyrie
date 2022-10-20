@@ -55,6 +55,7 @@ namespace Valkyrie
         {
             public WorldModelInfo World;
             public WindowModelInfo Window;
+            public MethodImpl Method;
         }
 
         private static IAstConstructor AstConstructor
@@ -88,6 +89,7 @@ namespace Valkyrie
 
         private static readonly ParseSwitcher WindowElementSwitcher;
         private static readonly ParseSwitcher RootSwitcher;
+        private static readonly ParseSwitcher SentenceSwitcher;
 
         static WorldModelCompiler()
         {
@@ -110,40 +112,35 @@ namespace Valkyrie
                 {
                     LogWarn($"skip info_define {node.Name}");
                 });
+
+            SentenceSwitcher = new ParseSwitcher(nameof(ParseSentence))
+                .AddBranch("<define_namespace>", ParseNamespace)
+                .AddBranch("<define_counters>", ParseCounters)
+                .AddBranch("<window_define>", ParseWindow);
         }
         
         private static void Parse(Context context, IAstNode ast) => RootSwitcher.Process(context, ast);
         static void ParseWindowElement(Context context, IAstNode ast) => WindowElementSwitcher.Process(context, ast);
+        private static void ParseSentence(Context context, IAstNode ast) => SentenceSwitcher.Process(context, ast);
 
-        static void ParseButton(Context context, IAstNode node)
+        static void ParseButton(Context context, List<IAstNode> children)
         {
-            Debug.LogWarning("skip button");
+            var buttonName = children.Find(x => x.Name == "<button_name>").GetString();
+            var eventName = context.Window.GetButtonEvent(buttonName);
+            Log($"Define event {eventName}");
+            var eventEntity = context.World.CreateEvent(eventName);
+            Log($"Building button {buttonName} at window {context.Window.Name}");
+            context.Method = context.Window.DefineButton(buttonName, eventEntity);
+            var buttonBody = children.Find(x => x.Name == "<button_body>");
+            if (buttonBody != null)
+                ParseButtonBody(context, buttonBody);
+            context.Method = default;
         }
 
-        private static void ParseSentence(Context context, IAstNode ast)
+        private static void ParseButtonBody(Context context, IAstNode ast)
         {
-            var name = ast.Name;
-            var children = ast.UnpackGeneratedLists();
-            switch (name)
-            {
-                case "<define_namespace>":
-                {
-                    ParseNamespace(context, children);
-                    return;
-                }
-                case "<define_counters>":
-                {
-                    ParseCounters(context, ast);
-                    break;
-                }
-                case "<window_define>":
-                {
-                    ParseWindow(context, ast);
-                    break;
-                }
-                default:
-                    throw new GrammarCompileException(ast, $"Unknown node {name}");
-            }
+            LogWarn($"Button body not implemented");
+            context.Method.LogOp($"Handled button");
         }
 
         private static void ParseWindow(Context context, IAstNode ast)
@@ -157,7 +154,6 @@ namespace Valkyrie
                     var windowName = children.Find(x => x.Name == "<window_name>").GetString();
                     Log($"Parsing window {windowName}");
                     context.Window = context.World.GetWindow(windowName);
-                    Log($"Parsing window {windowName}");
                     var windowBody = children.Find(x => x.Name == "<window_body>");
                     if(windowBody != default)
                         ParseWindow(context, windowBody);

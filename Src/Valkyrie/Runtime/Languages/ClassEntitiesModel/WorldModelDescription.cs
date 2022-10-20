@@ -1369,10 +1369,22 @@ namespace Valkyrie
             return this;
         }
 
+        public string GetButtonEvent(string buttonName)
+        {
+            return $"On{buttonName}ButtonAt{Name}Clicked";
+        }
+
         public WindowHandler AddHandler(string name)
         {
             var r = new WindowHandler() { Name = name };
             Handlers.Add(r);
+            return r;
+        }
+
+        public WindowHandler DefineButton(string buttonName, EventEntity evType)
+        {
+            var r = AddHandler($"On{buttonName}Clicked");
+            r.RaiseOp(evType);
             return r;
         }
     }

@@ -11,6 +11,8 @@
 ([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
 (\w|<|>)* -> IDENTIFIER
 
+(=>) -> LAMBDA_OP
+
 (:) -> COLON
 (\.) -> SENTENCE_OP
 (,) -> COMMA
@@ -24,14 +26,33 @@
 <full_sentence> -> <sentence> SENTENCE_OP
 <sentence> -> <define_namespace> | <define_counters> | <window_define>
 
+
+
+
 <info_define> -> "info"
+
+
+
+
+
+<op_list> -> <op> "," <op_list> | <op>
+<op> -> <log_op> | <cmd_op>
+
+<log_op> -> "log" <text_expr>
+<text_expr> -> STRING
+
+<cmd_op> -> "cmd" <cmd_name> <arg>*
+<cmd_name> -> IDENTIFIER
+<arg> -> IDENTIFIER
+
 
 <window_define> -> [Ww]indow <window_name> ":" <window_body> | [Ww]indow <window_name>
 <window_name> -> IDENTIFIER
 <window_body> -> <window_element> "," <window_body> | <window_element>
 <window_element> -> <button_define> | <info_define>
-<button_define> -> [Bb]utton <button_name>
+<button_define> -> [Bb]utton <button_name> "=>" <button_body> | [Bb]utton <button_name>
 <button_name> -> IDENTIFIER
+<button_body> -> <op_list>
 
 <define_counters> -> [Cc]ounters ":" <counters_names_list>
 <counters_names_list> -> <counter_name> "," <counters_names_list> | <counter_name>
