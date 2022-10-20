@@ -29,6 +29,17 @@ namespace Valkyrie
                 return this;
             }
 
+            public ParseSwitcher AddRecursionAllChildren(string nodeName)
+            {
+                void Call(Context context, List<IAstNode> children)
+                {
+                    foreach (var ast in children)
+                        Process(context, ast);
+                }
+
+                return AddBranch(nodeName, Call);
+            }
+
             public ParseSwitcher AddBranch(string nodeName, Action<Context, List<IAstNode>> parser)
             {
                 void Call(Context context, IAstNode ast)
@@ -74,12 +85,12 @@ namespace Valkyrie
         }
         public static void Parse(WorldModelInfo world, string text)
         {
-            Debug.Log(text);
+            //Debug.Log(text);
 
             var context = new Context { World = world };
             var ast = AstConstructor.Parse(text.ToStream());
             
-            Debug.Log(ast);
+            //Debug.Log(ast);
             Parse(context, ast);
         }
 
@@ -90,15 +101,12 @@ namespace Valkyrie
         private static readonly ParseSwitcher WindowElementSwitcher;
         private static readonly ParseSwitcher RootSwitcher;
         private static readonly ParseSwitcher SentenceSwitcher;
+        private static readonly ParseSwitcher MethodParseSwitcher;
 
         static WorldModelCompiler()
         {
             RootSwitcher = new ParseSwitcher("RootSwitch")
-                .AddBranch("<root>", (context, children) =>
-                {
-                    foreach (var astNode in children)
-                        Parse(context, astNode);
-                })
+                .AddRecursionAllChildren("<root>")
                 .AddBranch("<full_sentence>", (context, children) =>
                 {
                     foreach (var astNode in children.Where(x => x.Name == "<sentence>"))
@@ -117,31 +125,29 @@ namespace Valkyrie
                 .AddBranch("<define_namespace>", ParseNamespace)
                 .AddBranch("<define_counters>", ParseCounters)
                 .AddBranch("<window_define>", ParseWindow);
+
+            MethodParseSwitcher = new ParseSwitcher(nameof(ParseOp))
+                .AddBranch("<op_list>", (context, children) =>
+                {
+                    foreach (var astNode in children.Where(x => x.Name is "<op_list>" or "<op>"))
+                        ParseOp(context, astNode);
+                })
+                .AddRecursionAllChildren("<op>")
+                .AddBranch("<log_op>", ParseLogOp)
+                .AddBranch("<cmd_op>", ParseCmdOp)
+                .AddBranch("<show_window_op>", ParseWindowOp);
         }
-        
+
+        #region Switchers Calls
+
         private static void Parse(Context context, IAstNode ast) => RootSwitcher.Process(context, ast);
         static void ParseWindowElement(Context context, IAstNode ast) => WindowElementSwitcher.Process(context, ast);
         private static void ParseSentence(Context context, IAstNode ast) => SentenceSwitcher.Process(context, ast);
+        private static void ParseOp(Context context, IAstNode ast) => MethodParseSwitcher.Process(context, ast);
 
-        static void ParseButton(Context context, List<IAstNode> children)
-        {
-            var buttonName = children.Find(x => x.Name == "<button_name>").GetString();
-            var eventName = context.Window.GetButtonEvent(buttonName);
-            Log($"Define event {eventName}");
-            var eventEntity = context.World.CreateEvent(eventName);
-            Log($"Building button {buttonName} at window {context.Window.Name}");
-            context.Method = context.Window.DefineButton(buttonName, eventEntity);
-            var buttonBody = children.Find(x => x.Name == "<button_body>");
-            if (buttonBody != null)
-                ParseButtonBody(context, buttonBody);
-            context.Method = default;
-        }
-
-        private static void ParseButtonBody(Context context, IAstNode ast)
-        {
-            LogWarn($"Button body not implemented");
-            context.Method.LogOp($"Handled button");
-        }
+        #endregion
+        
+        #region Old Switch
 
         private static void ParseWindow(Context context, IAstNode ast)
         {
@@ -175,7 +181,7 @@ namespace Valkyrie
                     throw new GrammarCompileException(ast, $"Unknown node {name}");
             }
         }
-
+        
         private static void ParseCounters(Context context, IAstNode ast)
         {
             var name = ast.Name;
@@ -207,6 +213,53 @@ namespace Valkyrie
             }
         }
 
+        #endregion
+        
+        #region Concrete node parsing
+
+        private static void ParseWindowOp(Context context, List<IAstNode> children)
+        {
+            var windowName = children.Find(x => x.Name == "<window_name>").GetString();
+            context.Method.CommandOp("\"ShowWindow\"", $"\"{windowName}Window\"");
+        }
+        
+        private static void ParseCmdOp(Context context, List<IAstNode> children)
+        {
+            var cmdName = $"\"{children.Find(x => x.Name == "<cmd_name>").GetString()}\"";
+            var args = children.FindAll(x => x.Name == "<arg>").ConvertAll(argNode => ConvertCmdArg(argNode, context));
+            context.Method.CommandOp(cmdName, args.ToArray());
+        }
+
+        private static string ConvertCmdArg(IAstNode ast, Context context)
+        {
+            var str = ast.GetString();
+            if (context.World.Profile.Counters.Contains(str))
+                return $"_profile.{str}";
+            
+            LogWarn($"Can not determine cmd arg {str}");
+            return $"\"{str}\"";
+        }
+
+        private static void ParseLogOp(Context context, List<IAstNode> children)
+        {
+            var msg = children.Find(x => x.Name == "<text_expr>").GetString().Trim('"');
+            context.Method.LogOp(msg);
+        }
+
+        static void ParseButton(Context context, List<IAstNode> children)
+        {
+            var buttonName = children.Find(x => x.Name == "<button_name>").GetString();
+            var eventName = context.Window.GetButtonEvent(buttonName);
+            Log($"Define event {eventName}");
+            var eventEntity = context.World.CreateEvent(eventName);
+            Log($"Building button {buttonName} at window {context.Window.Name}");
+            context.Method = context.Window.DefineButton(buttonName, eventEntity);
+            var buttonBody = children.Find(x => x.Name == "<button_body>");
+            if (buttonBody != null)
+                MethodParseSwitcher.Process(context, buttonBody.GetChildren()[0]);
+            context.Method = default;
+        }
+
         private static void ParseNamespace(Context context, List<IAstNode> children)
         {
             var namespaceName = children.Find(x => x.Name == "<namespace_name>").GetString();
@@ -215,5 +268,7 @@ namespace Valkyrie
             context.World.Namespace = namespaceName;
             Log($"Change namespace to {namespaceName}");
         }
+        
+        #endregion
     }
 }

@@ -673,7 +673,7 @@ namespace Valkyrie
         public List<EntityBase> Entities = new();
         public List<ConfigEntity> Configs = new();
         public List<EventEntity> Events = new();
-        private List<WindowModelInfo> Windows = new();
+        public List<WindowModelInfo> Windows = new();
         public ProfileModel Profile = new();
 
         public void WriteToDirectory(string dirPath, string mainCsFile = "Gen.cs")

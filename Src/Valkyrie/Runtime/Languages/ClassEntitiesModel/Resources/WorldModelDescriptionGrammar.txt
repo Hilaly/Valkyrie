@@ -36,7 +36,7 @@
 
 
 <op_list> -> <op> "," <op_list> | <op>
-<op> -> <log_op> | <cmd_op>
+<op> -> <log_op> | <cmd_op> | <show_window_op>
 
 <log_op> -> "log" <text_expr>
 <text_expr> -> STRING
@@ -44,6 +44,8 @@
 <cmd_op> -> "cmd" <cmd_name> <arg>*
 <cmd_name> -> IDENTIFIER
 <arg> -> IDENTIFIER
+
+<show_window_op> -> "showWindow" <window_name> |  "ShowWindow" <window_name> |  "show_window" <window_name> | "show" <window_name>
 
 
 <window_define> -> [Ww]indow <window_name> ":" <window_body> | [Ww]indow <window_name>
