@@ -24,15 +24,23 @@
 <root> -> <full_sentence>+
 
 <full_sentence> -> <sentence> SENTENCE_OP
-<sentence> -> <define_namespace> | <define_counters> | <window_define>
+<sentence> -> <define_namespace>
+<sentence> -> <define_counters> | <window_define>
+<sentence> -> <event_handler_define>
 
 
 
 
 <info_define> -> "info"
+<arg> -> IDENTIFIER
 
 
 
+
+
+<event_handler_define> -> [Ww]hen <event_id> => <method_body>
+<event_id> -> <button_click_event>
+<button_click_event> -> [player] click on button <button_name> on <window_name>
 
 
 <op_list> -> <op> "," <op_list> | <op>
@@ -43,7 +51,6 @@
 
 <cmd_op> -> "cmd" <cmd_name> <arg>*
 <cmd_name> -> IDENTIFIER
-<arg> -> IDENTIFIER
 
 <show_window_op> -> "showWindow" <window_name> |  "ShowWindow" <window_name> |  "show_window" <window_name> | "show" <window_name>
 
@@ -52,9 +59,9 @@
 <window_name> -> IDENTIFIER
 <window_body> -> <window_element> "," <window_body> | <window_element>
 <window_element> -> <button_define> | <info_define>
-<button_define> -> [Bb]utton <button_name> "=>" <button_body> | [Bb]utton <button_name>
+<button_define> -> [Bb]utton <button_name> "=>" <method_body> | [Bb]utton <button_name>
 <button_name> -> IDENTIFIER
-<button_body> -> <op_list>
+<method_body> -> <op_list>
 
 <define_counters> -> [Cc]ounters ":" <counters_names_list>
 <counters_names_list> -> <counter_name> "," <counters_names_list> | <counter_name>

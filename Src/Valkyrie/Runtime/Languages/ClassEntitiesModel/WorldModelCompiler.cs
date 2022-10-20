@@ -102,6 +102,7 @@ namespace Valkyrie
         private static readonly ParseSwitcher RootSwitcher;
         private static readonly ParseSwitcher SentenceSwitcher;
         private static readonly ParseSwitcher MethodParseSwitcher;
+        private static readonly ParseSwitcher CountersParseSwitcher;
 
         static WorldModelCompiler()
         {
@@ -114,6 +115,26 @@ namespace Valkyrie
                 })
                 .AddBranch("<sentence>", (context, children) => ParseSentence(context, children[0]));
             
+            CountersParseSwitcher = new ParseSwitcher(nameof(ParseCounters))
+                .AddBranch("<counter_name>", (context, ast) =>
+                {
+                    var strName = ast.GetString();
+                    if (context.World.Profile.Counters.Contains(strName))
+                        LogWarn($"Counter {strName} already defined");
+                    context.World.Profile.AddCounter(strName);
+                    Log($"Add counter {strName}");
+                })
+                .AddBranch("<counters_names_list>", (context, children) =>
+                {
+                    foreach (var c in children.Where(x => x.Name is "<counter_name>" or "<counters_names_list>"))
+                        ParseCounters(context, c);
+                })
+                .AddBranch("<define_counters>", (context, children) =>
+                {
+                    ParseCounters(context, children.Find(x => x.Name == "<counters_names_list>"));
+
+                });
+            
             WindowElementSwitcher = new ParseSwitcher(nameof(ParseWindowElement))
                 .AddBranch("<button_define>", ParseButton)
                 .AddBranch("<info_define>", (context1, node) =>
@@ -124,7 +145,8 @@ namespace Valkyrie
             SentenceSwitcher = new ParseSwitcher(nameof(ParseSentence))
                 .AddBranch("<define_namespace>", ParseNamespace)
                 .AddBranch("<define_counters>", ParseCounters)
-                .AddBranch("<window_define>", ParseWindow);
+                .AddBranch("<window_define>", ParseWindow)
+                .AddBranch("<event_handler_define>", ParseEventHandler);
 
             MethodParseSwitcher = new ParseSwitcher(nameof(ParseOp))
                 .AddBranch("<op_list>", (context, children) =>
@@ -144,6 +166,8 @@ namespace Valkyrie
         static void ParseWindowElement(Context context, IAstNode ast) => WindowElementSwitcher.Process(context, ast);
         private static void ParseSentence(Context context, IAstNode ast) => SentenceSwitcher.Process(context, ast);
         private static void ParseOp(Context context, IAstNode ast) => MethodParseSwitcher.Process(context, ast);
+        private static void ParseCounters(Context context, IAstNode ast) => CountersParseSwitcher.Process(context, ast);
+
 
         #endregion
         
@@ -175,37 +199,6 @@ namespace Valkyrie
                 case "<window_element>":
                 {
                     ParseWindowElement(context, children[0]);
-                    break;
-                }
-                default:
-                    throw new GrammarCompileException(ast, $"Unknown node {name}");
-            }
-        }
-        
-        private static void ParseCounters(Context context, IAstNode ast)
-        {
-            var name = ast.Name;
-            var children = ast.UnpackGeneratedLists();
-            switch (name)
-            {
-                case "<counter_name>":
-                {
-                    var strName = ast.GetString();
-                    if (context.World.Profile.Counters.Contains(strName))
-                        LogWarn($"Counter {strName} already defined");
-                    context.World.Profile.AddCounter(strName);
-                    Log($"Add counter {strName}");
-                    return;
-                }
-                case "<counters_names_list>":
-                {
-                    foreach (var c in children.Where(x => x.Name is "<counter_name>" or "<counters_names_list>"))
-                        ParseCounters(context, c);
-                    break;
-                }
-                case "<define_counters>":
-                {
-                    ParseCounters(context, children.Find(x => x.Name == "<counters_names_list>"));
                     break;
                 }
                 default:
@@ -252,12 +245,48 @@ namespace Valkyrie
             var eventName = context.Window.GetButtonEvent(buttonName);
             Log($"Define event {eventName}");
             var eventEntity = context.World.CreateEvent(eventName);
+            
             Log($"Building button {buttonName} at window {context.Window.Name}");
             context.Method = context.Window.DefineButton(buttonName, eventEntity);
-            var buttonBody = children.Find(x => x.Name == "<button_body>");
-            if (buttonBody != null)
-                MethodParseSwitcher.Process(context, buttonBody.GetChildren()[0]);
+            var methodBody = children.Find(x => x.Name == "<method_body>");
+            if (methodBody != null)
+                MethodParseSwitcher.Process(context, methodBody.GetChildren()[0]);
             context.Method = default;
+        }
+
+        private static void ParseEventHandler(Context context, List<IAstNode> children)
+        {
+            var eventNode = children.Find(x => x.Name == "<event_id>");
+            var eventName = ParseEventName(context, eventNode);
+            var eventEntity = context.World.Events.Find(x => x.Name == eventName);
+            if (eventEntity == null)
+            {
+                LogWarn($"Event {eventName} not defined, it can be error in source");
+                Log($"Define event {eventName}");
+                eventEntity = context.World.CreateEvent(eventName);
+            }
+
+            Log($"Building handler for {eventName}");
+            context.Method = context.World.CreateEventHandler(eventEntity);
+            var methodBody = children.Find(x => x.Name == "<method_body>");
+            if (methodBody != null)
+                MethodParseSwitcher.Process(context, methodBody.GetChildren()[0]);
+            context.Method = default;
+        }
+
+        private static string ParseEventName(Context c, IAstNode eventNode)
+        {
+            string id = default;
+            var switcher = new ParseSwitcher(nameof(ParseEventName))
+                .AddBranch("<button_click_event>", (context, children) =>
+                {
+                    var buttonName = children.Find(x => x.Name == "<button_name>").GetString();
+                    var windowName = children.Find(x => x.Name == "<window_name>").GetString();
+                    var window = context.World.Windows.Find(x => x.Name == windowName);
+                    id = window.GetButtonEvent(buttonName);
+                });
+            switcher.Process(c, eventNode.GetChildren()[0]);
+            return id;
         }
 
         private static void ParseNamespace(Context context, List<IAstNode> children)
