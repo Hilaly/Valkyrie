@@ -325,7 +325,7 @@ namespace Valkyrie
         {
             var str = ast.GetString();
             if (context.World.Profile.Counters.Contains(str))
-                return $"_profile.{str}";
+                return $"Profile.{str}";
             
             LogWarn($"Can not determine cmd arg {str}");
             return $"\"{str}\"";

@@ -599,13 +599,13 @@ namespace Valkyrie
             sb.BeginBlock("class GeneratedEventsHandler : IDisposable");
             sb.AppendLine($"private readonly {typeof(CompositeDisposable).FullName} _disposable = new();");
             sb.AppendLine($"private readonly {typeof(IEventSystem).FullName} _events;");
-            sb.AppendLine("private readonly IPlayerProfile _profile;");
+            sb.AppendLine("private IPlayerProfile Profile { get; }");
             sb.AppendLine($"private {typeof(ICommandsInterpreter).FullName} Interpreter {{ get; }}");
             sb.AppendLine($"private {typeof(IConfigService).FullName} Config {{ get; }}");
             sb.AppendLine();
             sb.BeginBlock(
                 $"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter, {typeof(IConfigService).FullName} config)");
-            sb.AppendLine("_profile = profile;");
+            sb.AppendLine("Profile = profile;");
             sb.AppendLine("_events = eventSystem;");
             sb.AppendLine("Interpreter = interpreter;");
             sb.AppendLine("Config = config;");
@@ -757,16 +757,15 @@ namespace Valkyrie
 
             var rootNamespace = Namespace;
 
-            if (includeMono)
-            {
-                sb.BeginBlock($"namespace {rootNamespace}");
-                sb.AppendLine($"#region Ui");
-                sb.AppendLine();
+            sb.BeginBlock($"namespace {rootNamespace}");
+            sb.AppendLine($"#region Ui");
+            sb.AppendLine();
+            if (includeMono) 
                 WriteUi(sb);
-                sb.AppendLine();
-                sb.AppendLine($"#endregion //Ui");
-                sb.EndBlock();
-            }
+            WriteBaseClassesToImplement(sb);
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //Ui");
+            sb.EndBlock();
 
             sb.AppendLine();
 
@@ -819,6 +818,13 @@ namespace Valkyrie
             sb.EndBlock();
 
             return sb.ToString();
+        }
+
+        private void WriteBaseClassesToImplement(FormatWriter sb)
+        {
+            sb.BeginBlock($"public abstract class ProjectWindow : {typeof(BaseWindow).FullName}");
+            sb.AppendLine($"[field: {typeof(InjectAttribute).FullName}] public IPlayerProfile Profile {{ get; }}");
+            sb.EndBlock();
         }
 
         private static void WriteFileStart(FormatWriter sb)
@@ -1377,9 +1383,7 @@ namespace Valkyrie
         public void Write(FormatWriter sb)
         {
             sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
-            sb.BeginBlock($"public class {ClassName} : {typeof(BaseWindow).FullName}");
-            sb.AppendLine($"[{typeof(InjectAttribute).FullName}] private readonly IPlayerProfile _profile;");
-            sb.AppendLine();
+            sb.BeginBlock($"public class {ClassName} : ProjectWindow");
             foreach (var getter in Bindings)
                 sb.AppendLine(
                     $"[{typeof(BindingAttribute).FullName}] public {getter.Type} {getter.Name} => {getter.Code};");
