@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Configs;
+using Meta.Commands;
 using Meta.Inventory;
 using UnityEngine;
 using Utils;
@@ -210,7 +211,7 @@ namespace Valkyrie
         }
 
         IType IType.AddProperty(string type, string name, bool isRequired) => AddProperty(type, name, isRequired);
-        
+
         public EntityBase AddProperty(string type, string name, bool isRequired = true)
         {
             Properties.Add(new PropertyInfo()
@@ -472,12 +473,12 @@ namespace Valkyrie
     class WriteCodeLine : EventHandlerOperation
     {
         private string _code;
-        
+
         public override bool IsAsync() => false;
 
         public WriteCodeLine(string code)
         {
-            if(code.EndsWith(";"))
+            if (code.EndsWith(";"))
                 _code = code;
             else
                 _code = code + ";";
@@ -596,41 +597,48 @@ namespace Valkyrie
 
         public void WriteEvents(FormatWriter sb)
         {
-            sb.BeginBlock("class GeneratedEventsHandler : IDisposable");
+            sb.AppendLine($"/// <summary>");
+            sb.AppendLine($"/// Inherit from this class and use Where<T>(Handler)");
+            sb.AppendLine($"/// </summary>");
+            sb.BeginBlock("public abstract class BaseEventsHandler : IDisposable");
             sb.AppendLine($"private readonly {typeof(CompositeDisposable).FullName} _disposable = new();");
             sb.AppendLine($"private readonly {typeof(IEventSystem).FullName} _events;");
-            sb.AppendLine("private IPlayerProfile Profile { get; }");
-            sb.AppendLine($"private {typeof(ICommandsInterpreter).FullName} Interpreter {{ get; }}");
-            sb.AppendLine($"private {typeof(IConfigService).FullName} Config {{ get; }}");
-            sb.AppendLine();
+            sb.AppendLine($"protected IPlayerProfile Profile {{ get; }}");
+            sb.AppendLine($"protected {typeof(ICommandsInterpreter).FullName} Interpreter {{ get; }}");
+            sb.AppendLine($"protected {typeof(IConfigService).FullName} Config {{ get; }}");
             sb.BeginBlock(
-                $"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter, {typeof(IConfigService).FullName} config)");
-            sb.AppendLine("Profile = profile;");
-            sb.AppendLine("_events = eventSystem;");
-            sb.AppendLine("Interpreter = interpreter;");
-            sb.AppendLine("Config = config;");
-            foreach (var handler in Handlers)
-            {
-                sb.AppendLine(
-                    $"_disposable.Add(_events.Subscribe<{handler.Event.ClassName}>({handler.GetMethodName()}));");
-            }
-
+                $"protected BaseEventsHandler({typeof(IEventSystem).FullName} events, IPlayerProfile profile, {typeof(ICommandsInterpreter).FullName} interpreter, {typeof(IConfigService).FullName} config)");
+            sb.AppendLine($"_events = events;");
+            sb.AppendLine($"Profile = profile;");
+            sb.AppendLine($"Interpreter = interpreter;");
+            sb.AppendLine($"Config = config;");
             sb.EndBlock();
             sb.AppendLine();
-            sb.AppendLine("public void Dispose() => _disposable.Dispose();");
+            sb.AppendLine("public virtual void Dispose() => _disposable.Dispose();");
             sb.AppendLine();
-            sb.BeginBlock($"{typeof(Task).FullName} Raise<T>(T instance) where T : {typeof(BaseEvent).FullName}");
-            sb.AppendLine($"Debug.Log($\"[GEN]: Raise {{typeof(T).Name}} event from GeneratedEventsHandler\");");
+            sb.BeginBlock(
+                $"protected {typeof(Task).FullName} Raise<T>(T instance) where T : {typeof(BaseEvent).FullName}");
+            sb.AppendLine("Debug.Log($\"[GEN]: Raise {{typeof(T).Name}} event from {{GetType().Name}}\");");
             sb.AppendLine("return _events.Raise(instance);");
+            sb.EndBlock();
+            sb.AppendLine($"protected void When<T>(Func<T, {typeof(Task).FullName}> handler) where T : {typeof(BaseEvent).FullName} => _disposable.Add(_events.Subscribe<T>(handler));");
+            sb.AppendLine();
+            sb.AppendLine($"protected void When<T>(Action<T> handler) where T : {typeof(BaseEvent).FullName} => _disposable.Add(_events.Subscribe<T>(handler));");
+            sb.EndBlock();
+            sb.AppendLine();
+
+            sb.BeginBlock("class GeneratedEventsHandler : BaseEventsHandler");
+            sb.AppendLine(
+                $"public GeneratedEventsHandler(IPlayerProfile profile, {typeof(IEventSystem).FullName} eventSystem, {typeof(ICommandsInterpreter).FullName} interpreter, {typeof(IConfigService).FullName} config)");
+            sb.BeginBlock(": base(eventSystem, profile, interpreter, config)");
+            foreach (var handler in Handlers)
+                sb.AppendLine($"When<{handler.Event.ClassName}>({handler.GetMethodName()});");
             sb.EndBlock();
             sb.AppendLine();
             sb.AppendLine("#region Handlers");
             sb.AppendLine();
             foreach (var handler in Handlers)
-            {
                 handler.Write(sb);
-            }
-
             sb.AppendLine();
             sb.AppendLine("#endregion //Handlers");
             sb.EndBlock();
@@ -746,6 +754,7 @@ namespace Valkyrie
                 Debug.Log($"[GENERATION]: writing to file {fullPath}");
                 File.WriteAllText(fullPath, text);
             }
+
             Debug.Log($"[GENERATION]: SUCCESS in {dirPath}");
         }
 
@@ -760,7 +769,7 @@ namespace Valkyrie
             sb.BeginBlock($"namespace {rootNamespace}");
             sb.AppendLine($"#region Ui");
             sb.AppendLine();
-            if (includeMono) 
+            if (includeMono)
                 WriteUi(sb);
             WriteBaseClassesToImplement(sb);
             sb.AppendLine();
@@ -822,7 +831,17 @@ namespace Valkyrie
 
         private void WriteBaseClassesToImplement(FormatWriter sb)
         {
+            sb.AppendLine($"/// <summary>");
+            sb.AppendLine($"/// All windows must inherit from this class");
+            sb.AppendLine($"/// </summary>");
             sb.BeginBlock($"public abstract class ProjectWindow : {typeof(BaseWindow).FullName}");
+            sb.AppendLine($"[field: {typeof(InjectAttribute).FullName}] public IPlayerProfile Profile {{ get; }}");
+            sb.EndBlock();
+            sb.AppendLine();
+            sb.AppendLine($"/// <summary>");
+            sb.AppendLine($"/// Inherit Views from this class");
+            sb.AppendLine($"/// </summary>");
+            sb.BeginBlock($"public abstract class ProjectView : {typeof(BaseView).FullName}");
             sb.AppendLine($"[field: {typeof(InjectAttribute).FullName}] public IPlayerProfile Profile {{ get; }}");
             sb.EndBlock();
         }
@@ -832,6 +851,7 @@ namespace Valkyrie
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using UnityEngine;");
+            sb.AppendLine("using Valkyrie;");
             sb.AppendLine();
         }
 
@@ -1394,6 +1414,7 @@ namespace Valkyrie
                 handler.Write(sb);
                 sb.EndBlock();
             }
+
             sb.EndBlock();
         }
 

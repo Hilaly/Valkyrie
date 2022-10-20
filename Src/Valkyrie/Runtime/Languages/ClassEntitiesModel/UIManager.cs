@@ -10,6 +10,21 @@ using Valkyrie.Di;
 namespace Valkyrie
 {
     [Binding]
+    public abstract class BaseView
+    {
+        [Inject] private IEventSystem _events;
+
+        [field: Inject] public IConfigService Config { get; }
+        [field: Inject] public ICommandsInterpreter Interpreter { get; }
+
+        protected Task Raise<T>(T instance) where T : BaseEvent
+        {
+            Debug.Log($"[GEN]: Raise {typeof(T).Name} event from {GetType().Name}");
+            return _events.Raise(instance);
+        }
+    }
+    
+    [Binding]
     public abstract class BaseWindow : MonoBehaviour
     {
         [Inject] private IEventSystem _events;
