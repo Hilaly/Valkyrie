@@ -148,7 +148,8 @@ namespace Valkyrie
                 .AddBranch("<define_counters>", ParseCounters)
                 .AddBranch("<window_define>", ParseWindow)
                 .AddBranch("<event_handler_define>", ParseEventHandler)
-                .AddBranch("<config_define>", ParseConfig);
+                .AddBranch("<config_define>", ParseConfig)
+                .AddBranch("<event_define>", ParseEvent);
 
             MethodParseSwitcher = new ParseSwitcher(nameof(ParseOp))
                 .AddBranch("<op_list>", (context, children) =>
@@ -378,6 +379,23 @@ namespace Valkyrie
             if (methodBody != null)
                 MethodParseSwitcher.Process(context, methodBody.GetChildren()[0]);
             context.Method = default;
+        }
+
+        private static void ParseEvent(Context context, List<IAstNode> children)
+        {
+            var eventName = children.Find(x => x.Name == "<class_name>").GetString();
+            var argsNode = children.Find(x => x.Name == "<event_fields_list>");
+            if (argsNode != null)
+            {
+                var args = argsNode.UnpackNodes(x => x.Name == "<type_name>").Select(x => GetTypeName(context, x)).ToArray();
+                Log($"Define event {eventName}<{args.Join(",")}>");
+                context.World.CreateEvent(eventName, args);
+            }
+            else
+            {
+                Log($"Define event {eventName}");
+                context.World.CreateEvent(eventName);
+            }
         }
 
         private static void ParseEventHandler(Context context, List<IAstNode> children)
