@@ -36,7 +36,6 @@
 
 
 
-<info_define> -> "info"
 <arg> -> IDENTIFIER
 
 
@@ -78,6 +77,10 @@
 <button_define> -> [Bb]utton <button_name> "=>" <method_body> | [Bb]utton <button_name>
 <button_name> -> IDENTIFIER
 <method_body> -> <op_list>
+
+<info_define> -> info <type_name> <property_name> => <expr>
+<type_name> -> <identifier>
+<property_name> -> <identifier>
 
 <define_counters> -> [Cc]ounters ":" <counters_names_list>
 <counters_names_list> -> <counter_name> "," <counters_names_list> | <counter_name>

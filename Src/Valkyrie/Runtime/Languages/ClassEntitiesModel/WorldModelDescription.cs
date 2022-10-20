@@ -1384,7 +1384,7 @@ namespace Valkyrie
             sb.EndBlock();
         }
 
-        public WindowModelInfo AddBinding(string type, string name, string code)
+        public WindowModelInfo AddInfo(string type, string name, string code)
         {
             Bindings.Add(new InfoGetter()
             {

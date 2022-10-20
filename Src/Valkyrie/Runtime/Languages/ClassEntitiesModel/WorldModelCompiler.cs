@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using UnityEngine;
 using Valkyrie.Grammar;
 using Valkyrie.Tools;
@@ -137,10 +138,7 @@ namespace Valkyrie
             
             WindowElementSwitcher = new ParseSwitcher(nameof(ParseWindowElement))
                 .AddBranch("<button_define>", ParseButton)
-                .AddBranch("<info_define>", (context1, node) =>
-                {
-                    LogWarn($"skip info_define {node.Name}");
-                });
+                .AddBranch("<info_define>", ParseInfo);
 
             SentenceSwitcher = new ParseSwitcher(nameof(ParseSentence))
                 .AddBranch("<define_namespace>", ParseNamespace)
@@ -300,6 +298,25 @@ namespace Valkyrie
             context.Method.LogOp(msg);
         }
 
+        static void ParseInfo(Context context, List<IAstNode> children)
+        {
+            var typeNode = children.Find(x => x.Name == "<type_name>");
+            var infoName = children.Find(x => x.Name == "<property_name>").GetString();
+            Log($"Define info {infoName}");
+            var exprNode = children.Find(x => x.Name == "<expr>");
+            var expr = WriteExpr(context, exprNode);
+
+            context.Window.AddInfo(GetTypeName(context, typeNode), infoName, expr);
+        }
+
+        static string GetTypeName(Context context, IAstNode typeNode)
+        {
+            var str = typeNode.GetString();
+            if (str == "counter")
+                return typeof(BigInteger).FullName;
+            return str;
+        }
+        
         static void ParseButton(Context context, List<IAstNode> children)
         {
             var buttonName = children.Find(x => x.Name == "<button_name>").GetString();
