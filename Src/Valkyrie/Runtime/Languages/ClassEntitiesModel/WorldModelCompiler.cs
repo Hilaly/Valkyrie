@@ -142,7 +142,8 @@ namespace Valkyrie
             
             WindowElementSwitcher = new ParseSwitcher(nameof(ParseWindowElement))
                 .AddBranch("<button_define>", ParseButton)
-                .AddBranch("<info_define>", ParseInfo);
+                .AddBranch("<info_define>", ParseInfo)
+                .AddBranch("<list_define>", ParseList);
 
             SentenceSwitcher = new ParseSwitcher(nameof(ParseSentence))
                 .AddBranch("<define_namespace>", ParseNamespace)
@@ -286,12 +287,21 @@ namespace Valkyrie
             }
             
             context.Type = classInstance;
+            var attributesNode = children.Find(x => x.Name == "<attributes_define>");
+            if (attributesNode != null)
+                ParseTypeAttributes(attributesNode.GetChildren(true), classInstance);
             var bodyNode = children.Find(x => x.Name == "<item_tail>");
             if(bodyNode != null)
                 ParseClassBody(context, bodyNode.GetChildren()[1]);
             context.Type = null;
         }
-        
+
+        private static void ParseTypeAttributes(List<IAstNode> children, IType classInstance)
+        {
+            foreach (var node in children.Where(x => x.Name == "<attribute_name>"))
+                classInstance.Attributes.Add(node.GetString());
+        }
+
         private static void ParseConfig(Context context, List<IAstNode> children)
         {
             var className = children.Find(x => x.Name == "<class_name>").GetString();
@@ -403,6 +413,8 @@ namespace Valkyrie
             
             if (context.World.Profile.Counters.Contains(str))
                 return $"Profile.{str}";
+            if (context.World.Profile.Filters.Any(x => x.Name == str))
+                return $"Profile.{str}";
             
             LogWarn($"Can not determine cmd arg {str}");
             return $"\"{str}\"";
@@ -423,6 +435,17 @@ namespace Valkyrie
             var expr = WriteExpr(context, exprNode);
 
             context.Window.AddInfo(GetTypeName(context, typeNode), infoName, expr);
+        }
+
+        static void ParseList(Context context, List<IAstNode> children)
+        {
+            var typeNode = children.Find(x => x.Name == "<type_name>");
+            var infoName = children.Find(x => x.Name == "<property_name>").GetString();
+            Log($"Define list {infoName}");
+            var exprNode = children.Find(x => x.Name == "<expr>");
+            var expr = WriteExpr(context, exprNode);
+
+            context.Window.AddInfo($"IEnumerable<{GetTypeName(context, typeNode)}>", infoName, expr);
         }
 
         static void ParseProperty(Context context, List<IAstNode> children)

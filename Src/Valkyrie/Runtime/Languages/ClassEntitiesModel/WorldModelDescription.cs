@@ -58,11 +58,13 @@ namespace Valkyrie
 
     public interface IType : INamed
     {
+        public HashSet<string> Attributes { get; }
         public IType AddProperty(string type, string name, bool isRequired);
     }
     
     public abstract class Named : INamed, IType
     {
+        public HashSet<string> Attributes { get; } = new();
         public string Name { get; set; }
         public abstract IType AddProperty(string type, string name, bool isRequired);
 
@@ -120,7 +122,10 @@ namespace Valkyrie
 
         public void Write(FormatWriter sb)
         {
-            var blockName = $"public partial class {Name} : ";
+            var propertyAttributes = this.Attributes.Contains("view")
+                ? $"[{typeof(BindingAttribute).FullName}] "
+                : string.Empty;
+            var blockName = $"{propertyAttributes}public partial class {Name} : ";
             if (BaseTypes.Count > 0)
                 blockName += BaseTypes.Select(x => x.Name).Join(", ");
             else
@@ -128,7 +133,7 @@ namespace Valkyrie
             sb.BeginBlock(blockName);
             
             foreach (var property in Properties)
-                sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
+                sb.AppendLine($"{propertyAttributes}public {property.Type} {property.Name} {{ get; set; }}");
 
             sb.EndBlock();
         }
@@ -194,6 +199,7 @@ namespace Valkyrie
 
     public abstract class EntityBase : IType
     {
+        public HashSet<string> Attributes { get; } = new();
         public string Name { get; set; }
         protected readonly List<EntityBase> BaseTypes = new();
         protected readonly List<PropertyInfo> Properties = new();
