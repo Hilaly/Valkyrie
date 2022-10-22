@@ -814,6 +814,7 @@ namespace Valkyrie
                 if (filter.Code.NotNullOrEmpty())
                 {
                     sb.BeginBlock($".Where({filter.Entity.Name.ToLowerInvariant()} =>");
+                    sb.AppendLine("var Profile = this;");
                     sb.AppendLine($"return {filter.Code};");
                     sb.EndBlock();
                     sb.AppendLine(");");
