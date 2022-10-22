@@ -66,12 +66,43 @@ namespace Valkyrie
         public string Name { get; set; }
         public abstract IType AddProperty(string type, string name, bool isRequired);
 
-        protected readonly List<PropertyInfo> Properties = new();
+        protected internal readonly List<PropertyInfo> Properties = new();
+
+        public virtual IReadOnlyList<PropertyInfo> GetAllProperties()
+        {
+            return Properties;
+        }
     }
 
-    public class ItemEntity : Named, IType
+    public abstract class InheritedNamed<T> : Named where T : Named
     {
-        protected readonly List<ItemEntity> BaseTypes = new();
+        protected readonly List<T> BaseTypes = new();
+
+        public override IReadOnlyList<PropertyInfo> GetAllProperties()
+        {
+            var r = new List<PropertyInfo>();
+
+            foreach (var propertyInfo in BaseTypes.SelectMany(entityBase => entityBase.GetAllProperties()))
+                if (!r.Contains(propertyInfo))
+                    r.Add(propertyInfo);
+
+            foreach (var propertyInfo in Properties)
+                if (!r.Contains(propertyInfo))
+                    r.Add(propertyInfo);
+
+            return r;
+        }
+        
+        public InheritedNamed<T> Inherit(T baseType)
+        {
+            BaseTypes.Add(baseType);
+            return this;
+        }
+
+    }
+
+    public class ItemEntity : InheritedNamed<ItemEntity>, IType
+    {
         private string BaseInterfaceName = typeof(BaseInventoryItem).FullName;
 
         public ItemEntity AddProperty(string type, string name)
@@ -82,12 +113,6 @@ namespace Valkyrie
                 Type = type
             });
 
-            return this;
-        }
-
-        public ItemEntity Inherit(ItemEntity baseType)
-        {
-            BaseTypes.Add(baseType);
             return this;
         }
 
@@ -109,12 +134,9 @@ namespace Valkyrie
         }
     }
 
-    public class ConfigEntity : Named, IType
+    public class ConfigEntity : InheritedNamed<ConfigEntity>, IType
     {
         private string BaseInterfaceName => typeof(IConfigData).FullName;
-
-        protected readonly List<ConfigEntity> BaseTypes = new();
-        protected readonly List<PropertyInfo> Properties = new();
 
         public void Write(FormatWriter sb)
         {
@@ -636,10 +658,20 @@ namespace Valkyrie
         }
     }
 
+    public class ItemFilterModel
+    {
+        public string Name;
+        public ItemEntity Entity;
+        public ItemFilterModel Source;
+        public string Code;
+    }
+
     public class ProfileModel
     {
         public HashSet<string> Counters = new();
         public List<EventHandlerModel> Handlers = new();
+        public List<ItemEntity> Items = new();
+        public List<ItemFilterModel> Filters = new();
 
         public ProfileModel AddCounter(string name)
         {
@@ -698,12 +730,19 @@ namespace Valkyrie
 
         public void Write(FormatWriter sb)
         {
+            sb.AppendLine("#region Items");
+            sb.AppendLine();
+            foreach (var item in Items) 
+                item.Write(sb);
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Items");
+            sb.AppendLine();
+            
             sb.BeginBlock("public static class GeneratedConstants");
             foreach (var counter in Counters)
             {
                 sb.AppendLine($"public const string {counter}Name = \"{counter}\";");
             }
-
             sb.EndBlock();
 
             sb.AppendLine();
@@ -717,6 +756,17 @@ namespace Valkyrie
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
+            sb.AppendLine("#region Filters");
+            sb.AppendLine();
+            sb.AppendLine($"IEnumerable<{typeof(IInventoryItem).FullName}> All {{ get; }}");
+            sb.AppendLine();
+            foreach (var item in Items) 
+                sb.AppendLine($"{item.Name} {item.Name}(string id);");
+            sb.AppendLine();
+            foreach (var filter in Filters) 
+                sb.AppendLine($"IEnumerable<{filter.Entity.Name}> {filter.Name} {{ get; }}");
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Filters");
             sb.EndBlock();
 
             sb.AppendLine();
@@ -748,6 +798,33 @@ namespace Valkyrie
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
+            sb.AppendLine("#region Filters");
+            sb.AppendLine();
+            sb.AppendLine($"public IEnumerable<{typeof(IInventoryItem).FullName}> All => _inventory.Get();");
+            sb.AppendLine();
+            foreach (var item in Items) 
+                sb.AppendLine($"public {item.Name} {item.Name}(string id) => _inventory.Get<{item.Name}>(id);");
+            sb.AppendLine();
+            foreach (var filter in Filters)
+            {
+                sb.AppendLine($"public IEnumerable<{filter.Entity.Name}> {filter.Name} =>");
+                sb.AddTab();
+                var source = filter.Source != null ? filter.Source.Name : $"_inventory.Get<{filter.Entity.Name}>()";
+                sb.AppendLine($"{source}");
+                if (filter.Code.NotNullOrEmpty())
+                {
+                    sb.BeginBlock($".Where({filter.Entity.Name.ToLowerInvariant()} =>");
+                    sb.AppendLine($"return {filter.Code};");
+                    sb.EndBlock();
+                    sb.AppendLine(");");
+                }
+                else
+                    sb.AppendLine(";");
+
+                sb.RemoveTab();
+            }
+            sb.AppendLine();
+            sb.AppendLine("#endregion //Filters");
             sb.EndBlock();
 
             sb.AppendLine();
@@ -770,7 +847,6 @@ namespace Valkyrie
         public List<ConfigEntity> Configs = new();
         public List<EventEntity> Events = new();
         public List<WindowModelInfo> Windows = new();
-        public List<ItemEntity> Items = new();
         public ProfileModel Profile = new();
 
         public void WriteToDirectory(string dirPath, string mainCsFile = "Gen.cs")
@@ -843,16 +919,6 @@ namespace Valkyrie
             sb.AppendLine();
 
             sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region Items");
-            sb.AppendLine();
-            WriteItems(sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //Items");
-            sb.EndBlock();
-
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
             sb.AppendLine($"#region Profile");
             sb.AppendLine();
             Profile.Write(sb);
@@ -914,6 +980,7 @@ namespace Valkyrie
         {
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
+            sb.AppendLine("using System.Linq;");
             sb.AppendLine("using UnityEngine;");
             sb.AppendLine("using Valkyrie;");
             sb.AppendLine();
@@ -938,12 +1005,6 @@ namespace Valkyrie
             sb.AppendLine();
 
             Profile.WriteEvents(sb);
-        }
-
-        void WriteItems(FormatWriter sb)
-        {
-            foreach (var entity in Items)
-                entity.Write(sb);
         }
 
         void WriteConfigs(FormatWriter sb)
@@ -1462,9 +1523,19 @@ namespace Valkyrie
 
         public ItemEntity GetItem(string name)
         {
-            var r = Items.Find(x => x.Name == name);
+            var r = Profile.Items.Find(x => x.Name == name);
             if (r == default)
-                Items.Add(r = new ItemEntity() { Name = name });
+            {
+                Profile.Items.Add(r = new ItemEntity() { Name = name });
+                CreateFilter($"AllOf{r.Name}", r);
+            }
+            return r;
+        }
+
+        public ItemFilterModel CreateFilter(string name, ItemEntity itemEntity)
+        {
+            var r = new ItemFilterModel() { Entity = itemEntity, Name = name };
+            Profile.Filters.Add(r);
             return r;
         }
     }

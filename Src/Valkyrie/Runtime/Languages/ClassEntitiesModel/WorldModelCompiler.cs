@@ -70,6 +70,7 @@ namespace Valkyrie
             public WorldModelInfo World;
             public WindowModelInfo Window;
             public MethodImpl Method;
+            public ItemFilterModel Filter;
         }
 
         private static IAstConstructor AstConstructor
@@ -150,7 +151,8 @@ namespace Valkyrie
                 .AddBranch("<event_handler_define>", ParseEventHandler)
                 .AddBranch("<config_define>", ParseConfig)
                 .AddBranch("<event_define>", ParseEvent)
-                .AddBranch("<item_define>", ParseItem);
+                .AddBranch("<item_define>", ParseItem)
+                .AddBranch("<filter_define>", ParseFilter);
 
             MethodParseSwitcher = new ParseSwitcher(nameof(ParseOp))
                 .AddBranch("<op_list>", (context, children) =>
@@ -226,6 +228,44 @@ namespace Valkyrie
         
         #region Concrete node parsing
 
+        private static void ParseFilter(Context context, List<IAstNode> children)
+        {
+            var filterName = children.Find(x => x.Name == "<class_name>").GetString();
+            Log($"Parsing filter {filterName}");
+            var filterBody = children.Find(x => x.Name == "<filter_body>").GetChildren(true);
+            var filterTypeName = filterBody.Find(x => x.Name == "<type_name>").GetString();
+            var itemEntity = context.World.Profile.Items.Find(x => x.Name == filterTypeName);
+            if (itemEntity == null)
+                throw new GrammarCompileException(filterBody.Find(x => x.Name == "<type_name>"),
+                    $"Item {filterTypeName} not defined, it must be defined before filter define");
+            ItemFilterModel sourceFilter = default;
+            var sourceFilterName = filterBody
+                .Find(x => x.Name == "<filter_collection_selector>")?
+                .GetChildren(true).Find(x => x.Name == "<collection>")?.GetString();
+            if (sourceFilterName.NotNullOrEmpty())
+            {
+                sourceFilter = context.World.Profile.Filters.Find(x => x.Name == sourceFilterName);
+                if(sourceFilter == null)
+                    throw new GrammarCompileException(filterBody.Find(x => x.Name == "<type_name>"),
+                        $"Filter {sourceFilterName} not defined, it must be defined before filter define");
+                if(sourceFilter.Entity != itemEntity)
+                    throw new GrammarCompileException(filterBody.Find(x => x.Name == "<type_name>"),
+                        $"Filter {sourceFilterName} has different item type");
+            }
+
+            var exprNode = filterBody.Find(x => x.Name == "<filter_selector>")?.GetChildren()
+                .Find(x => x.Name == "<expr>");
+            var filter = context.World.CreateFilter(filterName, itemEntity);
+            filter.Source = sourceFilter;
+            if (exprNode != null)
+            {
+                context.Filter = filter;
+                var expr = WriteExpr(context, exprNode);
+                context.Filter = null;
+                filter.Code = expr;
+            }
+        }
+        
         private static void ParseItem(Context context, List<IAstNode> children)
         {
             var className = children.Find(x => x.Name == "<class_name>").GetString();
@@ -235,7 +275,7 @@ namespace Valkyrie
             if (baseNode != null)
             {
                 var baseName = baseNode.GetChildren()[1].GetString();
-                var baseData = context.World.Items.Find(x => x.Name == baseName);
+                var baseData = context.World.Profile.Items.Find(x => x.Name == baseName);
                 if (baseData == null)
                 {
                     LogWarn($"Base item {baseName} not defined, it must be defined before {className}");
@@ -353,6 +393,14 @@ namespace Valkyrie
         private static string ConvertCmdArg(IAstNode ast, Context context)
         {
             var str = ast.GetString();
+
+            if (context.Filter != null)
+            {
+                var filter = context.Filter.Entity;
+                if (filter.GetAllProperties().Any(x => x.Name == str))
+                    return $"{filter.Name.ToLowerInvariant()}.{str}";
+            }
+            
             if (context.World.Profile.Counters.Contains(str))
                 return $"Profile.{str}";
             

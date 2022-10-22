@@ -6,17 +6,19 @@
 '(?<value>[^']*)' -> STRING
 "(?<value>[^"]*)" -> STRING
 
-(true|false) -> BOOL
-(null|NULL|NIL) -> NULL
-([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
-(\w|<|>)* -> IDENTIFIER
-
 (=>) -> LAMBDA_OP
 
-(==) -> EQUALS_OP
+(==|!=) -> EQUALS_OP
 (=) -> ASSIGN_OP
 [\*\/] -> MUL_OP
 [\+\-] -> ADD_OP
+(<|>) -> COMP_OP
+
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+(\w)* -> IDENTIFIER
+
 
 (:) -> COLON
 (\.) -> SENTENCE_OP
@@ -33,6 +35,7 @@
 <sentence> -> <define_counters> | <window_define>
 <sentence> -> <event_handler_define> | <event_define>
 <sentence> -> <item_define> | <config_define>
+<sentence> -> <filter_define>
 
 
 
@@ -42,13 +45,14 @@
 
 
 <expr> -> <comp_expr>
-<comp_expr> -> <add_expr> COMP_OP <comp_expr> | <add_expr>
+<comp_expr> -> <add_expr> <comp_op> <comp_expr> | <add_expr>
 <add_expr> -> <mul_expr> ADD_OP <add_expr> | <mul_expr>
 <mul_expr> -> <single_expr> MUL_OP <mul_expr> | <single_expr>
 <single_expr> -> <const_expr> | <var_expr> | "\(" <expr> "\)"
 <var_expr> -> <identifier>
 <const_expr> -> STRING | "-" NUMBER | NUMBER | BOOL | NULL
 <identifier> -> IDENTIFIER
+<comp_op> -> COMP_OP | EQUALS_OP
 
 
 <event_handler_define> -> [Ww]hen <event_id> => <method_body>
@@ -77,6 +81,12 @@
 
 
 
+
+<filter_define> -> "filter" <class_name> => <filter_body>
+<filter_body> -> <type_name> [<filter_collection_selector>] [<filter_selector>]
+<filter_collection_selector> -> "from" <collection>
+<filter_selector> -> "where" <expr>
+<collection> -> <identifier>
 
 <event_define> -> event <class_name> [<event_fields_list>]
 <event_fields_list> -> <type_name> "," <event_fields_list> | <type_name>
