@@ -9,9 +9,15 @@ namespace Valkyrie
     {
         private readonly List<Func<Task>> _queue = new();
 
+        protected override void Awake()
+        {
+            base.Awake();
+            ClosePopup();
+        }
+
         public Task OpenPopup<T>() where T : BaseWindow
         {
-            if (!_openedWindows.Any())
+            if (IsAwakened && !_openedWindows.Any())
             {
                 var neededType = typeof(T);
                 var window = (T)FindWindow(neededType);

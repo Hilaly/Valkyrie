@@ -762,6 +762,8 @@ namespace Valkyrie
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
             sb.AppendLine();
+            sb.AppendLine($"T Add<T>(T item) where T : {typeof(IInventoryItem).FullName};");
+            sb.AppendLine();
             sb.AppendLine("#region Filters");
             sb.AppendLine();
             sb.AppendLine($"IEnumerable<{typeof(IInventoryItem).FullName}> All {{ get; }}");
@@ -803,6 +805,11 @@ namespace Valkyrie
             }
             sb.AppendLine();
             sb.AppendLine("#endregion //Counters");
+            sb.AppendLine();
+            sb.BeginBlock($"public T Add<T>(T item) where T : {typeof(IInventoryItem).FullName}");
+            sb.AppendLine("_inventory.Add(item);");
+            sb.AppendLine("return item;");
+            sb.EndBlock();
             sb.AppendLine();
             sb.AppendLine("#region Filters");
             sb.AppendLine();

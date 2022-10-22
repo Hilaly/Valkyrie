@@ -91,7 +91,7 @@
 <filter_selector> -> "where" <expr>
 <collection> -> <identifier>
 
-<event_define> -> event <class_name> [<event_fields_list>]
+<event_define> -> [Ee]vent <class_name> [<event_fields_list>]
 <event_fields_list> -> <type_name> "," <event_fields_list> | <type_name>
 
 <config_define> -> [Cc]onfig <class_name> ":" <base_class_name> => <config_body> | [Cc]onfig <class_name> => <config_body>

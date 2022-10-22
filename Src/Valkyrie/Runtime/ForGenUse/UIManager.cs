@@ -6,6 +6,7 @@ using Configs;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
+using Valkyrie.Ecs;
 
 namespace Valkyrie
 {
@@ -93,16 +94,22 @@ namespace Valkyrie
     {
         [SerializeField] protected List<TWindowComponent> _windows = new();
         protected readonly CompositeDisposable _openedWindows = new();
+        private readonly HashSet<TWindowComponent> _filter = new();
+        protected bool IsAwakened { get; private set; }
 
-        private void Awake()
+        protected virtual void Awake()
         {
-            foreach (var window in _windows)
+            foreach (var window in _windows.Where(x => !_filter.Contains(x)))
                 window.gameObject.SetActive(false);
+            _filter.Clear();
+            IsAwakened = true;
         }
 
         protected TWindowComponent FindWindow(Type neededType)
         {
             var window = _windows.Find(x => x.GetType() == neededType);
+            if (!IsAwakened)
+                _filter.Add(window);
             return window;
         }
 

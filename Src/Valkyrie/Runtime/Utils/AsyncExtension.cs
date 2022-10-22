@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Tools;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Valkyrie.Di;
 
 namespace Utils
 {
@@ -36,7 +37,7 @@ namespace Utils
                         ++i;
                     }
             }
-            
+
             private void LateUpdate() => UpdateUpdateActions(LateUpdateActions);
             private void Update() => UpdateUpdateActions(UpdateActions);
         }
@@ -67,7 +68,7 @@ namespace Utils
 
         public static void RunEveryLateUpdate(Action work, CancellationToken cancellationToken)
         {
-            if(cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
                 return;
 
             Runner.LateUpdateActions.Add(new CoroutineRunner.UpdateAction()
@@ -79,7 +80,7 @@ namespace Utils
 
         public static void RunEveryUpdate(Action work, CancellationToken cancellationToken)
         {
-            if(cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
                 return;
 
             Runner.UpdateActions.Add(new CoroutineRunner.UpdateAction()
@@ -87,6 +88,13 @@ namespace Utils
                 Token = cancellationToken,
                 Work = work
             });
+        }
+
+        public static IDisposable RunEveryUpdate(Action work)
+        {
+            var cts = new CancellationTokenSource();
+            RunEveryUpdate(work, cts.Token);
+            return new ActionDisposable(cts.Cancel);
         }
 
         static Task CoroutineAwaiterToTask(object awaiter)

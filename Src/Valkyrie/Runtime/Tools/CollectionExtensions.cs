@@ -45,6 +45,36 @@ namespace Tools
                     ++i;
         }
 
+        public static void SyncToView<TModel, TView>(this IEnumerable<TModel> models, IList<TView> views,
+            Func<TModel, TView> createMethod,
+            Action<TModel, TView> syncMethod,
+            Action<TView> disableMethod)
+        {
+            var modelsCount = 0;
+
+            foreach (var model in models)
+            {
+                if (views.Count > modelsCount)
+                {
+                    var view = views[modelsCount];
+                    syncMethod(model, view);
+                }
+                else
+                {
+                    var view = createMethod(model);
+                    syncMethod(model, view);
+                    views.Add(view);
+                }
+                modelsCount++;
+            }
+
+            for (var i = views.Count - 1; i >= modelsCount; --i)
+            {
+                var view = views[i];
+                disableMethod(view);
+            }
+        }
+
         public static void SyncToView<TModel, TView>(this IList<TModel> models, IList<TView> views,
             Func<TModel, TView> createMethod,
             Action<TModel, TView> syncMethod,
