@@ -109,6 +109,10 @@ namespace Valkyrie.Di
             {
                 foreach (var component in o.GetComponents<Component>())
                 {
+                    //Skip missing mono behaviours
+                    if(component == null)
+                        continue;
+                    
                     if (component is Behaviour beh)
                     {
                         if (beh.isActiveAndEnabled || includeInactive)
