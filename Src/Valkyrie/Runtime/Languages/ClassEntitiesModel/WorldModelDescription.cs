@@ -1330,6 +1330,41 @@ namespace Valkyrie
             sb.AppendLine();
 
 
+            sb.BeginBlock("public enum SimulationType");
+            sb.AppendLine("None,");
+            sb.AppendLine("Fixed,");
+            sb.AppendLine("Floating");
+            sb.EndBlock();
+            sb.AppendLine();
+
+
+            sb.BeginBlock("class FloatingSimulationService : IDisposable");
+            sb.AppendLine($"private readonly {typeof(SimulationSettings).FullName} _settings;");
+            sb.AppendLine("private readonly IWorldSimulation _worldSimulation;");
+            sb.AppendLine(
+                "private readonly System.Threading.CancellationTokenSource _cancellationTokenSource = new();");
+            sb.BeginBlock(
+                $"public FloatingSimulationService({typeof(SimulationSettings).FullName} settings, IWorldSimulation worldSimulation)");
+            sb.AppendLine("_settings = settings;");
+            sb.AppendLine("_worldSimulation = worldSimulation;");
+            sb.AppendLine(
+                $"{typeof(AsyncExtension).FullName}.RunEveryUpdate(SimulateIteration, _cancellationTokenSource.Token);");
+            sb.EndBlock();
+            sb.BeginBlock("void SimulateIteration()");
+            sb.BeginBlock("if (_settings.IsSimulationPaused)");
+            sb.AppendLine("return;");
+            sb.EndBlock();
+            sb.AppendLine("var dt = _settings.SimulationSpeed * UnityEngine.Time.deltaTime;");
+            sb.AppendLine("_worldSimulation.Simulate(dt);");
+            sb.EndBlock();
+            sb.BeginBlock("public void Dispose()");
+            sb.AppendLine("_cancellationTokenSource.Cancel();");
+            sb.AppendLine("_cancellationTokenSource.Dispose();");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
+
+
             sb.BeginBlock("class SimulationService : IDisposable");
             sb.AppendLine($"private readonly {typeof(SimulationSettings).FullName} _settings;");
             sb.AppendLine("private readonly IWorldSimulation _worldSimulation;");
@@ -1364,10 +1399,10 @@ namespace Valkyrie
 
 
             sb.BeginBlock($"public class WorldLibrary : {typeof(ILibrary).FullName}");
-            sb.AppendLine("private readonly bool _autoSimulate;");
+            sb.AppendLine("private readonly SimulationType _simulation;");
             sb.AppendLine("private readonly ViewsSpawnType _viewsHandlingType;");
-            sb.BeginBlock("public WorldLibrary(bool autoSimulate, ViewsSpawnType viewsHandlingType)");
-            sb.AppendLine("_autoSimulate = autoSimulate;");
+            sb.BeginBlock("public WorldLibrary(SimulationType simulation, ViewsSpawnType viewsHandlingType)");
+            sb.AppendLine("_simulation = simulation;");
             sb.AppendLine("_viewsHandlingType = viewsHandlingType;");
             sb.EndBlock();
             sb.BeginBlock($"public void Register({typeof(IContainer).FullName} container)");
@@ -1385,8 +1420,15 @@ namespace Valkyrie
             sb.AppendLine("break;");
             sb.EndBlock();
             sb.EndBlock();
-            sb.BeginBlock("if (_autoSimulate)");
+            sb.BeginBlock("switch (_simulation)");
+            sb.BeginBlock("case SimulationType.Fixed:");
             sb.AppendLine("container.Register<SimulationService>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
+            sb.AppendLine("break;");
+            sb.EndBlock();
+            sb.BeginBlock("case SimulationType.Floating:");
+            sb.AppendLine("container.Register<FloatingSimulationService>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
+            sb.AppendLine("break;");
+            sb.EndBlock();
             sb.EndBlock();
             sb.EndBlock();
             sb.EndBlock();
