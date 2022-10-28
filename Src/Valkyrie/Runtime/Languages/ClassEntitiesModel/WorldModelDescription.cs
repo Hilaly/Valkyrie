@@ -22,11 +22,26 @@ namespace Valkyrie
     {
         public string Name { get; set; }
     }
+
+    public interface IMember : INamed
+    {
+        string GetType();
+    }
     
-    public class MemberInfo : INamed
+    public class MemberInfo : INamed, IMember
     {
         public string Name { get; set; }
         public string Type;
+
+        string IMember.GetType() => Type;
+    }
+    
+    public class ConfigInfo : IMember
+    {
+        public string Name { get; set; }
+        public ConfigEntity Entity;
+
+        string IMember.GetType() => Entity.Name;
     }
 
     public class PropertyInfo : MemberInfo
@@ -205,7 +220,7 @@ namespace Valkyrie
         protected readonly List<PropertyInfo> Properties = new();
         internal readonly List<string> Timers = new();
         protected readonly List<InfoGetter> Infos = new();
-        protected readonly List<MemberInfo> Configs = new();
+        protected readonly List<ConfigInfo> Configs = new();
         protected readonly List<MemberInfo> Slots = new();
 
         protected readonly List<string> SyncWithPrefabs = new();
@@ -229,9 +244,9 @@ namespace Valkyrie
             return r;
         }
 
-        public IReadOnlyList<MemberInfo> GetAllConfigs()
+        public IReadOnlyList<ConfigInfo> GetAllConfigs()
         {
-            var r = new List<MemberInfo>();
+            var r = new List<ConfigInfo>();
 
             foreach (var propertyInfo in BaseTypes.SelectMany(entityBase => entityBase.GetAllConfigs()))
                 if (!r.Contains(propertyInfo))
@@ -270,6 +285,25 @@ namespace Valkyrie
             foreach (var propertyInfo in Infos)
                 if (!r.Contains(propertyInfo))
                     r.Add(propertyInfo);
+
+            foreach (var configInfo in Configs)
+            {
+                foreach (var propertyInfo in configInfo.Entity.Properties)
+                {
+                    var infoName = propertyInfo.Name;
+                    var infoType = propertyInfo.Type;
+                    
+                    if(r.Find(x => x.Name == infoName) != null)
+                        continue;
+                    
+                    r.Add(new InfoGetter()
+                    {
+                        Type = infoType,
+                        Name = infoName,
+                        Code = $"{configInfo.Name}.{infoName}"
+                    });
+                }
+            }
 
             return r;
         }
@@ -322,12 +356,12 @@ namespace Valkyrie
             return this;
         }
 
-        public EntityBase AddConfig(string type, string name)
+        public EntityBase AddConfig(ConfigEntity type, string name)
         {
-            Configs.Add(new MemberInfo()
+            Configs.Add(new ConfigInfo()
             {
                 Name = name,
-                Type = type
+                Entity = type
             });
             return this;
         }
@@ -385,7 +419,7 @@ namespace Valkyrie
                 }
 
                 foreach (var info in GetAllConfigs())
-                    sb.AppendLine($"public {info.Type} {info.Name} => Model.{info.Name};");
+                    sb.AppendLine($"public {info.Entity.Name} {info.Name} => Model.{info.Name};");
                 sb.EndBlock();
             }
         }
@@ -422,7 +456,7 @@ namespace Valkyrie
             }
 
             foreach (var info in Configs)
-                sb.AppendLine($"public {info.Type} {info.Name} {{ get; set; }}");
+                sb.AppendLine($"public {info.Entity.Name} {info.Name} {{ get; set; }}");
 
             foreach (var info in Slots)
                 sb.AppendLine($"public {info.Type} {info.Name} {{ get; set; }}");
@@ -456,7 +490,7 @@ namespace Valkyrie
             foreach (var property in GetAllProperties())
                 sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
             foreach (var property in GetAllConfigs())
-                sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
+                sb.AppendLine($"public {property.Entity.Name} {property.Name} {{ get; set; }}");
             foreach (var property in GetAllSlots())
                 sb.AppendLine($"public {property.Type} {property.Name} {{ get; set; }}");
             foreach (var property in GetAllInfos())
@@ -1086,8 +1120,10 @@ namespace Valkyrie
             sb.EndBlock();
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
-                var args = entityInfo.GetAllProperties().Where(x => x.IsRequired).ToList();
-                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
+                var allProperties = entityInfo.GetAllProperties().Where(x => x.IsRequired).OfType<IMember>();
+                var allConfigs = entityInfo.GetAllConfigs();
+                var args = allProperties.Union(allConfigs).ToList();
+                var argsStr = string.Join(", ", args.Select(x => $"{x.GetType()} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.Name}({argsStr})");
                 if (entityInfo.IsSingleton)
                     sb.AppendLine(
@@ -1150,8 +1186,8 @@ namespace Valkyrie
                 foreach (var property in entityInfo.GetPrefabsProperties())
                 {
                     sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property}");
-                    sb.AppendLine(
-                        $"var view = _viewsProvider.Spawn<{typeof(Template).FullName}>(model.{property});");
+                    sb.AppendLine($"{typeof(Debug).FullName}.Assert(!string.IsNullOrEmpty(model.{property}), $\"{entityInfo.Name}.{property} is null or empty\");");
+                    sb.AppendLine($"var view = _viewsProvider.Spawn<{typeof(Template).FullName}>(model.{property});");
                     sb.AppendLine($"view.ViewModel = viewModel;");
                     sb.AppendLine($"_views{entityInfo.Name}{property}.Add(viewModel, view);");
                     sb.EndBlock();
@@ -1476,8 +1512,10 @@ namespace Valkyrie
             sb.BeginBlock("public interface IWorldController");
             foreach (var entityInfo in Entities.OfType<EntityInfo>())
             {
-                var args = entityInfo.GetAllProperties().Where(x => x.IsRequired);
-                var argsStr = string.Join(", ", args.Select(x => $"{x.Type} {x.Name.ConvertToUnityPropertyName()}"));
+                var allProperties = entityInfo.GetAllProperties().Where(x => x.IsRequired).OfType<IMember>();
+                var allConfigs = entityInfo.GetAllConfigs();
+                var args = allProperties.Union(allConfigs).ToList();
+                var argsStr = string.Join(", ", args.Select(x => $"{x.GetType()} {x.Name.ConvertToUnityPropertyName()}"));
                 sb.AppendLine($"{entityInfo.Name} Create{entityInfo.Name}({argsStr});");
             }
 
