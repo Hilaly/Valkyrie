@@ -42,6 +42,18 @@ namespace Utils
             return result / points.Count;
         }
 
+        public static Vector3 Center(this IEnumerable<Vector3> points)
+        {
+            var count = 0;
+            var result = Vector3.zero;
+            foreach (var point in points)
+            {
+                result += point;
+                count++;
+            }
+            return result / count;
+        }
+
         public static float GetPolyLineLength(this IReadOnlyList<Vector3> points)
         {
             var r = 0f;
