@@ -212,6 +212,12 @@ namespace Valkyrie
         public override IType AddProperty(string type, string name, bool isRequired) => AddProperty(type, name);
     }
 
+    public class ViewSpawnInfo
+    {
+        public string PropertyName;
+        public string ViewName;
+    }
+
     public abstract class EntityBase : IType
     {
         public HashSet<string> Attributes { get; } = new();
@@ -223,9 +229,9 @@ namespace Valkyrie
         protected readonly List<ConfigInfo> Configs = new();
         protected readonly List<MemberInfo> Slots = new();
 
-        protected readonly List<string> SyncWithPrefabs = new();
+        protected readonly List<ViewSpawnInfo> SyncWithPrefabs = new();
 
-        public IReadOnlyList<string> GetPrefabsProperties() => SyncWithPrefabs;
+        public IReadOnlyList<ViewSpawnInfo> GetPrefabsProperties() => SyncWithPrefabs;
 
         public abstract void Write(FormatWriter sb);
 
@@ -240,6 +246,11 @@ namespace Valkyrie
             foreach (var propertyInfo in Properties)
                 if (!r.Contains(propertyInfo))
                     r.Add(propertyInfo);
+
+            foreach (var withPrefab in SyncWithPrefabs)
+                if (withPrefab.ViewName.NotNullOrEmpty())
+                    r.Add(new PropertyInfo()
+                        { Name = withPrefab.ViewName, Type = typeof(GameObject).FullName, IsRequired = false });
 
             return r;
         }
@@ -380,9 +391,11 @@ namespace Valkyrie
 
         public virtual EntityBase Singleton() => this;
 
-        public EntityBase ViewWithPrefabByProperty(string propertyName)
+        public EntityBase ViewWithPrefabByProperty(string propertyName) => ViewWithPrefabByProperty(propertyName, null);
+
+        public EntityBase ViewWithPrefabByProperty(string propertyName, string viewReceiveProperty)
         {
-            SyncWithPrefabs.Add(propertyName);
+            SyncWithPrefabs.Add(new ViewSpawnInfo() { PropertyName = propertyName, ViewName = viewReceiveProperty });
             return View();
         }
 
@@ -1162,8 +1175,7 @@ namespace Valkyrie
             sb.AppendLine("private readonly IViewsProvider _viewsProvider;");
             foreach (var entity in Entities)
             foreach (var property in entity.GetPrefabsProperties())
-                sb.AppendLine(
-                    $"private readonly Dictionary<{entity.Name}ViewModel, {typeof(Template).FullName}> _views{entity.Name}{property} = new();");
+                sb.AppendLine($"private readonly Dictionary<{entity.Name}ViewModel, {typeof(Template).FullName}> _views{entity.Name}{property.PropertyName} = new();");
             sb.BeginBlock("public WorldView(WorldState worldState, IViewsProvider viewsProvider)");
             sb.AppendLine("_worldState = worldState;");
             sb.AppendLine("_viewsProvider = viewsProvider;");
@@ -1185,11 +1197,13 @@ namespace Valkyrie
                 sb.AppendLine($"_viewModels{entityInfo.Name}List.Add(viewModel);");
                 foreach (var property in entityInfo.GetPrefabsProperties())
                 {
-                    sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property}");
-                    sb.AppendLine($"{typeof(Debug).FullName}.Assert(!string.IsNullOrEmpty(model.{property}), $\"{entityInfo.Name}.{property} is null or empty\");");
-                    sb.AppendLine($"var view = _viewsProvider.Spawn<{typeof(Template).FullName}>(model.{property});");
+                    sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property.PropertyName}");
+                    sb.AppendLine($"{typeof(Debug).FullName}.Assert(!string.IsNullOrEmpty(model.{property.PropertyName}), $\"{entityInfo.Name}.{property.PropertyName} is null or empty\");");
+                    sb.AppendLine($"var view = _viewsProvider.Spawn<{typeof(Template).FullName}>(model.{property.PropertyName});");
                     sb.AppendLine($"view.ViewModel = viewModel;");
-                    sb.AppendLine($"_views{entityInfo.Name}{property}.Add(viewModel, view);");
+                    sb.AppendLine($"_views{entityInfo.Name}{property.PropertyName}.Add(viewModel, view);");
+                    if(property.ViewName.NotNullOrEmpty())
+                        sb.AppendLine($"model.{property.ViewName} = view.gameObject;");
                     sb.EndBlock();
                 }
 
@@ -1199,8 +1213,14 @@ namespace Valkyrie
                 sb.BeginBlock($"if (_viewModels{entityInfo.Name}Dictionary.Remove(model, out var viewModel))");
                 sb.AppendLine($"_viewModels{entityInfo.Name}List.Remove(viewModel);");
                 foreach (var property in entityInfo.GetPrefabsProperties())
-                    sb.AppendLine(
-                        $"if (_views{entityInfo.Name}{property}.Remove(viewModel, out var view)) _viewsProvider.Release(view);");
+                {
+                    sb.BeginBlock(
+                        $"if (_views{entityInfo.Name}{property.PropertyName}.Remove(viewModel, out var view))");
+                    sb.AppendLine("_viewsProvider.Release(view);");
+                    if(property.ViewName.NotNullOrEmpty())
+                        sb.AppendLine($"model.{property.ViewName} = null;");
+                    sb.EndBlock();
+                }
                 sb.EndBlock();
 
                 sb.EndBlock();
