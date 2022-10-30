@@ -20,7 +20,7 @@ namespace Valkyrie.Di
         }
     }
 
-    public class CompositeDisposable
+    public class CompositeDisposable : IEnumerable<IDisposable>
     {
         private readonly HashSet<IDisposable> _subs = new HashSet<IDisposable>();
 
@@ -64,10 +64,9 @@ namespace Valkyrie.Di
             return true;
         }
 
-        public IEnumerator GetEnumerator()
-        {
-            return _subs.GetEnumerator();
-        }
+        IEnumerator<IDisposable> IEnumerable<IDisposable>.GetEnumerator() => _subs.GetEnumerator();
+
+        public IEnumerator GetEnumerator() => _subs.GetEnumerator();
 
         public bool Any() => _subs.Any();
     }

@@ -40,20 +40,24 @@ namespace Valkyrie
         }
     }
     
-    public interface IUiElement<out T> : IDisposable
+    public interface IUiElement : IDisposable
+    {}
+    
+    public interface IUiElement<out T> : IUiElement
     {
         T Model { get; }
     }
 
     public interface IWindowManager
     {
-        Task ShowWindow(Type type);
+        Task<IUiElement<BaseWindow>> ShowWindow(Type type);
         Task<IUiElement<T>> ShowWindow<T>() where T : BaseWindow;
     }
 
     public interface IPopupManager
     {
-        Task OpenPopup<T>() where T : BaseWindow;
+        Task<IUiElement<BaseWindow>> OpenPopup(Type type);
+        Task<IUiElement<T>> OpenPopup<T>() where T : BaseWindow;
         Task ClosePopup();
     }
 
@@ -72,7 +76,11 @@ namespace Valkyrie
         public UiElement(T instance, IDisposable disposable)
         {
             _instance = instance;
-            _disposable = disposable;
+            _disposable = new ActionDisposable(() =>
+            {
+                disposable?.Dispose();
+                _instance.gameObject.SetActive(false);
+            });
         }
 
         public T Model
@@ -116,7 +124,17 @@ namespace Valkyrie
         protected IUiElement<T> PrepareElement<T>(T window) where T : TWindowComponent
         {
             window.gameObject.SetActive(true);
-            var r = new UiElement<T>(window);
+            var r = new UiElement<T>(window, new ActionDisposable(() =>
+            {
+                foreach (IDisposable openedWindow in _openedWindows)
+                {
+                    if (openedWindow is UiElement<T> uiElement && uiElement.Model == window)
+                    {
+                        _openedWindows.Remove(openedWindow);
+                        break;
+                    }
+                }
+            }));
             _openedWindows.Add(r);
             return r;
         }

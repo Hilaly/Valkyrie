@@ -45,19 +45,43 @@ namespace Valkyrie.Utils
             return v;
         }
 
-        public static void DrawPolyLine(this IReadOnlyList<Vector3> points, Color color)
+        public static void DrawArrow(Vector3 startPoint, Vector3 endPoint, Color color)
+        {
+            const float Perp = 90f;
+            const float angle = 40f;
+            const float height = 0.4f;
+            var dir = (startPoint - endPoint).normalized;
+            var r = new List<Vector3>
+            {
+                startPoint + Quaternion.AngleAxis(Perp, Vector3.up) * dir * 0.5f * height,
+                startPoint + Quaternion.AngleAxis(Perp, Vector3.up) * dir * 0.5f * height + endPoint - startPoint + dir * Mathf.Cos(angle * Mathf.Deg2Rad),
+                endPoint + Quaternion.AngleAxis(angle, Vector3.up) * dir,
+                endPoint,
+                endPoint + Quaternion.AngleAxis(-angle, Vector3.up) * dir,
+                startPoint + Quaternion.AngleAxis(-Perp, Vector3.up) * dir * 0.5f * height + endPoint - startPoint + dir * Mathf.Cos(angle * Mathf.Deg2Rad),
+                startPoint + Quaternion.AngleAxis(-Perp, Vector3.up) * dir * 0.5f * height
+            };
+            DrawPolyLine(r, color, false);
+        }
+
+        public static void DrawPolyLine(this IReadOnlyList<Vector3> points, Color color, bool drawPoints = false)
         {
             if (points.Count <= 0)
                 return;
+            
             var p = points[0];
-            Debug.DrawLine(p, p + Vector3.up, color);
             for (var i = 1; i < points.Count; ++i)
             {
                 var n = points[i];
-                DrawPoint(n, 0.1f, color);
                 Debug.DrawLine(p, n, color);
                 p = n;
             }
+
+            if (!drawPoints) 
+                return;
+            
+            foreach (var n in points)
+                DrawPoint(n, 0.1f, color);
         }
 
         public static void DrawSphere(Vector4 pos, float radius, Color color)
