@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Configs;
 using Meta.Inventory;
 using UnityEngine;
@@ -12,8 +13,14 @@ namespace Valkyrie
 {
     public static class ClassEntitiesExtensions
     {
+        private static readonly Regex ListMatch = new Regex(@"List<(?<value>[\d\w\.]+)>");
+        
         public static Type FindType(this string typeName)
         {
+            var match = ListMatch.Match(typeName);
+            if (match.Success)
+                return typeof(List<>).MakeGenericType(FindType(match.Groups["value"].Value));
+            
             switch (typeName)
             {
                 case "bool":
@@ -25,7 +32,7 @@ namespace Valkyrie
                 case "int":
                     return typeof(int);
             }
-
+            
             var allSubTypes = typeof(object).GetAllSubTypes(x => x.FullName == typeName || x.Name == typeName);
             var r = allSubTypes.FirstOrDefault(x => x.FullName == typeName)
                     ?? allSubTypes.FirstOrDefault();
@@ -407,7 +414,8 @@ namespace Valkyrie
 
         public BaseType ViewWithPrefabByProperty(string propertyName, string viewReceiveProperty = null)
         {
-            _syncWithPrefabs.Add(new ViewSpawnInfo { PropertyName = propertyName, ViewName = viewReceiveProperty });
+            if(_syncWithPrefabs.TrueForAll(x => x.PropertyName != propertyName && x.ViewName != viewReceiveProperty))
+                _syncWithPrefabs.Add(new ViewSpawnInfo { PropertyName = propertyName, ViewName = viewReceiveProperty });
             return View();
         }
 

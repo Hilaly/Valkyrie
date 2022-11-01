@@ -22,5 +22,7 @@ namespace Valkyrie
         public EntityType CreateEntity(string typeName) => GetOrCreate<EntityType>(typeName);
         public ConfigType CreateConfig(string typeName) => GetOrCreate<ConfigType>(typeName);
         public ItemType CreateItem(string typeName) => GetOrCreate<ItemType>(typeName);
+
+        internal void Push(BaseType inst) => _types.Add(inst);
     }
 }
