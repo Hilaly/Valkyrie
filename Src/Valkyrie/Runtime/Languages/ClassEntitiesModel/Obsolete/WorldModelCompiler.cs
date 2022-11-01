@@ -307,12 +307,12 @@ namespace Valkyrie
         {
             var className = children.Find(x => x.Name == "<class_name>").GetString();
             Log($"Parsing config {className}");
-            var classInstance = context.World.GetConfig(className);
+            var classInstance = context.World.CreateConfig(className);
             var baseNode = children.Find(x => x.Name == "<base_class_name>");
             if (baseNode != null)
             {
                 var baseName = baseNode.GetString();
-                var baseData = context.World.Configs.Find(x => x.Name == baseName);
+                var baseData = context.World.Get<ConfigType>(baseName);
                 if (baseData == null)
                 {
                     LogWarn($"Base config {baseName} not defined, it must be defined before {className}");

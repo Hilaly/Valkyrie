@@ -142,10 +142,6 @@ namespace Valkyrie
         public string Code;
     }
 
-    public class PropertyInfo : MemberInfo
-    {
-    }
-
     public class MemberInfo : IMember
     {
         public string Name { get; set; }

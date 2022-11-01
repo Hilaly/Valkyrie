@@ -13,12 +13,31 @@ using Valkyrie.Utils.Pool;
 
 namespace Valkyrie
 {
-    public class WorldModelInfo
+    public class Feature
+    {
+        public List<BaseType> Types = new();
+
+        public T Get<T>(string name) where T : BaseType => (T)Types.Find(x => x is T && x.Name == name);
+
+        protected T GetOrCreate<T>(string name) where T : BaseType, new()
+        {
+            var r = Get<T>(name);
+            if(r == null)
+                Types.Add(r = new T {Name = name});
+            return r;
+        }
+
+        public IReadOnlyList<T> Get<T>() where T : BaseType => Types.OfType<T>().ToList();
+
+        public EntityType CreateEntity(string name) => GetOrCreate<EntityType>(name);
+        public ConfigType CreateConfig(string name) => GetOrCreate<ConfigType>(name);
+        public ItemType CreateItem(string name) => GetOrCreate<ItemType>(name);
+    }
+
+    public class WorldModelInfo : Feature
     {
         public string Namespace = nameof(WorldModelInfo);
 
-        public List<EntityType> Entities = new();
-        public List<ConfigType> Configs = new();
         public List<EventEntity> Events = new();
         public List<WindowModelInfo> Windows = new();
         public ProfileModel Profile = new();
@@ -183,27 +202,27 @@ namespace Valkyrie
 
         void WriteConfigs(FormatWriter sb)
         {
-            foreach (var entity in Configs)
+            foreach (var entity in Get<ConfigType>())
                 entity.WriteConfigClass(sb);
         }
 
         private bool IsEntityInterface(BaseType baseType)
         {
             if (baseType is EntityType entityType)
-                return Entities.Any(x => x.BaseTypes.Contains(entityType));
+                return Get<EntityType>().Any(x => x.BaseTypes.Contains(entityType));
             return false;
         }
 
         private bool IsEntityClass(BaseType baseType)
         {
             if (baseType is EntityType entityType)
-                return Entities.TrueForAll(x => !x.BaseTypes.Contains(entityType));
+                return Get<EntityType>().All(x => !x.BaseTypes.Contains(entityType));
             return false;
         }
 
         private void WriteEntities(FormatWriter sb)
         {
-            foreach (var entityType in Entities)
+            foreach (var entityType in Get<EntityType>())
             {
                 if(IsEntityClass(entityType))
                     entityType.WriteTypeClass(sb);
@@ -244,14 +263,14 @@ namespace Valkyrie
             sb.AppendLine("public readonly List<IEntity> Entities = new();");
             sb.AppendLine("public readonly HashSet<IEntity> ToDestroy = new();");
             sb.AppendLine("public IReadOnlyList<IEntity> All => Entities;");
-            foreach (var entityInfo in Entities)
+            foreach (var entityInfo in Get<EntityType>())
             {
                 sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
                 sb.AppendLine(
                     $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _allOf{entityInfo.Name}; // Entities.OfType<{entityInfo.Name}>().ToList();");
             }
 
-            foreach (var entityInfo in Entities.Where(x => x.IsSingleton))
+            foreach (var entityInfo in Get<EntityType>().Where(x => x.IsSingleton))
                 sb.AppendLine(
                     $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
             sb.EndBlock();
@@ -265,7 +284,7 @@ namespace Valkyrie
             sb.AppendLine("_worldState = worldState;");
             sb.AppendLine("_worldView = worldView;");
             sb.EndBlock();
-            foreach (var entityInfo in Entities.Where(IsEntityClass))
+            foreach (var entityInfo in Get<EntityType>().Where(IsEntityClass))
             {
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
@@ -307,14 +326,14 @@ namespace Valkyrie
             sb.AppendLine("//TODO: implement IDisposable");
             sb.AppendLine("private readonly WorldState _worldState;");
             sb.AppendLine("private readonly IViewsProvider _viewsProvider;");
-            foreach (var entity in Entities)
+            foreach (var entity in Get<EntityType>())
             foreach (var property in entity.GetPrefabsProperties())
                 sb.AppendLine($"private readonly Dictionary<{entity.Name}ViewModel, {typeof(Template).FullName}> _views{entity.Name}{property.PropertyName} = new();");
             sb.BeginBlock("public WorldView(WorldState worldState, IViewsProvider viewsProvider)");
             sb.AppendLine("_worldState = worldState;");
             sb.AppendLine("_viewsProvider = viewsProvider;");
             sb.EndBlock();
-            foreach (var entityInfo in Entities.Where(x => x.HasView))
+            foreach (var entityInfo in Get<EntityType>().Where(x => x.HasView))
             {
                 sb.AppendLine(
                     $"private readonly Dictionary<{entityInfo.Name}, {entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}Dictionary = new ();");
@@ -362,7 +381,7 @@ namespace Valkyrie
 
             sb.AppendLine("/*");
             sb.BeginBlock("public void SyncViewModels()");
-            foreach (var entityInfo in Entities.Where(x => x.HasView))
+            foreach (var entityInfo in Get<EntityType>().Where(x => x.HasView))
             {
                 sb.BeginBlock($"//Sync {entityInfo.Name} view models");
                 sb.AppendLine($"var models = _worldState.AllOf{entityInfo.Name};");
@@ -384,7 +403,7 @@ namespace Valkyrie
             sb.AppendLine("*/");
             sb.AppendLine("/*");
             sb.BeginBlock($"public void DestroyViewModels(IEntity model)");
-            foreach (var entityInfo in Entities.Where(x => x.HasView))
+            foreach (var entityInfo in Get<EntityType>().Where(x => x.HasView))
                 sb.AppendLine(
                     $"if(model is {entityInfo.Name} val{entityInfo.Name}) Destroy{entityInfo.Name}ViewModel(val{entityInfo.Name});");
             sb.EndBlock();
@@ -430,7 +449,7 @@ namespace Valkyrie
             sb.AppendLine("//_worldView.SyncViewModels();");
             sb.EndBlock();
             sb.BeginBlock("void AdvanceTimers(float dt)");
-            foreach (var entityInfo in Entities.Where(IsEntityClass))
+            foreach (var entityInfo in Get<EntityType>().Where(IsEntityClass))
             {
                 var args = entityInfo.GetAllTimers().ToList();
                 if (args.Count == 0)
@@ -466,7 +485,7 @@ namespace Valkyrie
             sb.BeginBlock($"void Destroy(IEntity entity)");
             sb.AppendLine($"_worldState.Entities.Remove(entity);");
             sb.BeginBlock($"switch (entity)");
-            foreach (var entityInfo in Entities.Where(IsEntityClass))
+            foreach (var entityInfo in Get<EntityType>().Where(IsEntityClass))
             {
                 sb.BeginBlock($"case {entityInfo.Name} val{entityInfo.Name}:");
                 sb.AppendLine("//Clean state cache");
@@ -657,14 +676,14 @@ namespace Valkyrie
 
 
             sb.BeginBlock("public interface IWorldView");
-            foreach (var entityInfo in Entities.Where(x => x.HasView))
+            foreach (var entityInfo in Get<EntityType>().Where(x => x.HasView))
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} {{ get; }}");
             sb.EndBlock();
             sb.AppendLine();
 
 
             sb.BeginBlock("public interface IWorldController");
-            foreach (var entityInfo in Entities.Where(IsEntityClass))
+            foreach (var entityInfo in Get<EntityType>().Where(IsEntityClass))
             {
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
@@ -680,7 +699,7 @@ namespace Valkyrie
 
             sb.BeginBlock("public interface IWorldState");
             sb.AppendLine($"IReadOnlyList<IEntity> All {{ get; }}");
-            foreach (var entityInfo in Entities.Where(IsEntityClass))
+            foreach (var entityInfo in Get<EntityType>().Where(IsEntityClass))
             {
                 if (entityInfo.IsSingleton)
                     sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} {{ get; }}");
@@ -708,7 +727,7 @@ namespace Valkyrie
 
         private List<TimerData> GetAllTimers()
         {
-            var allTimers = Entities.SelectMany(entityType =>
+            var allTimers = Get<EntityType>().SelectMany(entityType =>
             {
                 return entityType.Timers.Select(x =>
                     new TimerData
@@ -718,22 +737,6 @@ namespace Valkyrie
                     });
             }).ToList();
             return allTimers;
-        }
-
-        public EntityType CreateEntity(string name)
-        {
-            var r = Entities.Find(x => x.Name == name);
-            if (r == null)
-                Entities.Add(r = new EntityType() { Name = name });
-            return (EntityType)r;
-        }
-
-        public ConfigType GetConfig(string configId)
-        {
-            var r = Configs.Find(x => x.Name == configId);
-            if (r == null)
-                Configs.Add(r = new ConfigType() { Name = configId });
-            return r;
         }
 
         public EventEntity CreateEvent(string eventName, params string[] args)
