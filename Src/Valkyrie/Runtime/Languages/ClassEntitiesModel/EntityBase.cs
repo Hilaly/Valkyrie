@@ -12,9 +12,27 @@ namespace Valkyrie
 {
     public static class ClassEntitiesExtensions
     {
-        public static Type FindType(this string typeName) =>
-            typeof(object).GetAllSubTypes(x => x.FullName == typeName || x.Name == typeName)
-                .FirstOrDefault();
+        public static Type FindType(this string typeName)
+        {
+            switch (typeName)
+            {
+                case "bool":
+                    return typeof(bool);
+                case "float":
+                    return typeof(float);
+                case "string":
+                    return typeof(string);
+                case "int":
+                    return typeof(int);
+            }
+
+            var allSubTypes = typeof(object).GetAllSubTypes(x => x.FullName == typeName || x.Name == typeName);
+            var r = allSubTypes.FirstOrDefault(x => x.FullName == typeName)
+                    ?? allSubTypes.FirstOrDefault();
+            if (r == null)
+                throw new Exception($"Couldn't find type {typeName}");
+            return r;
+        }
 
         public static TypeData ToTypeData(this BaseType type) => new RefTypeData(type);
         public static TypeData ToTypeData(this Type type) => new CSharpTypeData(type);
@@ -44,7 +62,17 @@ namespace Valkyrie
             Type = type;
         }
 
-        public override string GetTypeName() => Type.FullName;
+        public override string GetTypeName()
+        {
+            if (Type.IsGenericType)
+            {
+                var result =
+                    $"{Type.Namespace}.{Type.Name.Split('`')[0]}<{string.Join(',', Type.GetGenericArguments().Select(x => x.FullName))}>";
+                return result;
+            }
+
+            return Type.FullName;
+        }
     }
 
     class RefTypeData : TypeData
@@ -73,11 +101,11 @@ namespace Valkyrie
     {
         public string GetMemberType();
     }
-    
+
     public class TimerMember : IMemberGetter
     {
         public string Name { get; set; }
-        
+
         public string GetMemberType()
         {
             throw new NotImplementedException();
@@ -212,19 +240,19 @@ namespace Valkyrie
 
             if (includeGenerated)
             {
-                /* TODO: implement new!!
-                foreach (var withPrefab in SyncWithPrefabs)
+                foreach (var withPrefab in _syncWithPrefabs)
                     if (withPrefab.ViewName.NotNullOrEmpty())
-                        r.Add(new PropertyInfo()
-                            { Name = withPrefab.ViewName, Type = typeof(GameObject).FullName, IsRequired = false });
-                            */
+                        r.Add(new BaseTypeProperty
+                        {
+                            Name = withPrefab.ViewName, TypeData = typeof(GameObject).ToTypeData(), IsRequired = false
+                        });
             }
 
             return r;
         }
 
         public BaseType AddProperty(BaseType type, string name, bool isRequired) =>
-            InternalAdd(new BaseTypeProperty()
+            InternalAdd(new BaseTypeProperty
             {
                 Name = name,
                 TypeData = type.ToTypeData(),
@@ -232,7 +260,7 @@ namespace Valkyrie
             });
 
         public BaseType AddProperty(Type type, string name, bool isRequired) =>
-            InternalAdd(new BaseTypeProperty()
+            InternalAdd(new BaseTypeProperty
             {
                 Name = name,
                 TypeData = type.ToTypeData(),
@@ -240,7 +268,7 @@ namespace Valkyrie
             });
 
         public BaseType AddProperty<T>(string name, bool isRequired) =>
-            InternalAdd(new BaseTypeProperty()
+            InternalAdd(new BaseTypeProperty
             {
                 Name = name,
                 TypeData = typeof(T).ToTypeData(),
@@ -292,7 +320,7 @@ namespace Valkyrie
         public readonly List<BaseTypeInfo> Infos = new();
 
         public BaseType AddInfo(string type, string name, string code) =>
-            InternalAdd(new BaseTypeInfo()
+            InternalAdd(new BaseTypeInfo
             {
                 Name = name,
                 TypeData = type.ToTypeData(),
@@ -300,7 +328,7 @@ namespace Valkyrie
             });
 
         public BaseType AddInfo(Type type, string name, string code) =>
-            InternalAdd(new BaseTypeInfo()
+            InternalAdd(new BaseTypeInfo
             {
                 Name = name,
                 TypeData = type.ToTypeData(),
@@ -308,7 +336,7 @@ namespace Valkyrie
             });
 
         public BaseType AddInfo(BaseType type, string name, string code) =>
-            InternalAdd(new BaseTypeInfo()
+            InternalAdd(new BaseTypeInfo
             {
                 Name = name,
                 TypeData = type.ToTypeData(),
@@ -317,7 +345,7 @@ namespace Valkyrie
 
         BaseType InternalAdd(BaseTypeInfo newMember)
         {
-            if (IsMemberExist(newMember))
+            if (!IsMemberExist(newMember))
                 Infos.Add(newMember);
             return this;
         }
@@ -338,26 +366,23 @@ namespace Valkyrie
 
             if (addGenerated)
             {
-                /* TODO: infos from configs
-                foreach (var configInfo in Configs)
+                foreach (var baseTypeMember in GetAllConfigs())
                 {
-                    foreach (var propertyInfo in configInfo.Entity.Properties)
+                    foreach (var propertyInfo in ((RefTypeData)baseTypeMember.TypeData).Type.Properties)
                     {
                         var infoName = propertyInfo.Name;
-                        var infoType = propertyInfo.Type;
-    
+
                         if (r.Find(x => x.Name == infoName) != null)
                             continue;
-    
-                        r.Add(new InfoGetter()
+
+                        r.Add(new BaseTypeInfo
                         {
-                            Type = infoType,
+                            TypeData = propertyInfo.TypeData,
                             Name = infoName,
-                            Code = $"{configInfo.Name}.{infoName}"
+                            Code = $"{baseTypeMember.Name}.{infoName}"
                         });
                     }
                 }
-                */
             }
 
             return r;
@@ -386,32 +411,35 @@ namespace Valkyrie
 
         public BaseType ViewWithPrefabByProperty(string propertyName, string viewReceiveProperty = null)
         {
-            _syncWithPrefabs.Add(new ViewSpawnInfo() { PropertyName = propertyName, ViewName = viewReceiveProperty });
+            _syncWithPrefabs.Add(new ViewSpawnInfo { PropertyName = propertyName, ViewName = viewReceiveProperty });
             return View();
         }
 
         #endregion
 
-        BaseType IType.AddProperty(string type, string name, bool isRequired)
+        public BaseType AddProperty(string type, string name, bool isRequired)
         {
-            throw new NotImplementedException();
+            return AddProperty(type.FindType(), name, isRequired);
         }
     }
 
     public class EntityType : BaseType
-    {}
-    
+    {
+    }
+
     public class ConfigType : BaseType
-    {}
-    
+    {
+    }
+
     public class ItemType : BaseType
-    {}
-    
+    {
+    }
+
     static class TypesToCSharpSerializer
     {
         private static string BaseConfigInterface => typeof(IConfigData).FullName;
         private static string BaseProfileInterface => typeof(BaseInventoryItem).FullName;
-        
+
         public static void WriteViewModelTimer(string timer, FormatWriter sb)
         {
             sb.AppendLine(
@@ -434,14 +462,14 @@ namespace Valkyrie
             sb.AppendLine($"bool {timer}JustFinished {{ get; }}");
         }
 
-        public static void Write(this BaseTypeProperty property, FormatWriter sb) => 
+        public static void Write(this BaseTypeProperty property, FormatWriter sb) =>
             sb.AppendLine($"public {property.GetMemberType()} {property.Name} {{ get; set; }}");
 
         public static void WriteViewModels(this BaseType baseType, FormatWriter sb)
         {
-            if (!baseType.HasView) 
+            if (!baseType.HasView)
                 return;
-            
+
             sb.BeginBlock($"[{typeof(BindingAttribute).FullName}] public partial class {baseType.Name}ViewModel");
             sb.AppendLine($"public {baseType.Name} Model {{ get; }}");
             sb.BeginBlock($"public {baseType.Name}ViewModel({baseType.Name} model)");
@@ -453,11 +481,8 @@ namespace Valkyrie
             foreach (var info in baseType.GetAllInfos(true))
                 sb.AppendLine(
                     $"[{typeof(BindingAttribute).FullName}] public {info.GetMemberType()} {info.Name} => Model.{info.Name};");
-            foreach (var info in baseType.GetAllSlots())
-                sb.AppendLine(
-                    $"[{typeof(BindingAttribute).FullName}] public {info.GetMemberType()} {info.Name} => Model.{info.Name};");
             foreach (var timer in baseType.GetAllTimers()) WriteViewModelTimer(timer, sb);
-            
+
             sb.EndBlock();
         }
 
@@ -519,8 +544,8 @@ namespace Valkyrie
 
             foreach (var property in baseType.Properties)
                 property.Write(sb);
-            
-            foreach (var timer in baseType.Timers) 
+
+            foreach (var timer in baseType.Timers)
                 WriteInterfaceTimer(timer, sb);
 
             foreach (var info in baseType.Infos)
@@ -564,8 +589,8 @@ namespace Valkyrie
 
             sb.EndBlock();
         }
-        
-        public static void WriteInventoryClass( this BaseType baseType, FormatWriter sb)
+
+        public static void WriteInventoryClass(this BaseType baseType, FormatWriter sb)
         {
             var propertyAttributes = baseType.Attributes.Contains("view")
                 ? $"[{typeof(BindingAttribute).FullName}] "
@@ -576,7 +601,7 @@ namespace Valkyrie
             else
                 blockName += BaseProfileInterface;
             sb.BeginBlock(blockName);
-            
+
             foreach (var property in baseType.Properties)
                 property.Write(sb);
 
