@@ -16,7 +16,7 @@ namespace Valkyrie
         class ParseSwitcher
         {
             private readonly Dictionary<string, Action<Context, IAstNode>> _branches = new();
-            
+
             public string Name { get; }
 
             public ParseSwitcher(string name)
@@ -62,11 +62,11 @@ namespace Valkyrie
                     throw new GrammarCompileException(ast, $"{Name}: Unknown node {name}");
             }
         }
-        
+
         private class Context
         {
             public IType Type;
-            
+
             public WorldModelInfo World;
             public WindowModelInfo Window;
             public MethodImpl Method;
@@ -87,13 +87,14 @@ namespace Valkyrie
                 return _astConstructor;
             }
         }
+
         public static void Parse(WorldModelInfo world, string text)
         {
             //Debug.Log(text);
 
             var context = new Context { World = world };
             var ast = AstConstructor.Parse(text.ToStream());
-            
+
             //Debug.Log(ast);
             Parse(context, ast);
         }
@@ -119,7 +120,7 @@ namespace Valkyrie
                         Parse(context, astNode);
                 })
                 .AddBranch("<sentence>", (context, children) => ParseSentence(context, children[0]));
-            
+
             CountersParseSwitcher = new ParseSwitcher(nameof(ParseCounters))
                 .AddBranch("<counter_name>", (context, ast) =>
                 {
@@ -134,12 +135,12 @@ namespace Valkyrie
                     foreach (var c in children.Where(x => x.Name is "<counter_name>" or "<counters_names_list>"))
                         ParseCounters(context, c);
                 })
-                .AddBranch("<define_counters>", (context, children) =>
-                {
-                    ParseCounters(context, children.Find(x => x.Name == "<counters_names_list>"));
+                .AddBranch("<define_counters>",
+                    (context, children) =>
+                    {
+                        ParseCounters(context, children.Find(x => x.Name == "<counters_names_list>"));
+                    });
 
-                });
-            
             WindowElementSwitcher = new ParseSwitcher(nameof(ParseWindowElement))
                 .AddBranch("<button_define>", ParseButton)
                 .AddBranch("<info_define>", ParseInfo)
@@ -187,9 +188,8 @@ namespace Valkyrie
         private static void ParseCounters(Context context, IAstNode ast) => CountersParseSwitcher.Process(context, ast);
         private static void ParseClassBody(Context context, IAstNode ast) => ClassBodySwitcher.Process(context, ast);
 
-
         #endregion
-        
+
         #region Old Switch
 
         private static void ParseWindow(Context context, IAstNode ast)
@@ -204,7 +204,7 @@ namespace Valkyrie
                     Log($"Parsing window {windowName}");
                     context.Window = context.World.GetWindow(windowName);
                     var windowBody = children.Find(x => x.Name == "<window_body>");
-                    if(windowBody != default)
+                    if (windowBody != default)
                         ParseWindow(context, windowBody);
                     context.Window = default;
                     break;
@@ -226,7 +226,7 @@ namespace Valkyrie
         }
 
         #endregion
-        
+
         #region Concrete node parsing
 
         private static void ParseFilter(Context context, List<IAstNode> children)
@@ -246,10 +246,10 @@ namespace Valkyrie
             if (sourceFilterName.NotNullOrEmpty())
             {
                 sourceFilter = context.World.Profile.Filters.Find(x => x.Name == sourceFilterName);
-                if(sourceFilter == null)
+                if (sourceFilter == null)
                     throw new GrammarCompileException(filterBody.Find(x => x.Name == "<type_name>"),
                         $"Filter {sourceFilterName} not defined, it must be defined before filter define");
-                if(sourceFilter.Entity != itemEntity)
+                if (sourceFilter.Entity != itemEntity)
                     throw new GrammarCompileException(filterBody.Find(x => x.Name == "<type_name>"),
                         $"Filter {sourceFilterName} has different item type");
             }
@@ -266,7 +266,7 @@ namespace Valkyrie
                 filter.Code = expr;
             }
         }
-        
+
         private static void ParseItem(Context context, List<IAstNode> children)
         {
             var className = children.Find(x => x.Name == "<class_name>").GetString();
@@ -282,16 +282,17 @@ namespace Valkyrie
                     LogWarn($"Base item {baseName} not defined, it must be defined before {className}");
                     throw new GrammarCompileException(baseNode);
                 }
+
                 Log($"Item {className} extends {baseName}");
                 classInstance.Inherit(baseData);
             }
-            
+
             context.Type = classInstance;
             var attributesNode = children.Find(x => x.Name == "<attributes_define>");
             if (attributesNode != null)
                 ParseTypeAttributes(attributesNode.GetChildren(true), classInstance);
             var bodyNode = children.Find(x => x.Name == "<item_tail>");
-            if(bodyNode != null)
+            if (bodyNode != null)
                 ParseClassBody(context, bodyNode.GetChildren()[1]);
             context.Type = null;
         }
@@ -317,6 +318,7 @@ namespace Valkyrie
                     LogWarn($"Base config {baseName} not defined, it must be defined before {className}");
                     throw new GrammarCompileException(baseNode);
                 }
+
                 Log($"Config {className} extends {baseName}");
                 classInstance.Inherit(baseData);
             }
@@ -375,14 +377,8 @@ namespace Valkyrie
                     else
                         r = WriteExpr(context, children[1]);
                 })
-                .AddBranch("<var_expr>", (context, children) =>
-                {
-                    r = ConvertCmdArg(children[0], context);
-                })
-                .AddBranch("<const_expr>", (context, children) =>
-                {
-                    r = children[0].GetString();
-                });
+                .AddBranch("<var_expr>", (context, children) => { r = ConvertCmdArg(children[0], context); })
+                .AddBranch("<const_expr>", (context, children) => { r = children[0].GetString(); });
             switcher.Process(c, ast);
             return r;
         }
@@ -392,7 +388,7 @@ namespace Valkyrie
             var windowName = children.Find(x => x.Name == "<window_name>").GetString();
             context.Method.CommandOp("\"ShowWindow\"", $"\"{windowName}Window\"");
         }
-        
+
         private static void ParseCmdOp(Context context, List<IAstNode> children)
         {
             var cmdName = $"\"{children.Find(x => x.Name == "<cmd_name>").GetString()}\"";
@@ -407,15 +403,15 @@ namespace Valkyrie
             if (context.Filter != null)
             {
                 var filter = context.Filter.Entity;
-                if (filter.GetAllProperties().Any(x => x.Name == str))
+                if (filter.GetAllProperties(true).Any(x => x.Name == str))
                     return $"{filter.Name.ToLowerInvariant()}.{str}";
             }
-            
+
             if (context.World.Profile.Counters.Contains(str))
                 return $"Profile.{str}";
             if (context.World.Profile.Filters.Any(x => x.Name == str))
                 return $"Profile.{str}";
-            
+
             LogWarn($"Can not determine cmd arg {str}");
             return $"\"{str}\"";
         }
@@ -464,14 +460,14 @@ namespace Valkyrie
                 return typeof(BigInteger).FullName;
             return str;
         }
-        
+
         static void ParseButton(Context context, List<IAstNode> children)
         {
             var buttonName = children.Find(x => x.Name == "<button_name>").GetString();
             var eventName = context.Window.GetButtonEvent(buttonName);
             Log($"Define event {eventName}");
             var eventEntity = context.World.CreateEvent(eventName);
-            
+
             Log($"Building button {buttonName} at window {context.Window.Name}");
             context.Method = context.Window.DefineButton(buttonName, eventEntity);
             var methodBody = children.Find(x => x.Name == "<method_body>");
@@ -479,14 +475,15 @@ namespace Valkyrie
                 MethodParseSwitcher.Process(context, methodBody.GetChildren()[0]);
             context.Method = default;
         }
-        
+
         private static void ParseEvent(Context context, List<IAstNode> children)
         {
             var eventName = children.Find(x => x.Name == "<class_name>").GetString();
             var argsNode = children.Find(x => x.Name == "<event_fields_list>");
             if (argsNode != null)
             {
-                var args = argsNode.UnpackNodes(x => x.Name == "<type_name>").Select(x => GetTypeName(context, x)).ToArray();
+                var args = argsNode.UnpackNodes(x => x.Name == "<type_name>").Select(x => GetTypeName(context, x))
+                    .ToArray();
                 Log($"Define event {eventName}<{args.Join(",")}>");
                 context.World.CreateEvent(eventName, args);
             }
@@ -540,7 +537,7 @@ namespace Valkyrie
             context.World.Namespace = namespaceName;
             Log($"Change namespace to {namespaceName}");
         }
-        
+
         #endregion
     }
 }

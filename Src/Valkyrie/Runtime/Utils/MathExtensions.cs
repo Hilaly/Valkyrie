@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Utils
@@ -33,6 +34,14 @@ namespace Utils
         #endregion
 
         #region Vector3
+
+        public static Vector3 RotateTowards(Vector3 from, Vector3 to, float maxDegreesDelta)
+        {
+            return Quaternion.RotateTowards(
+                Quaternion.LookRotation(from, Vector3.up),
+                Quaternion.LookRotation(to, Vector3.up),
+                maxDegreesDelta) * Vector3.forward;
+        }
 
         public static Vector3 Center(this IReadOnlyList<Vector3> points)
         {
