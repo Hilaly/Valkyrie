@@ -1,45 +1,25 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
+using UnityEngine;
 
 namespace Valkyrie
 {
-    public abstract class MainData
-    {
-        public string name;
-        public string displayName;
-        public string description;
-
-        public Dictionary<string, string> dependencies = new();
-    }
-
-    public class Feature : MainData
-    {
-        private List<BaseType> Types = new();
-
-        public T Get<T>(string name) where T : BaseType => (T)Types.Find(x => x is T && x.Name == name);
-
-        private T GetOrCreate<T>(string name) where T : BaseType, new()
-        {
-            var r = Get<T>(name);
-            if (r == null)
-                Types.Add(r = new T { Name = name });
-            return r;
-        }
-
-        public IReadOnlyList<T> Get<T>() where T : BaseType => Types.OfType<T>().ToList();
-
-        public EntityType CreateEntity(string name) => GetOrCreate<EntityType>(name);
-        public ConfigType CreateConfig(string name) => GetOrCreate<ConfigType>(name);
-        public ItemType CreateItem(string name) => GetOrCreate<ItemType>(name);
-    }
-
     public class WorldModelInfo : Feature
     {
-        public string Namespace = nameof(WorldModelInfo);
+        public string Namespace;
 
         public List<EventEntity> Events = new();
         public List<WindowModelInfo> Windows = new();
         public ProfileModel Profile = new();
+
+        public WorldModelInfo()
+        {
+            Namespace = EditorSettings.projectGenerationRootNamespace;
+            name = PlayerSettings.applicationIdentifier;
+            displayName = Application.productName;
+            description = "Main context for project generation";
+        }
 
         #region Request
 
