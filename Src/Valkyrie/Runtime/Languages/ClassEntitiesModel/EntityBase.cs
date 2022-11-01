@@ -431,7 +431,7 @@ namespace Valkyrie
     {
     }
 
-    static class TypesToCSharpSerializer
+    static partial class TypesToCSharpSerializer
     {
         private static string BaseConfigInterface => typeof(IConfigData).FullName;
         private static string BaseProfileInterface => typeof(BaseInventoryItem).FullName;
@@ -600,6 +600,24 @@ namespace Valkyrie
 
             foreach (var property in baseType.Properties)
                 property.Write(sb);
+
+            sb.EndBlock();
+        }
+
+        public static void WriteWindow(this WindowModelInfo baseType, FormatWriter sb)
+        {
+            sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
+            sb.BeginBlock($"public partial class {baseType.ClassName} : ProjectWindow");
+            foreach (var getter in baseType.Bindings)
+                sb.AppendLine(
+                    $"[{typeof(BindingAttribute).FullName}] public {getter.Type} {getter.Name} => {getter.Code};");
+            sb.AppendLine();
+            foreach (var handler in baseType.Handlers)
+            {
+                sb.BeginBlock($"[{typeof(BindingAttribute).FullName}] public async void {handler.Name}()");
+                handler.Write(sb);
+                sb.EndBlock();
+            }
 
             sb.EndBlock();
         }

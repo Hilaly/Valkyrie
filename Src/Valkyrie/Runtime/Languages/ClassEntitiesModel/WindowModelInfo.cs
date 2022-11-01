@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Utils;
-using Valkyrie.Language.Description.Utils;
 
 namespace Valkyrie
 {
@@ -9,27 +7,9 @@ namespace Valkyrie
         public string Name { get; set; }
 
         public List<InfoGetter> Bindings = new();
-        private List<WindowHandler> Handlers = new();
+        public List<WindowHandler> Handlers = new();
 
         public string ClassName => $"{Name}Window";
-
-        public void Write(FormatWriter sb)
-        {
-            sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
-            sb.BeginBlock($"public partial class {ClassName} : ProjectWindow");
-            foreach (var getter in Bindings)
-                sb.AppendLine(
-                    $"[{typeof(BindingAttribute).FullName}] public {getter.Type} {getter.Name} => {getter.Code};");
-            sb.AppendLine();
-            foreach (var handler in Handlers)
-            {
-                sb.BeginBlock($"[{typeof(BindingAttribute).FullName}] public async void {handler.Name}()");
-                handler.Write(sb);
-                sb.EndBlock();
-            }
-
-            sb.EndBlock();
-        }
 
         public WindowModelInfo AddInfo(string type, string name, string code)
         {
