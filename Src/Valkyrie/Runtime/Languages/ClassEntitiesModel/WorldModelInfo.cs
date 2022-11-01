@@ -3,13 +3,22 @@ using System.Linq;
 
 namespace Valkyrie
 {
-    public class Feature
+    public abstract class MainData
     {
-        public List<BaseType> Types = new();
+        public string name;
+        public string displayName;
+        public string description;
+
+        public Dictionary<string, string> dependencies = new();
+    }
+
+    public class Feature : MainData
+    {
+        private List<BaseType> Types = new();
 
         public T Get<T>(string name) where T : BaseType => (T)Types.Find(x => x is T && x.Name == name);
 
-        protected T GetOrCreate<T>(string name) where T : BaseType, new()
+        private T GetOrCreate<T>(string name) where T : BaseType, new()
         {
             var r = Get<T>(name);
             if (r == null)
@@ -74,7 +83,7 @@ namespace Valkyrie
             TypesToCSharpSerializer.WriteToDirectory(this, dirPath, fileName);
 
         #endregion
-        
+
         #region Old to refactor
 
         public EventEntity CreateEvent(string eventName, params string[] args)
@@ -118,7 +127,6 @@ namespace Valkyrie
             Profile.Filters.Add(r);
             return r;
         }
-        
 
         #endregion
     }
