@@ -67,7 +67,7 @@ namespace Valkyrie
             public IType Type;
 
             public WorldModelInfo World;
-            public WindowModelInfo Window;
+            public WindowType Window;
             public MethodImpl Method;
             public ItemFilterModel Filter;
         }

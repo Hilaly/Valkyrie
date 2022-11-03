@@ -6,7 +6,7 @@ using UnityEditor.Callbacks;
 using UnityEngine;
 using Valkyrie.Language.Description;
 
-namespace Editor
+namespace Valkyrie.Language
 {
     public class ValkyrieGameLanguageCompiler : AssetPostprocessor
     {

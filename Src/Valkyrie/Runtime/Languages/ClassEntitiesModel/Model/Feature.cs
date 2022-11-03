@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using Valkyrie;
 
 namespace Valkyrie
 {
-    public class Feature : MainFeatureData
+    public class Feature : MainFeatureData, IGraph
     {
         private readonly List<BaseType> _types = new();
 
@@ -24,5 +26,44 @@ namespace Valkyrie
         public ItemType CreateItem(string typeName) => GetOrCreate<ItemType>(typeName);
 
         internal void Push(BaseType inst) => _types.Add(inst);
+
+        #region IGraph
+
+        public int NodeCount => Nodes.Count();
+
+        public IEnumerable<INode> Nodes
+        {
+            get
+            {
+                return Get<BaseType>().Select(x => new TypeDefineNode(x));
+            }
+        }
+
+        public void Add(INode node)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Remove(INode node)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Disconnect(IPort outputPort, IPort inputPort)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Connect(IPort outputPort, IPort inputPort)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void MarkDirty()
+        {
+            Debug.Log("[CEM] mark dirty");
+        }
+
+        #endregion
     }
 }

@@ -5,12 +5,12 @@ using UnityEngine;
 
 namespace Valkyrie
 {
-    public class WorldModelInfo : Feature
+    public class WorldModelInfo : Feature, IGraph
     {
         public string Namespace;
 
         public List<EventEntity> Events = new();
-        public List<WindowModelInfo> Windows = new();
+        public List<WindowType> Windows = new();
         public ProfileModel Profile = new();
 
         public WorldModelInfo()
@@ -81,11 +81,11 @@ namespace Valkyrie
             return r;
         }
 
-        public WindowModelInfo GetWindow(string name)
+        public WindowType GetWindow(string name)
         {
             var r = Windows.Find(x => x.Name == name);
             if (r == null)
-                Windows.Add(r = new WindowModelInfo() { Name = name });
+                Windows.Add(r = new WindowType() { Name = name });
             return r;
         }
 

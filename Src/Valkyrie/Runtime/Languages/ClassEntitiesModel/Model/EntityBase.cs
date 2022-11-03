@@ -294,6 +294,7 @@ namespace Valkyrie
 
         public BaseType View() => AddAttribute("view");
         public bool HasView => GetAllAttributes().Contains("view");
+        public string Uid { get; set; } = Guid.NewGuid().ToString();
 
         #endregion
 
@@ -437,6 +438,33 @@ namespace Valkyrie
 
     public class ItemType : BaseType
     {
+    }
+    
+    public class WindowType : BaseType
+    {
+        public readonly List<InfoGetter> Bindings = new();
+        public readonly List<WindowHandler> Handlers = new();
+
+        public string ClassName => $"{Name}Window";
+        
+        public string GetButtonEvent(string buttonName)
+        {
+            return $"On{buttonName}ButtonAt{Name}Clicked";
+        }
+
+        public WindowHandler AddHandler(string name)
+        {
+            var r = new WindowHandler() { Name = name };
+            Handlers.Add(r);
+            return r;
+        }
+
+        public WindowHandler DefineButton(string buttonName, EventEntity evType)
+        {
+            var r = AddHandler($"On{buttonName}Clicked");
+            r.RaiseOp(evType);
+            return r;
+        }
     }
 
     static partial class TypesToCSharpSerializer
@@ -612,7 +640,7 @@ namespace Valkyrie
             sb.EndBlock();
         }
 
-        public static void WriteWindow(this WindowModelInfo baseType, FormatWriter sb)
+        public static void WriteWindow(this WindowType baseType, FormatWriter sb)
         {
             sb.AppendLine($"[{typeof(BindingAttribute).FullName}]");
             sb.BeginBlock($"public partial class {baseType.ClassName} : ProjectWindow");

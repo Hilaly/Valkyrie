@@ -155,6 +155,41 @@ namespace Utils
             return default(T);
         }
 
+        public static Dictionary<string, FieldInfo> GetFieldTable(this Type self, BindingFlags bindingFlags)
+        {
+            var output = new Dictionary<string, FieldInfo>();
+            foreach (var info in self.GetFields(bindingFlags).OrderBy(field => field.MetadataToken))
+            {
+                if (output.ContainsKey(info.Name)) continue;
+                output.Add(info.Name, info);
+            }
+
+            return output;
+        }
+        
+        public static Dictionary<string, PropertyInfo> GetPropertyTable(this Type self, BindingFlags bindingFlags)
+        {
+            var output = new Dictionary<string, PropertyInfo>();
+            foreach (var info in self.GetProperties(bindingFlags).OrderBy(field => field.MetadataToken))
+            {
+                if (output.ContainsKey(info.Name)) continue;
+                output.Add(info.Name, info);
+            }
+
+            return output;
+        }
+        
+        public static Dictionary<string, MethodInfo> GetMethodTable(this Type self, BindingFlags bindingFlags)
+        {
+            var output = new Dictionary<string, MethodInfo>();
+            foreach (var info in self.GetMethods(bindingFlags).OrderBy(field => field.MetadataToken))
+            {
+                if (output.ContainsKey(info.Name)) continue;
+                output.Add(info.Name, info);
+            }
+            return output;
+        }
+        
         #endregion
 
         #region Json

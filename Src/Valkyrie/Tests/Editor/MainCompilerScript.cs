@@ -1,5 +1,5 @@
 using System.Collections;
-using Editor;
+using Valkyrie.Language;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
