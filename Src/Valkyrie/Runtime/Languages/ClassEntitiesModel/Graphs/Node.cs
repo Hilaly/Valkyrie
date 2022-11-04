@@ -1,27 +1,11 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Utils;
 
 namespace Valkyrie
 {
-    public interface INode
-    {
-        IGraph Graph { get; }
-        string Uid { get; }
-
-        Rect NodeRect { get; set; }
-        Vector2 NodePosition { get; set; }
-
-        Dictionary<string, IPort> ValueInPorts { get; }
-        Dictionary<string, IPort> ValueOutPorts { get; }
-        Dictionary<string, IPort> FlowInPorts { get; }
-        Dictionary<string, IPort> FlowOutPorts { get; }
-        
-        IReflectionData GetData();
-        void Define(IGraph graph);
-    }
-
     [Serializable]
     public abstract class BaseNode : INode
     {
@@ -44,12 +28,12 @@ namespace Valkyrie
             set => nodeRect.position = value;
         }
 
-        public Dictionary<string, IPort> ValueInPorts { get; } = new();
-        public Dictionary<string, IPort> ValueOutPorts { get; } = new();
-        public Dictionary<string, IPort> FlowInPorts { get; } = new();
-        public Dictionary<string, IPort> FlowOutPorts { get; } = new();
-        
-        public virtual IReflectionData GetData() => GetType().GetCustomAttribute<NodeAttribute>(true);
+        public Dictionary<string, IValuePort> ValueInPorts { get; } = new();
+        public Dictionary<string, IValuePort> ValueOutPorts { get; } = new();
+        public Dictionary<string, IFlowPort> FlowInPorts { get; } = new();
+        public Dictionary<string, IFlowPort> FlowOutPorts { get; } = new();
+
+        public virtual IReflectionData GetData() => NodeAttribute.Cache[GetType()];
 
         public void Define(IGraph graph)
         {
@@ -62,28 +46,29 @@ namespace Valkyrie
 
         protected virtual void DefineValuePorts()
         {
-            /* TODO
-            if (!NodeAttribute.Cache.TryGet(GetType(), out var data)) return;
+            var data = GetData();
+            if (data == null) return;
             foreach (var valuePort in data.ValuePorts)
             {
                 var port = valuePort.GetOrCreatePort(this);
+                /* TODO
                 if (valuePort.GraphPort)
                 {
                     var graphPort = port.Clone(Graph);
                     (valuePort.Direction == PortDirection.Input ? Graph.ValueOutPorts : Graph.ValueInPorts).Add(graphPort.Name, graphPort);
                 }
-                (valuePort.Direction == PortDirection.Input ? ValueInPorts : ValueOutPorts).Add(valuePort.Name, port);
-                // Debug.Log($"{this} has Value Port '{valuePort.Name} | {valuePort.Direction}'");
+                */
+                (valuePort.Direction == Direction.Input ? ValueInPorts : ValueOutPorts).Add(port.Uid, port);
             }
-            */
         }
         
         protected virtual void DefineFlowPorts()
         {
+            var data = GetData();
+            if (data == null) return;
             /* TODO
             FlowInPorts = new Dictionary<string, IFlowPort>();
             FlowOutPorts = new Dictionary<string, IFlowPort>();
-            if (!NodeAttribute.Cache.TryGet(GetType(), out var data)) return;
             foreach (var flowPort in data.FlowPorts)
             {
                 var port = flowPort.GetOrCreatePort(this);
@@ -101,5 +86,29 @@ namespace Valkyrie
         protected virtual void FinishDefine() {}
 
         public override string ToString() => $"{GetType().Name}({Uid[..8]})";
+    }
+    
+    public static class PortAttributeExtensions
+    {
+        public static IPort GetOrCreatePort(this IPortAttribute self, INode node)
+        {
+            var port = (IPort)self.Info.GetValue(node);
+            if (port == null)
+            {
+                port = (IPort)Activator.CreateInstance(self.Info.FieldType);
+                self.Info.SetValue(node, port);
+            }
+            return port;
+        }
+    }
+    
+    public static class ValueAttributeExtensions
+    {
+        public static IValuePort GetOrCreatePort(this IValuePortAttribute self, INode node)
+        {
+            var port = self.Info.GetValue(node) as IValuePort ?? ValuePort.MakeGeneric(self);
+            port.Definition(node, self);
+            return port;
+        }
     }
 }

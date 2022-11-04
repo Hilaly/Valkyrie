@@ -6,26 +6,14 @@ using Valkyrie.Tools;
 
 namespace Valkyrie
 {
-    public interface IPortAttribute
-    {
-        FieldInfo Info { get; }
-        string Name { get; }
-        Direction Direction { get; }
-        Port.Capacity Capacity { get; }
-        
-        void SetInfo(FieldInfo info);
-    }
-    
-    public interface IValuePortAttribute : IPortAttribute
-    {}
-
     public abstract class PortAttribute : PreserveAttribute, IPortAttribute
     {
         public FieldInfo Info { get; private set; }
-        
+
         public string Name { get; set; }
         public abstract Direction Direction { get; }
-        public abstract Port.Capacity Capacity { get; set; }
+        public virtual Port.Capacity Capacity { get; set; }
+        public virtual Orientation Orientation { get; set; }
 
         public void SetInfo(FieldInfo info)
         {
@@ -35,7 +23,9 @@ namespace Valkyrie
     }
 
     public abstract class ValuePortAttribute : PortAttribute, IValuePortAttribute
-    {}
+    {
+        public override Orientation Orientation { get; set; } = Orientation.Horizontal;
+    }
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public sealed class ValueInAttribute : ValuePortAttribute

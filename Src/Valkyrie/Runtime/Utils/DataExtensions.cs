@@ -8,6 +8,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using Valkyrie.Di;
@@ -216,6 +217,46 @@ namespace Utils
                 return false;
             }
         }
+
+        public static Rect ToRect(this JObject jo)
+        {
+            var pos = jo["pos"]?.ToVector2() ?? new Vector2();
+            var size = jo["size"]?.ToVector2() ?? new Vector2();
+            return new Rect(pos, size);
+        }
+        public static JObject ToJObject(this Rect rect) =>
+            new()
+            {
+                ["pos"] = rect.position.ToJObject(),
+                ["size"] = rect.size.ToJObject()
+            };
+
+        public static Vector3 ToVector3(this JToken jo)
+        {
+            var x = jo.Value<float>("x");
+            var y = jo.Value<float>("y");
+            var z = jo.Value<float>("z");
+            return new Vector3(x, y, z);
+        }
+        public static Vector2 ToVector2(this JToken jo)
+        {
+            var x = jo.Value<float>("x");
+            var y = jo.Value<float>("y");
+            return new Vector2(x, y);
+        }
+        public static JObject ToJObject(this Vector2 vec) =>
+            new()
+            {
+                ["x"] = vec.x,
+                ["y"] = vec.y
+            };
+        public static JObject ToJObject(this Vector3 vec) =>
+            new()
+            {
+                ["x"] = vec.x,
+                ["y"] = vec.y,
+                ["z"] = vec.z
+            };
 
         #endregion
 
