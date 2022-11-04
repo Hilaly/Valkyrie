@@ -22,7 +22,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private void OnEnable()
         {
-            rootVisualElement.styleSheets.Add(Resources.Load<StyleSheet>("CemWindow"));
+            //rootVisualElement.styleSheets.Add(Resources.Load<StyleSheet>("CemWindow"));
             
             CreateGraphView();
             CreateToolbar();

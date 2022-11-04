@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Utils;
+using Valkyrie.GraphDefineImpl;
 
 namespace Valkyrie.Editor.ClassEntitiesModel
 {
@@ -30,11 +31,11 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             foreach (var group in GetSearchGroups())
             {
                 tree.Add(group.Section);
-                //Debug.Log($"[CEM] Add search section {group.Section.name}");
+                Debug.LogWarning($"[CEM] Add search section {group.Section.name} d={group.Section.level}");
                 foreach (var entry in group.Entries)
                 {
                     tree.Add(entry);
-                    //Debug.Log($"[CEM] Add search entry {entry.name}");
+                    Debug.LogWarning($"[CEM] Add search entry {entry.name} d={entry.level}");
                 }
             }
 
@@ -50,13 +51,13 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         private IEnumerable<SearchGroup> GetSearchGroups()
         {
             Dictionary<string, SearchGroup> groups = new Dictionary<string, SearchGroup>();
-            foreach (INodeFactory node in CollectFactories())
+            foreach (INodeFactory factory in CollectFactories())
             {
-                if (_useGraphTagMatching && !_graphTypeData.Tags.Overlaps(node.Tags)) continue;
+                if (_useGraphTagMatching && !_graphTypeData.Tags.Overlaps(factory.Tags)) continue;
                 SearchGroup searchGroup = null;
                 int depth = 1;
 
-                foreach (string subsection in node.Path.Split('/'))
+                foreach (string subsection in factory.Path.Split('/'))
                 {
                     var key = $"{subsection}{depth}";
                     if (!groups.TryGetValue(key, out searchGroup))
@@ -68,7 +69,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
                     depth++;
                 }
 
-                searchGroup?.Add(node);
+                searchGroup?.Add(factory);
             }
 
             var data = new List<SearchGroup>(groups.Values);
@@ -81,9 +82,19 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private IEnumerable<INodeFactory> CollectFactories()
         {
-            return typeof(INodeFactory).GetAllSubTypes(x => x.IsClass && !x.IsAbstract)
+            var nodes = typeof(INode).GetAllSubTypes(x => x.IsClass && !x.IsAbstract)
                 .Where(x => x.GetConstructor(Type.EmptyTypes) != null)
-                .Select(x => (INodeFactory)Activator.CreateInstance(x));
+                .Select(x => (INode)Activator.CreateInstance(x))
+                .Select(x => x.GetData());
+            var set = new HashSet<INodeFactory>();
+            set.UnionWith(nodes);
+            /*
+            set.UnionWith(typeof(INodeFactory).GetAllSubTypes(x => x.IsClass && !x.IsAbstract)
+                .Where(x => x.GetConstructor(Type.EmptyTypes) != null && !x.ContainsGenericParameters)
+                .Select(x => (INodeFactory)Activator.CreateInstance(x))
+            );
+            */
+            return set;
         }
     }
 }

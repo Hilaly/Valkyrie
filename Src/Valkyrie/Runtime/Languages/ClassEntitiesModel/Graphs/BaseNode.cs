@@ -41,7 +41,7 @@ namespace Valkyrie
         [JsonIgnore] public IReadOnlyList<IFlowPort> FlowInPorts => flowInPorts;
         [JsonIgnore] public IReadOnlyList<IFlowPort> FlowOutPorts => flowOutPorts;
 
-        public virtual INodeFactory GetData() => default;
+        public abstract INodeFactory GetData();
 
         public void Define(IGraph graph)
         {
@@ -94,29 +94,5 @@ namespace Valkyrie
         protected virtual void FinishDefine() {}
 
         public override string ToString() => $"{GetType().Name}({Uid[..8]})";
-    }
-    
-    public static class PortAttributeExtensions
-    {
-        public static IPort GetOrCreatePort(this IPortAttribute self, INode node)
-        {
-            var port = (IPort)self.Info.GetValue(node);
-            if (port == null)
-            {
-                port = (IPort)Activator.CreateInstance(self.Info.FieldType);
-                self.Info.SetValue(node, port);
-            }
-            return port;
-        }
-    }
-    
-    public static class ValueAttributeExtensions
-    {
-        public static IValuePort GetOrCreatePort(this IValuePortAttribute self, INode node)
-        {
-            var port = self.Info.GetValue(node) as IValuePort ?? ValuePort.MakeGeneric(self);
-            port.Definition(node, self);
-            return port;
-        }
     }
 }
