@@ -1,22 +1,25 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
+using Newtonsoft.Json;
 using UnityEngine;
-using Utils;
 
 namespace Valkyrie
 {
     [Serializable]
     public abstract class BaseNode : INode
     {
-        [SerializeField] private string uId = Guid.NewGuid().ToString();
+        [SerializeField, JsonProperty] private string uId = Guid.NewGuid().ToString();
         [SerializeField] private Rect nodeRect;
+        [SerializeField, JsonProperty] private List<IValuePort> valueInPorts = new();
+        [SerializeField, JsonProperty] private List<IValuePort> valueOutPorts = new();
+        [SerializeField, JsonProperty] private List<IFlowPort> flowInPorts = new();
+        [SerializeField, JsonProperty] private List<IFlowPort> flowOutPorts = new();
         
-        public IGraph Graph { get; private set; }
+        [JsonIgnore] public IGraph Graph { get; private set; }
 
-        public virtual string Uid => uId;
+        [JsonIgnore] public virtual string Uid => uId;
         
-        public Rect NodeRect
+        [JsonIgnore] public Rect NodeRect
         {
             get => nodeRect;
             set => nodeRect = value;
@@ -27,13 +30,18 @@ namespace Valkyrie
             get => nodeRect.position;
             set => nodeRect.position = value;
         }
+        public Vector2 NodeSize
+        {
+            get => nodeRect.size;
+            set => nodeRect.size = value;
+        }
 
-        public Dictionary<string, IValuePort> ValueInPorts { get; } = new();
-        public Dictionary<string, IValuePort> ValueOutPorts { get; } = new();
-        public Dictionary<string, IFlowPort> FlowInPorts { get; } = new();
-        public Dictionary<string, IFlowPort> FlowOutPorts { get; } = new();
+        [JsonIgnore] public IReadOnlyList<IValuePort> ValueInPorts => valueInPorts;
+        [JsonIgnore] public IReadOnlyList<IValuePort> ValueOutPorts => valueOutPorts;
+        [JsonIgnore] public IReadOnlyList<IFlowPort> FlowInPorts => flowInPorts;
+        [JsonIgnore] public IReadOnlyList<IFlowPort> FlowOutPorts => flowOutPorts;
 
-        public virtual IReflectionData GetData() => NodeAttribute.Cache[GetType()];
+        public virtual INodeFactory GetData() => default;
 
         public void Define(IGraph graph)
         {
@@ -48,18 +56,18 @@ namespace Valkyrie
         {
             var data = GetData();
             if (data == null) return;
+                /* TODO
             foreach (var valuePort in data.ValuePorts)
             {
                 var port = valuePort.GetOrCreatePort(this);
-                /* TODO
                 if (valuePort.GraphPort)
                 {
                     var graphPort = port.Clone(Graph);
                     (valuePort.Direction == PortDirection.Input ? Graph.ValueOutPorts : Graph.ValueInPorts).Add(graphPort.Name, graphPort);
                 }
-                */
-                (valuePort.Direction == Direction.Input ? ValueInPorts : ValueOutPorts).Add(port.Uid, port);
+                (valuePort.Direction == Direction.Input ? valueInPorts : valueOutPorts).Add(port);
             }
+                */
         }
         
         protected virtual void DefineFlowPorts()

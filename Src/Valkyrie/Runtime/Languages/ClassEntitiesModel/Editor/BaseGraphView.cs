@@ -43,7 +43,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             nodeCreationRequest = ctx => SearchWindow.Open(new SearchWindowContext(ctx.screenMousePosition), SearchProvider);
         }
 
-        public void CreateNode(IReflectionData data, Vector2 position)
+        public void CreateNode(INodeFactory data, Vector2 position)
         {
             RecordUndo("Create Node");
             var node = data.Create();
@@ -68,11 +68,9 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         #region API
 
-        protected void CreateNodeView<T>(INode node, IReflectionData info) where T : NodeViewBase, new()
+        protected void CreateNodeView<T>(INode node, INodeFactory info) where T : NodeViewBase, new()
         {
-            var element = info.EditorView != null
-                ? (GraphElement)Activator.CreateInstance(info.EditorView)
-                : new T();
+            var element = new T();
             if (element is IEditorNodeView editorView) editorView.EdgeListener = EdgeConnectorListener;
             if (element is INodeView nodeView)
             {

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using Utils;
 
 namespace Valkyrie.Editor.ClassEntitiesModel
 {
@@ -28,11 +30,11 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             foreach (var group in GetSearchGroups())
             {
                 tree.Add(group.Section);
-                Debug.Log($"[CEM] Add search section {group.Section.name}");
+                //Debug.Log($"[CEM] Add search section {group.Section.name}");
                 foreach (var entry in group.Entries)
                 {
                     tree.Add(entry);
-                    Debug.Log($"[CEM] Add search entry {entry.name}");
+                    //Debug.Log($"[CEM] Add search entry {entry.name}");
                 }
             }
 
@@ -41,14 +43,14 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         public bool OnSelectEntry(SearchTreeEntry entry, SearchWindowContext context)
         {
-            GraphView.CreateNode((IReflectionData)entry.userData, context.screenMousePosition);
+            GraphView.CreateNode((INodeFactory)entry.userData, context.screenMousePosition);
             return true;
         }
 
         private IEnumerable<SearchGroup> GetSearchGroups()
         {
             Dictionary<string, SearchGroup> groups = new Dictionary<string, SearchGroup>();
-            foreach (var node in NodeAttribute.Cache.All)
+            foreach (INodeFactory node in CollectFactories())
             {
                 if (_useGraphTagMatching && !_graphTypeData.Tags.Overlaps(node.Tags)) continue;
                 SearchGroup searchGroup = null;
@@ -75,6 +77,13 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             {
                 yield return group;
             }
+        }
+
+        private IEnumerable<INodeFactory> CollectFactories()
+        {
+            return typeof(INodeFactory).GetAllSubTypes(x => x.IsClass && !x.IsAbstract)
+                .Where(x => x.GetConstructor(Type.EmptyTypes) != null)
+                .Select(x => (INodeFactory)Activator.CreateInstance(x));
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.Scripting;
 
@@ -8,21 +9,21 @@ namespace Valkyrie
     {
         public string Uid { get; set; } = Guid.NewGuid().ToString();
 
-        public IGraph Graph => Node.Graph;
-        public INode Node { get; internal set; }
+        [JsonIgnore] public IGraph Graph => Node.Graph;
+        [JsonIgnore] public INode Node { get; internal set; }
         public string Name { get; internal set; }
         
         public Direction Direction { get; set; }
         public Port.Capacity Capacity { get; set; }
         
-        public Type ValueType { get; set; }
+        [JsonIgnore] public Type ValueType { get; set; }
         public Orientation Orientation { get; set; }
     }
 
     [Preserve]
     class ValuePort : BasePort, IValuePort
     {
-        public IValuePortAttribute Info { get; private set; }
+        [JsonIgnore] public IValuePortAttribute Info { get; private set; }
         
         public void Definition(INode node, IValuePortAttribute info)
         {

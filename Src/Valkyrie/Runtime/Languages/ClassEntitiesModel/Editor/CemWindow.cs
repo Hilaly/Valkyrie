@@ -1,4 +1,5 @@
 using System.IO;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -100,7 +101,9 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         public void Load()
         {
             WorldModel = new WorldModelInfo();// ??= CemEditorUtils.Load();
-            _graphView.Graph = new Graph(); 
+            _graphView.Graph = new Graph();
+            if (File.Exists("Assets/graph.json"))
+                _graphView.Graph = JsonConvert.DeserializeObject<Graph>(File.ReadAllText("Assets/graph.json"), GraphSerializer.SerSettings);
             _graphView.Reload();
         }
 

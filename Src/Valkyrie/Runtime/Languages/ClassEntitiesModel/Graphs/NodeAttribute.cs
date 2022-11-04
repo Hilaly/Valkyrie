@@ -10,7 +10,7 @@ using Valkyrie.Utils;
 namespace Valkyrie
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-    public class NodeAttribute : PreserveAttribute, IReflectionData
+    public class NodeAttribute : PreserveAttribute
     {
         private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public |
                                                   System.Reflection.BindingFlags.NonPublic |
@@ -82,7 +82,7 @@ namespace Valkyrie
                 {
                     attribute.SetInfo(info);
                     //TODO: attribute.SetCallbackInfo(methodTable[attribute.Callback]);
-                    Debug.Log($"[CEM] Extracting Value Port '{attribute.Name} {attribute.Direction}'");
+                    //Debug.Log($"[CEM] Extracting Value Port '{attribute.Name} {attribute.Direction}'");
                     ValuePorts.Add(attribute);
                 }
             }

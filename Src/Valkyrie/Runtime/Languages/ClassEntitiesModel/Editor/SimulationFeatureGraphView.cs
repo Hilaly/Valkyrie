@@ -268,7 +268,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private void CreateValueConnections(INodeView view, INode node)
         {
-            foreach (var valueIn in node.ValueInPorts.Values)
+            foreach (var valueIn in node.ValueInPorts)
             {
                 /*
                 foreach (var connection in Graph.ValueInConnections.SafeGet(valueIn.Id))
@@ -285,7 +285,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private void CreateFlowConnections(INodeView view, INode node)
         {
-            foreach (var flowOut in node.FlowOutPorts.Values)
+            foreach (var flowOut in node.FlowOutPorts)
             {
                 /*
                 foreach (var connection in Graph.FlowOutConnections.SafeGet(flowOut.Id))

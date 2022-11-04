@@ -22,7 +22,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         public VisualElement FlowInPortContainer { get; }
         public VisualElement FlowOutPortContainer { get; }
 
-        void Initialize(INode node, IReflectionData info);
+        void Initialize(INode node, INodeFactory info);
         Rect GetPosition();
         void SetPosition(Rect position);
     }

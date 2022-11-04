@@ -14,28 +14,24 @@ namespace Valkyrie
         Rect NodeRect { get; set; }
         Vector2 NodePosition { get; set; }
 
-        Dictionary<string, IValuePort> ValueInPorts { get; }
-        Dictionary<string, IValuePort> ValueOutPorts { get; }
-        Dictionary<string, IFlowPort> FlowInPorts { get; }
-        Dictionary<string, IFlowPort> FlowOutPorts { get; }
+        IReadOnlyList<IValuePort> ValueInPorts { get; }
+        IReadOnlyList<IValuePort> ValueOutPorts { get; }
+        IReadOnlyList<IFlowPort> FlowInPorts { get; }
+        IReadOnlyList<IFlowPort> FlowOutPorts { get; }
         
-        IReflectionData GetData();
+        INodeFactory GetData();
         void Define(IGraph graph);
     }
 
-    public interface IReflectionData
+    public interface INodeFactory
     {
+        public HashSet<string> Tags { get; }
+        public string Path { get; }
         string Name { get; }
-        string Tooltip { get; }
         Vector2 MinSize { get; }
+        string Tooltip { get; }
         bool Deletable { get; }
         bool Movable { get; }
-
-        Type EditorView { get; }
-        
-        public List<IValuePortAttribute> ValuePorts { get; }
-        
-        public List<IFlowPortAttribute> FlowPorts { get; }
 
         INode Create();
     }

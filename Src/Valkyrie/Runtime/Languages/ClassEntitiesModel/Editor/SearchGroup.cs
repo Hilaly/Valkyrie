@@ -15,7 +15,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             Entries = new List<SearchTreeEntry>();
         }
 
-        public SearchGroup Add(IReflectionData data)
+        public SearchGroup Add(INodeFactory data)
         {
             Entries.Add(new SearchTreeEntry(new GUIContent(data.Name)) { userData = data, level = Section.level + 1 });
             return this;

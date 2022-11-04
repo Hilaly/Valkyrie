@@ -14,8 +14,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         public VisualElement FlowOutPortContainer { get; private set; }
 
         public INode Node => (INode)userData;
-        public IReflectionData ReflectionData { get; set; }
-        public bool IsMoveable => ReflectionData.Movable;
+        public bool IsMoveable => throw new Exception("Not implemented");
 
         #region API
 
@@ -33,24 +32,23 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         #endregion
 
-        public void Initialize(INode node, IReflectionData data)
+        public void Initialize(INode node, INodeFactory data)
         {
             userData = node;
-            ReflectionData = data;
             name = node.Uid;
             style.position = Position.Absolute;
             style.left = node.NodePosition.x;
             style.top = node.NodePosition.y;
             style.minWidth = data.MinSize.x;
             style.minHeight = data.MinSize.y;
-            title = $"{ReflectionData.Name}";
-            tooltip = ReflectionData.Tooltip;
-            if (!ReflectionData.Deletable)
+            title = $"{data.Name}";
+            tooltip = data.Tooltip;
+            if (!data.Deletable)
             {
                 capabilities &= ~Capabilities.Deletable;
             }
 
-            if (!ReflectionData.Movable)
+            if (!data.Movable)
             {
                 capabilities &= ~Capabilities.Movable;
             }
@@ -94,12 +92,12 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private void CreateFlowPorts(INode node)
         {
-            foreach (var port in node.FlowInPorts.Values)
+            foreach (var port in node.FlowInPorts)
             {
                 FlowInPortContainer.Add(CreatePortView(port, port.Orientation));
             }
 
-            foreach (var port in node.FlowOutPorts.Values)
+            foreach (var port in node.FlowOutPorts)
             {
                 FlowOutPortContainer.Add(CreatePortView(port, port.Orientation));
             }
@@ -125,12 +123,12 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private void CreateValuePorts(INode node)
         {
-            foreach (var port in node.ValueInPorts.Values)
+            foreach (var port in node.ValueInPorts)
             {
                 ValueInPortContainer.Add(CreatePortView(port, port.Orientation));
             }
 
-            foreach (var port in node.ValueOutPorts.Values)
+            foreach (var port in node.ValueOutPorts)
             {
                 ValueOutPortContainer.Add(CreatePortView(port, port.Orientation));
             }
