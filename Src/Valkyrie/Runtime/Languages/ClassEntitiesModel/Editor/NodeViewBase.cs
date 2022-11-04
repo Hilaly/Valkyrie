@@ -53,11 +53,11 @@ namespace Valkyrie.Editor.ClassEntitiesModel
                 capabilities &= ~Capabilities.Movable;
             }
 
+            InitializeView();
+
             CreateBody(node);
-            CreateFlowPortContainers();
             //CreateExecuteButton(node);
             CreateFlowPorts(node);
-            AttachFlowPortContainers();
             CreateValuePorts(node);
             RefreshExpandedState();
             RefreshPorts();
@@ -67,10 +67,17 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             OnInitialize();
         }
 
-        private void CreateBody(INode node)
+        #region Markup
+
+        private VisualElement topPortContainer;
+
+        private void InitializeView()
         {
-            // TODO: Draw Property Field's with UI Elements
-            // http://wiki.unity3d.com/index.php/ExposePropertiesInInspector_Generic
+            topPortContainer = new VisualElement { name = "TopPortContainer" };
+            this.Insert(0, topPortContainer);
+            
+            CreateFlowPortContainers();
+            AttachFlowPortContainers();
         }
 
         private void CreateFlowPortContainers()
@@ -79,6 +86,22 @@ namespace Valkyrie.Editor.ClassEntitiesModel
             FlowInPortContainer.AddToClassList("FlowInPorts");
             FlowOutPortContainer = new VisualElement { name = "FlowPorts" };
             FlowOutPortContainer.AddToClassList("FlowOutPorts");
+        }
+
+        private void AttachFlowPortContainers()
+        {
+            if (FlowInPortContainer.childCount > 0) mainContainer.parent.Insert(0, FlowInPortContainer);
+            if (FlowOutPortContainer.childCount > 0) mainContainer.parent.Add(FlowOutPortContainer);
+        }
+
+        #endregion
+
+        private void CreateBody(INode node)
+        {
+            if (node is INodeContent nodeContent)
+                nodeContent.FillBody(contentContainer);
+            // TODO: Draw Property Field's with UI Elements
+            // http://wiki.unity3d.com/index.php/ExposePropertiesInInspector_Generic
         }
 
         private void CreateExecuteButton(INode node)
@@ -113,12 +136,6 @@ namespace Valkyrie.Editor.ClassEntitiesModel
                 portName = port.Name,
             };
             return view;
-        }
-
-        private void AttachFlowPortContainers()
-        {
-            if (FlowInPortContainer.childCount > 0) mainContainer.parent.Insert(0, FlowInPortContainer);
-            if (FlowOutPortContainer.childCount > 0) mainContainer.parent.Add(FlowOutPortContainer);
         }
 
         private void CreateValuePorts(INode node)

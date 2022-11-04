@@ -3,24 +3,38 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Valkyrie
 {
-    public interface INode
+    public interface INodeContent
+    {
+        void FillBody(VisualElement container);
+    }
+    
+    public interface INode : INodeSection
     {
         IGraph Graph { get; }
         string Uid { get; }
 
         Rect NodeRect { get; set; }
         Vector2 NodePosition { get; set; }
-
-        IReadOnlyList<IValuePort> ValueInPorts { get; }
-        IReadOnlyList<IValuePort> ValueOutPorts { get; }
+        
         IReadOnlyList<IFlowPort> FlowInPorts { get; }
         IReadOnlyList<IFlowPort> FlowOutPorts { get; }
         
         INodeFactory GetData();
+        
         void Define(IGraph graph);
+        void Define();
+    }
+
+    public interface INodeSection
+    {
+        public string Name { get; set; }
+
+        IReadOnlyList<IValuePort> ValueInPorts { get; }
+        IReadOnlyList<IValuePort> ValueOutPorts { get; }
     }
 
     public interface INodeFactory

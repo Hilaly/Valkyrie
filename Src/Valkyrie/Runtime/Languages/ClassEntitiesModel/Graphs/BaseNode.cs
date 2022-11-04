@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
+using Valkyrie.Tools;
 
 namespace Valkyrie
 {
@@ -18,7 +19,9 @@ namespace Valkyrie
         [JsonIgnore] public IGraph Graph { get; private set; }
 
         [JsonIgnore] public virtual string Uid => uId;
-        
+
+        public string Name { get; set; }
+
         [JsonIgnore] public Rect NodeRect
         {
             get => nodeRect;
@@ -43,16 +46,22 @@ namespace Valkyrie
 
         public abstract INodeFactory GetData();
 
-        public void Define(IGraph graph)
+        public void Define()
         {
-            Graph = graph;
+            if (Name.IsNullOrEmpty())
+                Name = GetData().Name;
 
-            DefineValuePorts();
+            DefineValuePorts(valueInPorts, valueOutPorts);
             DefineFlowPorts();
             FinishDefine();
         }
 
-        protected virtual void DefineValuePorts()
+        public void Define(IGraph graph)
+        {
+            Graph = graph;
+        }
+
+        protected virtual void DefineValuePorts(List<IValuePort> inPorts, List<IValuePort> outPorts)
         {
             var data = GetData();
             if (data == null) return;

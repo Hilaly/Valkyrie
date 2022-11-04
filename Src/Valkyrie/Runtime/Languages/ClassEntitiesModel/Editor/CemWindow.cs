@@ -40,7 +40,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 
         private void CreateGraphView()
         {
-            _graphView = new SimulationFeatureGraphView(WorldModel, WorldModel);
+            _graphView = new SimulationFeatureGraphView();
 
             if (_graphView is VisualElement element)
             {

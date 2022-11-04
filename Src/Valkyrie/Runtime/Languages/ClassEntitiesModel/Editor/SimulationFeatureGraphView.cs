@@ -8,24 +8,6 @@ namespace Valkyrie.Editor.ClassEntitiesModel
 {
     class SimulationFeatureGraphView : BaseGraphView
     {
-        public SimulationFeatureGraphView(Feature worldModel, WorldModelInfo worldModelInfo)
-        {
-            RegisterCallback<GeometryChangedEvent>(GeometryChangedCallback);
-            RegisterCallback<KeyUpEvent>(OnKeyUp);
-            
-            graphViewChanged = OnGraphViewChanged;
-            viewTransformChanged = OnViewTransformChanged;
-            
-            SetupZoom(ContentZoomer.DefaultMinScale * 0.5f, ContentZoomer.DefaultMaxScale);
-            
-            this.AddManipulator(new ContentDragger());
-            this.AddManipulator(new SelectionDragger());
-            this.AddManipulator(new RectangleSelector());
-            
-            CreateGridBackground();
-            CreateMiniMap();
-        }
-
         public override List<Port> GetCompatiblePorts(Port sp, NodeAdapter nodeAdapter)
         {
             var startPort = (CemPortView)sp;
@@ -114,88 +96,6 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         private void OnViewTransformChanged(GraphView graphview)
         {
             
-        }
-
-        private void GeometryChangedCallback(GeometryChangedEvent evt)
-        {
-            MiniMap.SetPosition(new Rect(worldBound.width - 205, 25, 200, 100));
-        }
-
-        private void OnKeyUp(KeyUpEvent evt)
-        {
-            if (evt.target != this)
-            {
-                return;
-            }
-
-            switch (evt.keyCode)
-            {
-                case KeyCode.C when !evt.ctrlKey && !evt.commandKey:
-                    // AddComment();
-                    break;
-                case KeyCode.M:
-                    MiniMap.visible = !MiniMap.visible;
-                    break;
-                case KeyCode.H when !evt.ctrlKey && !evt.commandKey:
-                    HorizontallyAlignSelectedNodes();
-                    break;
-                case KeyCode.V when !evt.ctrlKey && !evt.commandKey:
-                    VerticallyAlignSelectedNodes();
-                    break;
-            }
-        }
-        
-        protected void HorizontallyAlignSelectedNodes()
-        {
-            float sum = 0;
-            int count = 0;
-            
-            // TODO: Implement a way to Align to "first selected" thing rather then average
-            foreach (var selectable in selection)
-            {
-                if (selectable is Node node)
-                {
-                    sum += node.GetPosition().xMin;
-                    count++;
-                }
-            }
-
-            float xAvg = sum / count;
-            foreach (var selectable in selection)
-            {
-                if (selectable is INodeView node && node.IsMoveable)
-                {
-                    var pos = node.GetPosition();
-                    pos.xMin = xAvg;
-                    node.SetPosition(pos);
-                }
-            }
-        }
-        
-        protected void VerticallyAlignSelectedNodes()
-        {
-            float sum = 0;
-            int count = 0;
-
-            foreach (var selectable in selection)
-            {
-                if (selectable is INodeView node && node.IsMoveable)
-                {
-                    sum += node.GetPosition().yMin;
-                    count++;
-                }
-            }
-
-            float yAvg = sum / count;
-            foreach (var selectable in selection)
-            {
-                if (selectable is Node node)
-                {
-                    var pos = node.GetPosition();
-                    pos.yMin = yAvg;
-                    node.SetPosition(pos);
-                }
-            }
         }
 
         private void CleanupFlowConnectionElements(Port port)

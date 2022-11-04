@@ -40,7 +40,9 @@ namespace Valkyrie
 
         public INode Create()
         {
-            return (INode)new T();
+            var r = (INode)new T();
+            r.Define();
+            return r;
         }
     }
 }

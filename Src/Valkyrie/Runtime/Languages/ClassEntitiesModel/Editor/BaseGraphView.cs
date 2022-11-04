@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -12,8 +11,7 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         protected Dictionary<string, INodeView> _nodeViewCache = new();
         
         public IGraph Graph { get; set; }
-        
-        public GridBackground GridBackground { get; private set; }
+
         public CemSearchProvider SearchProvider { get; private set; }
         public MiniMap MiniMap { get; private set; }
         
@@ -22,18 +20,6 @@ namespace Valkyrie.Editor.ClassEntitiesModel
         protected BaseGraphView()
         {
             EdgeConnectorListener = new CemGraphEdgeConnectorListener(this);
-        }
-        
-        protected void CreateGridBackground()
-        {
-            GridBackground = new GridBackground {name = "Grid"};
-            Insert(0, GridBackground);
-        }
-
-        protected void CreateMiniMap()
-        {
-            MiniMap = new MiniMap {anchored = true, maxWidth = 200, maxHeight = 100, visible = false};
-            Add(MiniMap);
         }
 
         protected void CreateSearch()
