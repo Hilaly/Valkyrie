@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using UnityEngine;
 
 namespace Valkyrie.Model
 {
@@ -7,12 +11,84 @@ namespace Valkyrie.Model
         IReadOnlyList<INode> Nodes { get; }
 
         INode Create(INodeFactory nodeType);
-        
+
         void Remove(INode node);
         void Connect(IPort output, IPort input);
         void Disconnect(IPort output, IPort input);
         void MarkDirty();
-        
+
         IEnumerable<INodeFactory> GetFactories();
+    }
+
+    [Serializable]
+    public abstract class CemGraph : CemNode, IGraph
+    {
+        [SerializeField, JsonProperty] private List<INode> _nodes = new();
+        [SerializeField, JsonProperty] private KeyListCollection<string, string> _connections = new();
+
+        public IReadOnlyList<INode> Nodes => _nodes;
+
+        public void MarkDirty()
+        {
+            Debug.Log($"[CEM] graph {Uid} changed");
+        }
+
+        public abstract IEnumerable<INodeFactory> GetFactories();
+
+        public INode Create(INodeFactory nodeType)
+        {
+            var node = nodeType.Create();
+            _nodes.Add(node);
+            MarkDirty();
+            return node;
+        }
+
+        public void Remove(INode node)
+        {
+            bool changed = false;
+            for (int i = _nodes.Count - 1; i >= 0; i--)
+            {
+                var n = _nodes[i];
+                if (n.Uid == node.Uid)
+                {
+                    CleanupConnections(n);
+                    _nodes.RemoveAt(i);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+                MarkDirty();
+        }
+
+        public void Clear()
+        {
+            _nodes.Clear();
+            _connections.Clear();
+            MarkDirty();
+        }
+
+        public void Disconnect(IPort output, IPort input)
+        {
+            _connections.Disconnect(input.Uid, output.Uid);
+            MarkDirty();
+        }
+
+        public void Connect(IPort output, IPort input)
+        {
+            _connections.Connect(input.Uid, output.Uid);
+            MarkDirty();
+        }
+
+        private void CleanupConnections(INode node)
+        {
+            var keys = _connections.Keys.Where(x => x.StartsWith(node.Uid)).ToList();
+            keys.ForEach(x => _connections.Remove(x));
+            var values = _connections.Where(x => x.Value.Any(u => u.StartsWith(node.Uid)))
+                .SelectMany(x =>
+                    x.Value.Where(u => u.StartsWith(node.Uid)).Select(u => new KeyValuePair<string, string>(x.Key, u)))
+                .ToList();
+            values.ForEach(x => _connections.Disconnect(x.Key, x.Value));
+        }
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Valkyrie.Model
 {
     [Serializable]
-    class CemNode : INode
+    public class CemNode : INode
     {
         [SerializeField, JsonProperty] private string uid = Guid.NewGuid().ToString();
         [SerializeField, JsonProperty] private Rect rect;
