@@ -7,7 +7,7 @@ namespace Valkyrie.Model
     {
         string Uid { get; }
         
-        string Name { get; }
+        string Name { get; set; }
         Rect NodeRect { get; set; }
         Vector2 NodePosition { get; set; }
         
@@ -18,4 +18,6 @@ namespace Valkyrie.Model
     {
         void OnCreate();
     }
+    
+    public interface IRenamable {}
 }

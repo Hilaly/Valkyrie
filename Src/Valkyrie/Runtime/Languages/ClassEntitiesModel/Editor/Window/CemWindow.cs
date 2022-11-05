@@ -26,7 +26,8 @@ namespace Valkyrie.Window
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             TypeNameHandling = TypeNameHandling.All,
-            Formatting = Formatting.Indented
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore
         };
 
         private void Load()
