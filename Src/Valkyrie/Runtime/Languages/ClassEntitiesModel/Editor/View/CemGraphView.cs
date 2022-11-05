@@ -25,8 +25,8 @@ namespace Valkyrie.View
         public CemGraphView()
         {
             EdgeConnectorListener = new CemEdgeConnectorListener(this);
-            
-            //TODO: SetupZoom(ContentZoomer.DefaultMinScale * 0.5f, ContentZoomer.DefaultMaxScale);
+
+            SetupZoom(ContentZoomer.DefaultMinScale * 0.5f, ContentZoomer.DefaultMaxScale);
 
             CreateDefaultElements();
 
@@ -82,7 +82,6 @@ namespace Valkyrie.View
 
         private void OnViewTransformChanged(GraphView graphview)
         {
-            
         }
 
         private void GeometryChangedCallback(GeometryChangedEvent evt)
@@ -178,10 +177,7 @@ namespace Valkyrie.View
                     {
                         case INodeView view:
                             changeMade = true;
-                            /* TODO
-                            view.FlowInPortContainer.Query<Port>().ForEach(CleanupFlowConnectionElements);
-                            view.FlowOutPortContainer.Query<Port>().ForEach(CleanupFlowConnectionElements);
-                            */
+                            view.GetRoot().Query<Port>().ForEach(CleanupFlowConnectionElements);
                             Graph.Remove(view.Node);
                             break;
                         case Edge edge:
@@ -189,12 +185,13 @@ namespace Valkyrie.View
                             Graph.Disconnect((IPort)edge.output.userData, (IPort)edge.input.userData);
                             break;
                         default:
-                            Debug.LogWarning($"Unhandled GraphElement Removed: {element.GetType().FullName} | {element.name} | {element.title}");
+                            Debug.LogWarning(
+                                $"Unhandled GraphElement Removed: {element.GetType().FullName} | {element.name} | {element.title}");
                             break;
                     }
                 }
             }
-            
+
             if (change.movedElements != null)
             {
                 foreach (var element in change.movedElements)
@@ -202,16 +199,17 @@ namespace Valkyrie.View
                     switch (element)
                     {
                         case INodeView view:
-                            changeMade = true; 
+                            changeMade = true;
                             view.Node.NodeRect = view.GetPosition();
                             break;
                         default:
-                            Debug.LogWarning($"Unhandled GraphElement Moved: {element.GetType().FullName} | {element.name} | {element.title}");
+                            Debug.LogWarning(
+                                $"Unhandled GraphElement Moved: {element.GetType().FullName} | {element.name} | {element.title}");
                             break;
                     }
                 }
             }
-            
+
             if (change.edgesToCreate != null)
             {
                 foreach (var edge in change.edgesToCreate)
@@ -226,7 +224,7 @@ namespace Valkyrie.View
                 Save();
                 Graph.MarkDirty();
             }
-            
+
             return change;
         }
 
@@ -236,8 +234,8 @@ namespace Valkyrie.View
             {
                 if ((connection.capabilities & Capabilities.Deletable) != 0)
                 {
-                    TODO: Graph.Disconnect((IPort) connection.output.userData, (IPort) connection.input.userData);
-                    
+                    Graph.Disconnect((IPort)connection.output.userData, (IPort)connection.input.userData);
+
                     // Replicate what Unity is doing in their "DeleteElement" method
                     connection.output.Disconnect(connection);
                     connection.input.Disconnect(connection);
@@ -252,16 +250,17 @@ namespace Valkyrie.View
 
         #region Modifications
 
-        public void CreateNode(Model.INodeFactory nodeFactory, Vector2 position)
+        public void CreateNode(INodeFactory nodeFactory, Vector2 position)
         {
             var node = Graph.Create(nodeFactory);
             var window = EditorWindow.GetWindow<CemWindow>();
-            node.NodePosition = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer, position - window.position.position - new Vector2(3, 26));
+            node.NodePosition = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer,
+                position - window.position.position - new Vector2(3, 26));
             CreateNodeView(node);
             Save();
         }
-        
-        INodeView CreateNodeView(Model.INode node)
+
+        INodeView CreateNodeView(INode node)
         {
             var element = new CemNodeView();
             if (element is IEditorNodeView editorView)
@@ -271,45 +270,48 @@ namespace Valkyrie.View
             AddElement(element);
             return element;
         }
-        
+
         private void CreateNodeViews()
         {
             var d = Graph.Nodes.Select(CreateNodeView).ToList();
-            foreach (var view in d) 
+            foreach (var view in d)
                 CreateConnections(view);
         }
+        
+        
 
         private void CreateConnections(INodeView nodeView)
         {
             var node = nodeView.Node;
-            // TODO: create connections
             
-            /*
-        foreach (var flowOut in node.FlowOutPorts)
-        {
-            foreach (var connection in Graph.FlowOutConnections.SafeGet(flowOut.Id))
+            foreach (var port in node.Ports.OfType<IOutputPort>())
             {
-                if (!_nodeViewCache.TryGetValue(connection.Node, out var inputView))
+                var outputPort = nodeView.GetRoot().Q<CemPortView>(port.Uid);
+
+                var connections = Graph.GetOutputConnections(port.Uid);
+                foreach (var inputPortUid in connections)
                 {
-                    Debug.Log($"Unable To Find Node View for {connection.Node}");
-                    continue;
+                    var inputNodeId = inputPortUid.Split('.')[0];
+                    var inputView = contentViewContainer.Q<CemNodeView>(inputNodeId);
+                    if (inputView == default)
+                    {
+                        Debug.LogWarning($"Unable To Find Node View for {inputNodeId}");
+                        continue;
+                    }
+
+                    var inputPort = inputView.GetRoot().Q<CemPortView>(inputPortUid);
+                    if (inputPort != null && outputPort != null)
+                        AddElement(outputPort.ConnectTo(inputPort));
+                    else
+                        Debug.LogError($"Unable To Make a Flow Port Connection | {port} => {inputPortUid}");
                 }
-                var inputPort = inputView.FlowInPortContainer.Q<PortView>(connection.Port);
-                var outputPort = view.FlowOutPortContainer.Q<PortView>(flowOut.Id.Port);
-                if (inputPort != null && outputPort != null)
-                    AddElement(outputPort.ConnectTo(inputPort));
-                else
-                    Debug.Log($"Unable To Make a Flow Port Connection | {flowOut} => {connection.Node}.{connection.Port}");
             }
-        }
-            */
-            
         }
 
         #endregion
 
         #region Logic
-        
+
         void Save()
         {
             /*TODO
@@ -325,7 +327,7 @@ namespace Valkyrie.View
         public void Reload()
         {
             Cleanup();
-            
+
             /*TODO if (GraphAsset == null) return;
             Graph.Definition(Graph);
             */
@@ -352,22 +354,20 @@ namespace Valkyrie.View
         {
             var compatible = new List<Port>();
 
-            /* TODO
             var startPort = (CemPortView)sp;
             ports.ForEach(x =>
             {
                 var port = (CemPortView)x;
-                if(startPort == port) return;
-                if(startPort.node == port.node) return;
-                if(startPort.direction == port.direction) return;
-                
-                if(port.direction == Direction.Input && !port.portType.IsAssignableFrom(startPort.portType)) return;
-                if(port.direction == Direction.Output && !startPort.portType.IsAssignableFrom(port.portType)) return;
-                
+                if (startPort == port) return;
+                if (startPort.node == port.node) return;
+                if (startPort.direction == port.direction) return;
+
+                if (port.direction == Direction.Input && !port.portType.IsAssignableFrom(startPort.portType)) return;
+                if (port.direction == Direction.Output && !startPort.portType.IsAssignableFrom(port.portType)) return;
+
                 compatible.Add(port);
             });
-            */
-            
+
             return compatible;
         }
 

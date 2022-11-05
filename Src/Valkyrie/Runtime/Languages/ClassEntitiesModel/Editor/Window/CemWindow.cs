@@ -29,7 +29,6 @@ namespace Valkyrie.Window
             Formatting = Formatting.Indented
         };
 
-        
         private void Load()
         {
             if (File.Exists(fileName))
@@ -37,6 +36,9 @@ namespace Valkyrie.Window
                 _graphView.Graph = JsonConvert.DeserializeObject<OverAllGraph>(File.ReadAllText(fileName), SerializeSettings);
                 _graphView.Reload();
             }
+            
+            if(_graphView.Graph == null)
+                _graphView.Graph = new OverAllGraph();
         }
 
         private CemGraphView _graphView;
@@ -57,8 +59,7 @@ namespace Valkyrie.Window
 
             _graphView = root.Q<CemGraphView>();
             
-            //TODO:
-            _graphView.Graph = new OverAllGraph();
+            Load();
         }
 
         private void OnDisable()

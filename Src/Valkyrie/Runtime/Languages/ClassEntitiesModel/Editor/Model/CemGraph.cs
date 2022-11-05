@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -20,6 +21,17 @@ namespace Valkyrie.Model
         }
 
         public abstract IEnumerable<INodeFactory> GetFactories();
+        public IEnumerable<string> GetOutputConnections(string outputPortUid)
+        {
+            foreach (var (key, list) in _connections)
+                if (list.Contains(outputPortUid))
+                    yield return key;
+        }
+
+        public IEnumerable<string> GetInputConnections(string inputPortUid) =>
+            _connections.TryGetValue(inputPortUid, out var list)
+                ? list
+                : Enumerable.Empty<string>();
 
         public INode Create(INodeFactory nodeType)
         {

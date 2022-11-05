@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Valkyrie.Model
@@ -14,5 +15,8 @@ namespace Valkyrie.Model
         void MarkDirty();
 
         IEnumerable<INodeFactory> GetFactories();
+        
+        IEnumerable<string> GetOutputConnections(string outputPortUid);
+        IEnumerable<string> GetInputConnections(string inputPortUid);
     }
 }

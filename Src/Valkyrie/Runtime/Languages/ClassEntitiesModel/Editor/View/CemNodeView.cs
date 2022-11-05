@@ -10,13 +10,16 @@ namespace Valkyrie.View
     {
         public IEdgeConnectorListener EdgeListener { get; set; }
         
-        public Model.INode Node => (Model.INode)userData;
+        public Model.INode Node => (INode)userData;
 
         bool INodeView.IsMovable => true;
 
+        public VisualElement GetRoot() => mainContainer;
 
         public void Init(INode node)
         {
+            name = node.Uid;
+            
             userData = node;
             viewDataKey = node.Uid;
 
@@ -50,6 +53,7 @@ namespace Valkyrie.View
             portView.AddToClassList($"Port_{port.GetType()}");
             portView.portName = port.Name;
             portView.userData = port;
+            portView.name = port.Uid;
             
             switch (port.Direction)
             {
@@ -64,5 +68,7 @@ namespace Valkyrie.View
             }
             
         }
+        
+        
     }
 }
