@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Valkyrie
 {
     [Serializable]
-    public abstract class MainFeatureData : Graph
+    public abstract class MainFeatureData
     {
         public string name;
         public string displayName;

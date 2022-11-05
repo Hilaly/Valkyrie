@@ -1,24 +1,17 @@
-using System;
-using Newtonsoft.Json;
-using UnityEngine;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 
 namespace Valkyrie.View
 {
-    public interface INodeView
+    class CemNodeView : UnityEditor.Experimental.GraphView.Node, INodeView, IEditorNodeView
     {
-        Rect GetPosition();
-        void SetPosition(Rect pos);
-        bool IsMovable { get; }
-    }
-    
-    class CemNodeView : UnityEditor.Experimental.GraphView.Node, INodeView
-    {
-        public INode Node => (INode)userData;
+        public IEdgeConnectorListener EdgeListener { get; set; }
+        
+        public Model.INode Node => (Model.INode)userData;
 
         bool INodeView.IsMovable => true;
 
-        public CemNodeView(INode node)
+        public CemNodeView(Model.INode node)
         {
             userData = node;
             viewDataKey = node.Uid;
@@ -33,35 +26,6 @@ namespace Valkyrie.View
             */
             
             title = node.Name;
-        }
-    }
-
-    public interface INode
-    {
-        string Uid { get; }
-        
-        string Name { get; }
-        Vector2 NodePosition { get; set; }
-    }
-
-    [Serializable]
-    class CemNode : INode
-    {
-        [SerializeField, JsonProperty] private string uid = Guid.NewGuid().ToString();
-        [SerializeField, JsonProperty] private Rect rect;
-        
-        public string Name { get; set; }
-        
-        [JsonIgnore] public string Uid => uid;
-        [JsonIgnore] public Rect NodeRect
-        {
-            get => rect;
-            set => rect = value;
-        }
-        [JsonIgnore] public Vector2 NodePosition
-        {
-            get => rect.position;
-            set => rect.position = value;
         }
     }
 }

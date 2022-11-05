@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Valkyrie
 {
-    public class WorldModelInfo : Feature, IGraph
+    public class WorldModelInfo : Feature
     {
         public string Namespace;
 
