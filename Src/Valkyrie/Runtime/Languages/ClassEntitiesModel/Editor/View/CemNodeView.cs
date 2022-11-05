@@ -19,7 +19,10 @@ namespace Valkyrie.View
 
         public void Init(INode node)
         {
-            this.AddToClassList($"Node_{node.GetType()}");
+            AddToClassList($"Node_{node.GetType()}");
+
+            node.NodeChanged += OnNodeChanged;
+            
             name = node.Uid;
 
             userData = node;
@@ -125,5 +128,10 @@ namespace Valkyrie.View
         }
 
         void UpdateTitle() => title = Node.Name;
+        
+        private void OnNodeChanged(CemNodeChangedEvent obj)
+        {
+            Debug.LogWarning($"[CEM]: OnNodeChanged {Node.Uid} not implemented");
+        }
     }
 }
