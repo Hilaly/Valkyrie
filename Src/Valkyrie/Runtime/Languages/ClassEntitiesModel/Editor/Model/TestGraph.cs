@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
+using Utils;
 using Valkyrie.Window;
 
 namespace Valkyrie.Model
@@ -10,10 +13,9 @@ namespace Valkyrie.Model
     {
         public override IEnumerable<INodeFactory> GetFactories()
         {
-            return new[]
-            {
-                new ConfigNode.Factory()
-            };
+            return typeof(INodeFactory)
+                .GetAllSubTypes(x => x.IsClass && !x.IsAbstract && x.GetConstructor(Type.EmptyTypes) != null)
+                .Select(x => (INodeFactory)Activator.CreateInstance(x));
         }
 
         public override void MarkDirty()
@@ -22,7 +24,7 @@ namespace Valkyrie.Model
         }
     }
 
-    class SimpleGenericFactory<T> : INodeFactory where T : CemNode, new()
+    abstract class SimpleGenericFactory<T> : INodeFactory where T : CemNode, new()
     {
         public string Name { get; }
         public string Path { get; }
@@ -33,20 +35,17 @@ namespace Valkyrie.Model
             Path = path;
         }
 
-        public INode Create() => new T
+        public INode Create()
         {
-            Name = Name,
-            NodeRect = new Rect(0, 0, 100, 50)
-        };
-    }
-
-    class ConfigNode : CemNode
-    {
-        public class Factory : SimpleGenericFactory<ConfigNode>
-        {
-            public Factory() : base("Config", "Types")
-            {
-            }
+            var r = CreateNode();
+            return r;
         }
+
+        protected virtual T CreateNode() =>
+            new T
+            {
+                Name = Name,
+                NodeRect = new Rect(0, 0, 100, 50)
+            };
     }
 }

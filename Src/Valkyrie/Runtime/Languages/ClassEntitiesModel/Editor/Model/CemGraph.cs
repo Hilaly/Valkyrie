@@ -25,6 +25,8 @@ namespace Valkyrie.Model
         {
             var node = nodeType.Create();
             _nodes.Add(node);
+            if(node is INodeExt nodeExt)
+                nodeExt.OnCreate();
             MarkDirty();
             return node;
         }

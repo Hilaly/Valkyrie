@@ -1,5 +1,8 @@
+using System;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
+using Valkyrie.Model;
 
 namespace Valkyrie.View
 {
@@ -11,7 +14,8 @@ namespace Valkyrie.View
 
         bool INodeView.IsMovable => true;
 
-        public CemNodeView(Model.INode node)
+
+        public void Init(INode node)
         {
             userData = node;
             viewDataKey = node.Uid;
@@ -27,7 +31,38 @@ namespace Valkyrie.View
             
             title = node.Name;
             
+            InitializePorts();
+            
             RefreshExpandedState();
+        }
+        void InitializePorts()
+        {
+            var listener = EdgeListener;
+
+            foreach (var port in Node.Ports.OfType<IOutputPort>()) AddPort(port);
+            foreach (var port in Node.Ports.OfType<IInputPort>()) AddPort(port);
+        }
+
+        private void AddPort(IPort port)
+        {
+            var portView = new CemPortView(port.Orientation, port.Direction, port.Capacity, port.Type, EdgeListener);
+            
+            portView.AddToClassList($"Port_{port.GetType()}");
+            portView.portName = port.Name;
+            portView.userData = port;
+            
+            switch (port.Direction)
+            {
+                case Direction.Input:
+                    inputContainer.Add(portView);
+                    break;
+                case Direction.Output:
+                    outputContainer.Add(portView);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
         }
     }
 }

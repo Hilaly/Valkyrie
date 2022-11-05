@@ -263,8 +263,10 @@ namespace Valkyrie.View
         
         INodeView CreateNodeView(Model.INode node)
         {
-            var element = new CemNodeView(node);
-            if (element is IEditorNodeView editorView) editorView.EdgeListener = EdgeConnectorListener;
+            var element = new CemNodeView();
+            if (element is IEditorNodeView editorView)
+                editorView.EdgeListener = EdgeConnectorListener;
+            element.Init(node);
             element.SetPosition(node.NodeRect);
             AddElement(element);
             return element;

@@ -22,10 +22,11 @@ namespace Valkyrie.Window
         }
 
         internal static string fileName = "Assets/graph.json";
-        internal static JsonSerializerSettings SerializeSettings = new JsonSerializerSettings()
+        internal static JsonSerializerSettings SerializeSettings = new()
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.All
+            TypeNameHandling = TypeNameHandling.All,
+            Formatting = Formatting.Indented
         };
 
         
