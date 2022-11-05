@@ -12,9 +12,9 @@ namespace Valkyrie.Model
         [SerializeField, JsonProperty] private List<INode> _nodes = new();
         [SerializeField, JsonProperty] private KeyListCollection<string, string> _connections = new();
 
-        public IReadOnlyList<INode> Nodes => _nodes;
+        [JsonIgnore] public IReadOnlyList<INode> Nodes => _nodes;
 
-        public void MarkDirty()
+        public virtual void MarkDirty()
         {
             Debug.Log($"[CEM] graph {Uid} changed");
         }

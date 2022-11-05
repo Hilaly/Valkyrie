@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,6 +17,25 @@ namespace Valkyrie.Window
         {
             CemWindow wnd = GetWindow<CemWindow>();
             wnd.titleContent = new GUIContent("CemWindow");
+
+            wnd.Load();
+        }
+
+        internal static string fileName = "Assets/graph.json";
+        internal static JsonSerializerSettings SerializeSettings = new JsonSerializerSettings()
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.All
+        };
+
+        
+        private void Load()
+        {
+            if (File.Exists(fileName))
+            {
+                _graphView.Graph = JsonConvert.DeserializeObject<OverAllGraph>(File.ReadAllText(fileName), SerializeSettings);
+                _graphView.Reload();
+            }
         }
 
         private CemGraphView _graphView;
@@ -35,7 +57,12 @@ namespace Valkyrie.Window
             _graphView = root.Q<CemGraphView>();
             
             //TODO:
-            _graphView.Graph = new TestGraph();
+            _graphView.Graph = new OverAllGraph();
+        }
+
+        private void OnDisable()
+        {
+            _graphView.Graph.MarkDirty();
         }
     }
 }

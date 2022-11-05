@@ -26,6 +26,8 @@ namespace Valkyrie.View
             */
             
             title = node.Name;
+            
+            RefreshExpandedState();
         }
     }
 }

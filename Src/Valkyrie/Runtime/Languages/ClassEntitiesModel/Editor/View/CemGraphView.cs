@@ -265,6 +265,7 @@ namespace Valkyrie.View
         {
             var element = new CemNodeView(node);
             if (element is IEditorNodeView editorView) editorView.EdgeListener = EdgeConnectorListener;
+            element.SetPosition(node.NodeRect);
             AddElement(element);
             return element;
         }
