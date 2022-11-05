@@ -19,7 +19,7 @@ namespace Valkyrie.View
         private CemSearchProvider _searchProvider;
         private MiniMap _minimap;
 
-        public Model.IGraph Graph { get; private set; }
+        public Model.IGraph Graph { get; internal set; }
         public IEdgeConnectorListener EdgeConnectorListener { get; }
 
         public CemGraphView()

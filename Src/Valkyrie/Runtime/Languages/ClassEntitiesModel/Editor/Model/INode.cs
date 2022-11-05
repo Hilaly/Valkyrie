@@ -2,11 +2,6 @@ using UnityEngine;
 
 namespace Valkyrie.Model
 {
-    public interface IPort
-    {
-        string Uid { get; }
-    }
-    
     public interface INode
     {
         string Uid { get; }

@@ -1,6 +1,8 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Valkyrie.Model;
+using Valkyrie.View;
 
 namespace Valkyrie.Window
 {
@@ -13,6 +15,8 @@ namespace Valkyrie.Window
             CemWindow wnd = GetWindow<CemWindow>();
             wnd.titleContent = new GUIContent("CemWindow");
         }
+
+        private CemGraphView _graphView;
 
         public void CreateGUI()
         {
@@ -27,6 +31,11 @@ namespace Valkyrie.Window
             // The style will be applied to the VisualElement and all of its children.
             var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/CemWindow.uss");
             root.styleSheets.Add(styleSheet);
+
+            _graphView = root.Q<CemGraphView>();
+            
+            //TODO:
+            _graphView.Graph = new TestGraph();
         }
     }
 }
