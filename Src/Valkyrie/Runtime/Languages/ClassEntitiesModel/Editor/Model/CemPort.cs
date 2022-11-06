@@ -45,12 +45,12 @@ namespace Valkyrie.Model
         }
     }
 
-    class GenericCemInputPort<T> : GenericPort<T>, IInputPort
+    class CemInputPort<T> : GenericPort<T>, IInputPort
     {
         public override Direction Direction => Direction.Input;
     }
 
-    class GenericCemOutputPort<T> : GenericPort<T>, IOutputPort
+    class CemOutputPort<T> : GenericPort<T>, IOutputPort
     {
         public override Direction Direction => Direction.Output;
     }

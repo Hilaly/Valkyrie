@@ -7,14 +7,21 @@ namespace Valkyrie.Model.Nodes
     [Preserve]
     class ListPropertyNode : CemNode
     {
-        private PropertyDefine _output;
-        
-        [Output("Output"), JsonIgnore] public PropertyDefine Output => _output;
+        public class Factory : SimpleGenericFactory<ListPropertyNode>
+        {
+            public Factory() : base("List", "Properties")
+            {
+            }
+        }
+
+        [Output("Output"), JsonIgnore]
+        [field: JsonProperty]
+        public PropertyDefine Output { get; } = new();
 
         [Input("Input"), JsonIgnore]
         public PropertyDefine Input
         {
-            set => _output.Type = $"{typeof(List<>).Namespace}.List<{value.Type}>";
+            set => Output.Type = $"{typeof(List<>).Namespace}.List<{value.Type}>";
         }
     }
     

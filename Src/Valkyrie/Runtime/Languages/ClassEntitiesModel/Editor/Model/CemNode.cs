@@ -82,14 +82,14 @@ namespace Valkyrie.Model
             }
         }
 
-        protected IPort CreateInputPort<TType>(string name) => CreatePort<GenericCemInputPort<TType>>(name);
-        protected IPort CreateOutputPort<TType>(string name) => CreatePort<GenericCemOutputPort<TType>>(name);
+        protected IPort CreateInputPort<TType>(string name) => CreatePort<CemInputPort<TType>>(name);
+        protected IPort CreateOutputPort<TType>(string name) => CreatePort<CemOutputPort<TType>>(name);
 
         protected IPort CreatePort(string name, Type valueType, Direction direction)
         {
             var genericType = direction == Direction.Input
-                ? typeof(GenericCemInputPort<>)
-                : typeof(GenericCemOutputPort<>);
+                ? typeof(CemInputPort<>)
+                : typeof(CemOutputPort<>);
             var portType = genericType.MakeGenericType(valueType);
             return CreatePort(name, portType);
         }

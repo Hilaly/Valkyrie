@@ -17,8 +17,6 @@ namespace Valkyrie.Window
         {
             CemWindow wnd = GetWindow<CemWindow>();
             wnd.titleContent = new GUIContent("CemWindow");
-
-            wnd.Load();
         }
 
         internal static string fileName = "Assets/graph.json";
@@ -34,6 +32,7 @@ namespace Valkyrie.Window
         {
             if (File.Exists(fileName))
             {
+                Debug.Log($"[CEM]: loading from {fileName}");
                 _graphView.Graph = JsonConvert.DeserializeObject<OverAllGraph>(File.ReadAllText(fileName), SerializeSettings);
                 _graphView.Reload();
             }
