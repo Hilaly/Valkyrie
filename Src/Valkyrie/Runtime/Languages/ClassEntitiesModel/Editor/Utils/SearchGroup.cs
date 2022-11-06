@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-namespace Valkyrie.View
+namespace Valkyrie.Utils
 {
     class SearchGroup
     {

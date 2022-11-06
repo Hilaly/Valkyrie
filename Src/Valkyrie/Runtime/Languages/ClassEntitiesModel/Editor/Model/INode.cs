@@ -21,6 +21,18 @@ namespace Valkyrie.Model
     {
         void OnCreate();
     }
+
+    public interface INodeWithFields : INode
+    {
+        IEnumerable<INodeProperty> Properties { get; }
+    }
     
     public interface IRenamable {}
+
+    public interface INodeProperty
+    {
+        string Name { get; }
+        Type PropertyType { get; }
+        object Value { get; set; }
+    }
 }

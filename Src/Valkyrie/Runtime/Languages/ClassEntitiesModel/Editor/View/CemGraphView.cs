@@ -6,6 +6,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Valkyrie.Model;
+using Valkyrie.Utils;
 using Valkyrie.Window;
 
 namespace Valkyrie.View

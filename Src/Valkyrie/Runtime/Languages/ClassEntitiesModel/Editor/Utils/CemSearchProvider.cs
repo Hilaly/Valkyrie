@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using Utils;
+using Valkyrie.View;
 
-namespace Valkyrie.View
+namespace Valkyrie.Utils
 {
     class CemSearchProvider : ScriptableObject, ISearchWindowProvider
     {

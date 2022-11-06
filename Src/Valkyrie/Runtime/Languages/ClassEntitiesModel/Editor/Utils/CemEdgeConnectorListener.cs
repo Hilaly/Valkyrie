@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using Valkyrie.View;
 
-namespace Valkyrie.View
+namespace Valkyrie.Utils
 {
     class CemEdgeConnectorListener : IEdgeConnectorListener
     {

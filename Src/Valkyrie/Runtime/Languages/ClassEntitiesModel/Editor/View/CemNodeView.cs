@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Valkyrie.Model;
@@ -40,6 +42,7 @@ namespace Valkyrie.View
             UpdateTitle();
             InitializePorts();
             SetPosition(node.NodeRect);
+            SetupProperties();
 
             if (node is IRenamable)
             {
@@ -48,6 +51,51 @@ namespace Valkyrie.View
             }
 
             RefreshExpandedState();
+        }
+
+        private void SetupProperties()
+        {
+            if (Node is INodeWithFields node)
+            {
+                foreach (var property in node.Properties)
+                {
+                    var propertyElement = CreateProperty(property);
+                    if(propertyElement != null)
+                        extensionContainer.Add(propertyElement);
+                }
+            }
+        }
+
+        private VisualElement CreateProperty(INodeProperty property)
+        {
+            var t = property.PropertyType;
+            if (t == typeof(int))
+            {
+                var r = new IntegerField(property.Name);
+                r.SetValueWithoutNotify((int)property.Value);
+                r.RegisterValueChangedCallback(e => property.Value = e.newValue);
+                r.RegisterCallback<FocusOutEvent>(e => property.Value = r.value);
+                return r;
+            }
+            else if(t == typeof(float))
+            {
+                var r = new FloatField(property.Name);
+                r.SetValueWithoutNotify((float)property.Value);
+                r.RegisterValueChangedCallback(e => property.Value = e.newValue);
+                r.RegisterCallback<FocusOutEvent>(e => property.Value = r.value);
+                return r;
+            }
+            else if(t == typeof(string))
+            {
+                var r = new TextField(property.Name);
+                r.SetValueWithoutNotify((string)property.Value);
+                r.RegisterValueChangedCallback(e => property.Value = e.newValue);
+                r.RegisterCallback<FocusOutEvent>(e => property.Value = r.value);
+                return r;
+            }
+
+            Debug.LogWarning($"[CEM]: can not create property field for {property.PropertyType.FullName}");
+            return default;
         }
 
         void InitializePorts()

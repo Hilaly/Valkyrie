@@ -18,19 +18,20 @@ namespace Valkyrie.Model
 
         [JsonIgnore] public string Uid => uid;
         [JsonIgnore] public virtual Type Type { get; set; }
-        [JsonIgnore] public INode Node { get; private set; }
-        [JsonIgnore] public string Name => _name;
+        [JsonIgnore] public INode Node { get; internal set; }
+        [JsonIgnore] public string Name
+        {
+            get => _name;
+            set => _name = value;
+        }
 
         public void Init(INode node, string name)
         {
             _name = name;
             Node = node;
             
-            var nid = $"{node.Uid}.{name}";
             if (uid.IsNullOrEmpty())
-                uid = nid;
-            else if(uid != nid)
-                throw new Exception($"Port id changed f={uid} n={nid}");
+                uid = $"{node.Uid}.{Guid.NewGuid()}";
         }
     }
 
@@ -42,19 +43,17 @@ namespace Valkyrie.Model
             get => typeof(T);
             set => throw new Exception();
         }
-
-        protected GenericPort()
-        {
-        }
     }
 
-    class CemInputPort<T> : GenericPort<T>, IInputPort
+    class GenericCemInputPort<T> : GenericPort<T>, IInputPort
     {
         public override Direction Direction => Direction.Input;
     }
 
-    class CemOutputPort<T> : GenericPort<T>, IOutputPort
+    class GenericCemOutputPort<T> : GenericPort<T>, IOutputPort
     {
         public override Direction Direction => Direction.Output;
     }
+    
+    
 }

@@ -12,6 +12,8 @@ namespace Valkyrie.Model.Nodes
         {
             CreateInputPort<T>("Parents").Capacity = Port.Capacity.Multi;
             CreateOutputPort<T>("Self").Capacity = Port.Capacity.Multi;
+
+            CreateInputPort<PropertyDefine>("Properties").Capacity = Port.Capacity.Multi;
         }
     }
 }
