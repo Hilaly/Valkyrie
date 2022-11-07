@@ -9,12 +9,10 @@ namespace Valkyrie.Model.Nodes
     {
         public class Factory : SimpleGenericFactory<ListPropertyNode>
         {
-            public Factory() : base("List", "Properties")
-            {
-            }
+            public Factory() : base("List", "Properties") { }
         }
 
-        [Output("Output"), JsonIgnore]
+        [Output("Output"), JsonIgnore, DependsOnProperty("Name")]
         [field: JsonProperty]
         public PropertyDefine Output { get; } = new();
 
@@ -23,38 +21,29 @@ namespace Valkyrie.Model.Nodes
         {
             set => Output.Type = $"{typeof(List<>).Namespace}.List<{value.Type}>";
         }
+
+        [ExportProperty(Name = "Name")]
+        public string PropertyName
+        {
+            get => Output.Name;
+            set => Output.Name = value;
+        }
     }
     
     [Preserve]
     abstract class GenericPropertyNode<T> : CemNode
     {
-        private readonly PropertyDefine _propertyDefine = new()
+        [Output("Output"), JsonIgnore, DependsOnProperty("Name")]
+        [field: JsonProperty]
+        public PropertyDefine Output { get; } = new()
         {
             Type = typeof(T).FullName
         };
-        
-        protected GenericPropertyNode()
+
+        [ExportProperty(Name = "Name")] public string PropertyName
         {
-            CreateProperty("PropertyName", "Name");
-        }
-
-        public override void OnCreate()
-        {
-            base.OnCreate();
-
-            CreateOutputPort<PropertyDefine>("Output");
-        }
-
-        [JsonIgnore] private PropertyDefine Output => _propertyDefine;
-
-        public string PropertyName
-        {
-            get => _propertyDefine.Name;
-            set
-            {
-                _propertyDefine.Name = value;
-                OnNodeChanged(CemNodeChangedEvent.PortValueChanged(GetPort("Output")));
-            }
+            get => Output.Name;
+            set => Output.Name = value;
         }
     }
     
@@ -63,9 +52,7 @@ namespace Valkyrie.Model.Nodes
     {
         public class Factory : SimpleGenericFactory<StringPropertyNode>
         {
-            public Factory() : base("string", "Properties")
-            {
-            }
+            public Factory() : base("string", "Properties") { }
         }
     }
     [Preserve]
@@ -73,9 +60,7 @@ namespace Valkyrie.Model.Nodes
     {
         public class Factory : SimpleGenericFactory<BoolPropertyNode>
         {
-            public Factory() : base("bool", "Properties")
-            {
-            }
+            public Factory() : base("bool", "Properties") { }
         }
     }
     [Preserve]
@@ -83,9 +68,7 @@ namespace Valkyrie.Model.Nodes
     {
         public class Factory : SimpleGenericFactory<IntPropertyNode>
         {
-            public Factory() : base("int", "Properties")
-            {
-            }
+            public Factory() : base("int", "Properties") { }
         }
     }
     [Preserve]
@@ -93,9 +76,7 @@ namespace Valkyrie.Model.Nodes
     {
         public class Factory : SimpleGenericFactory<FloatPropertyNode>
         {
-            public Factory() : base("float", "Properties")
-            {
-            }
+            public Factory() : base("float", "Properties") { }
         }
     }
 

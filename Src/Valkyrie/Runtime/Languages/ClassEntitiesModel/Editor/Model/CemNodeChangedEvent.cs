@@ -9,6 +9,7 @@ namespace Valkyrie.Model
         public List<IPort> portRemoved;
         public List<IPort> portRenamed;
         public List<IPort> portValueChanged;
+        public List<INodeProperty> propertyChanged;
 
         public static CemNodeChangedEvent AddPort(IPort port) =>
             new()
@@ -38,6 +39,12 @@ namespace Valkyrie.Model
             new()
             {
                 renamed = true
+            };
+
+        public static CemNodeChangedEvent PropertyChanged(INodeProperty property) =>
+            new()
+            {
+                propertyChanged = new List<INodeProperty>() { property }
             };
     }
 }

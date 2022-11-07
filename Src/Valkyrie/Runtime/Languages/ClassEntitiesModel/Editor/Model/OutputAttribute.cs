@@ -31,4 +31,21 @@ namespace Valkyrie.Model
             Name = name;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class ExportPropertyAttribute : Attribute
+    {
+        public string Name { get; set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class DependsOnProperty : Attribute
+    {
+        public string PropertyName { get; }
+
+        public DependsOnProperty(string propertyName)
+        {
+            PropertyName = propertyName;
+        }
+    }
 }
