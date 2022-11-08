@@ -13,9 +13,10 @@ namespace Valkyrie.Model
             Path = path;
         }
 
-        public INode Create()
+        public INode Create(IGraph graph)
         {
             var r = CreateNode();
+            r.Graph = graph;
             return r;
         }
 

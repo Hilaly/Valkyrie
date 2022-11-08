@@ -5,6 +5,6 @@ namespace Valkyrie.Model
         string Name { get; }
         string Path { get; }
         
-        INode Create();
+        INode Create(IGraph graph);
     }
 }

@@ -19,6 +19,8 @@ namespace Valkyrie.Model
         private List<INodeProperty> properties = new();
 
         public event Action<CemNodeChangedEvent> NodeChanged;
+        
+        public IGraph Graph { get; set; }
 
         [JsonIgnore]
         public string Name
@@ -58,7 +60,7 @@ namespace Valkyrie.Model
             InitAttributesProperties();
         }
 
-        protected IPort GetPort(string name) => ports.SingleOrDefault(x => x.Value.Name == name).Value;
+        public IPort GetPort(string name) => ports.SingleOrDefault(x => x.Value.Name == name).Value;
 
         protected IPort CreatePort<T>(string name) where T : CemPort => CreatePort(name, typeof(T));
 

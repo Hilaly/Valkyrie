@@ -9,7 +9,7 @@ namespace Valkyrie
 
         public T Get<T>(string typeName) where T : BaseType => (T)_types.Find(x => x is T && x.Name == typeName);
 
-        private T GetOrCreate<T>(string typeName) where T : BaseType, new()
+        public T GetOrCreate<T>(string typeName) where T : BaseType, new()
         {
             var r = Get<T>(typeName);
             if (r == null)

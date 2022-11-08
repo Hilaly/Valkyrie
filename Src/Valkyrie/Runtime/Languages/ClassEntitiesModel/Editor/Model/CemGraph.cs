@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -35,7 +36,7 @@ namespace Valkyrie.Model
 
         public INode Create(INodeFactory nodeType)
         {
-            var node = nodeType.Create();
+            var node = nodeType.Create(this);
             _nodes.Add(node);
             if(node is INodeExt nodeExt)
                 nodeExt.OnCreate();
@@ -90,5 +91,13 @@ namespace Valkyrie.Model
                 .ToList();
             values.ForEach(x => _connections.Disconnect(x.Key, x.Value));
         }
+        
+        [OnDeserialized]
+        internal new void OnDeserializedMethod(StreamingContext context)
+        {
+            foreach (var node in _nodes.OfType<CemNode>()) 
+                node.Graph = this;
+        }
+
     }
 }

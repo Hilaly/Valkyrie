@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -24,7 +23,7 @@ namespace Valkyrie.View
             AddToClassList($"Node_{node.GetType()}");
 
             node.NodeChanged += OnNodeChanged;
-            
+
             name = node.Uid;
 
             userData = node;
@@ -60,8 +59,10 @@ namespace Valkyrie.View
                 foreach (var property in node.Properties)
                 {
                     var propertyElement = CreateProperty(property);
-                    if(propertyElement != null)
+                    if (propertyElement != null)
                         extensionContainer.Add(propertyElement);
+                    else
+                        extensionContainer.Add(new Label($"Placeholder: {property.Name}"));
                 }
             }
         }
@@ -77,7 +78,7 @@ namespace Valkyrie.View
                 r.RegisterCallback<FocusOutEvent>(e => property.Value = r.value);
                 return r;
             }
-            else if(t == typeof(float))
+            else if (t == typeof(float))
             {
                 var r = new FloatField(property.Name);
                 r.SetValueWithoutNotify((float)property.Value);
@@ -85,7 +86,7 @@ namespace Valkyrie.View
                 r.RegisterCallback<FocusOutEvent>(e => property.Value = r.value);
                 return r;
             }
-            else if(t == typeof(string))
+            else if (t == typeof(string))
             {
                 var r = new TextField(property.Name);
                 r.SetValueWithoutNotify((string)property.Value);
@@ -176,7 +177,7 @@ namespace Valkyrie.View
         }
 
         void UpdateTitle() => title = Node.Name;
-        
+
         private void OnNodeChanged(CemNodeChangedEvent obj)
         {
             Debug.LogWarning($"[CEM]: OnNodeChanged {Node.Uid} not implemented");

@@ -8,10 +8,13 @@ namespace Valkyrie.Model
     {
         string Uid { get; }
         
+        IGraph Graph { get; }
+        
         string Name { get; set; }
         Rect NodeRect { get; set; }
         Vector2 NodePosition { get; set; }
-        
+
+        IPort GetPort(string name);
         IEnumerable<IPort> Ports { get; }
 
         public event Action<CemNodeChangedEvent> NodeChanged;
