@@ -47,6 +47,12 @@ namespace Valkyrie.Utils
                 var baseType = GetOrCreate<TType, TNode>(baseTypeNode, world, graph, initCall);
                 type.Inherit(baseType);
             }
+            foreach (var previousNode in graph.GetPreviousNodes(node.GetPort("Properties")))
+            {
+                var typedNode = previousNode as IPropertyNode;
+                var data = typedNode.Output;
+                type.AddProperty(data.Type, data.Name, true);
+            }
             
             initCall(type);
             
@@ -64,13 +70,6 @@ namespace Valkyrie.Utils
             IGraph graph) =>
             GetOrCreate<ConfigType, ConfigNode>(node, world, graph, type =>
             {
-                foreach (var previousNode in graph.GetPreviousNodes(node.GetPort("Properties")))
-                {
-                    var typedNode = previousNode as IPropertyNode;
-                    var data = typedNode.Output;
-                    type.AddProperty(data.Type, data.Name, true);
-                }
-                //TODO: init type!!!
             });
     }
 }

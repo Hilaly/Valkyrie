@@ -117,6 +117,7 @@ namespace Valkyrie.Model
         {
             foreach (var pair in ports)
                 pair.Value.Node = this;
+            SubscribeToInputChangedEvents();
             SubscribeToPropertiesChangedEvents();
         }
 
@@ -127,7 +128,7 @@ namespace Valkyrie.Model
         {
             foreach (var property in GetType()
                 .GetProperties(filter)
-                .Where(x => x.GetCustomAttribute<T>() != null))
+                .Where(x => x.GetCustomAttributes<T>().Any()))
             {
                 foreach (var attribute in property.GetCustomAttributes<T>())
                     call.Invoke(property, attribute);
@@ -137,6 +138,7 @@ namespace Valkyrie.Model
         public virtual void OnCreate()
         {
             CreateAttributesPorts();
+            SubscribeToInputChangedEvents();
             SubscribeToPropertiesChangedEvents();
         }
 
@@ -159,15 +161,36 @@ namespace Valkyrie.Model
                 });
         }
 
+        private void SubscribeToInputChangedEvents()
+        {
+            foreach (var info in GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.Instance)
+                .Where(x => x.GetCustomAttributes<DependsOnInput>().Any())
+                .Where(x => x.GetCustomAttributes<OutputAttribute>().Any()))
+            {
+                var outputs = info.GetCustomAttributes<OutputAttribute>().Select(x => GetPort(x.Name)).ToList();
+                foreach (var attribute in info.GetCustomAttributes<DependsOnInput>())
+                    NodeChanged += e =>
+                    {
+                        if (e.portValueChanged == null)
+                            return;
+
+                        foreach (var unused in e.portValueChanged.Where(x => x.Name == attribute.InputName))
+                        foreach (var port in outputs)
+                            OnNodeChanged(CemNodeChangedEvent.PortValueChanged(port));
+                    };
+            }
+        }
+
         private void SubscribeToPropertiesChangedEvents()
         {
             foreach (var info in GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.Instance)
-                .Where(x => x.GetCustomAttribute<DependsOnProperty>() != null)
-                .Where(x => x.GetCustomAttribute<OutputAttribute>() != null))
+                .Where(x => x.GetCustomAttributes<DependsOnProperty>().Any())
+                .Where(x => x.GetCustomAttributes<OutputAttribute>().Any()))
 
             {
-                Debug.LogWarning($"Output depends on property {info.Name}");
+                //Debug.LogWarning($"Output depends on property {info.Name}");
                 var outputs = info.GetCustomAttributes<OutputAttribute>().Select(x => GetPort(x.Name)).ToList();
                 foreach (var attribute in info.GetCustomAttributes<DependsOnProperty>())
                     NodeChanged += e =>

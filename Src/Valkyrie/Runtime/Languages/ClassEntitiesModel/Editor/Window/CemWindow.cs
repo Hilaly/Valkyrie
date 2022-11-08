@@ -19,6 +19,8 @@ namespace Valkyrie.Window
         {
             CemWindow wnd = GetWindow<CemWindow>();
             wnd.titleContent = new GUIContent("CemWindow");
+            
+            wnd.Load();
         }
 
         internal static string fileName = "Assets/graph.json";

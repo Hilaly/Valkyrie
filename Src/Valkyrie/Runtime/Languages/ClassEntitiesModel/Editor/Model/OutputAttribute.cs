@@ -38,7 +38,7 @@ namespace Valkyrie.Model
         public string Name { get; set; }
     }
 
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
     public class DependsOnProperty : Attribute
     {
         public string PropertyName { get; }
@@ -46,6 +46,17 @@ namespace Valkyrie.Model
         public DependsOnProperty(string propertyName)
         {
             PropertyName = propertyName;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+    public class DependsOnInput : Attribute
+    {
+        public string InputName { get; }
+
+        public DependsOnInput(string inputPortName)
+        {
+            InputName = inputPortName;
         }
     }
 }
