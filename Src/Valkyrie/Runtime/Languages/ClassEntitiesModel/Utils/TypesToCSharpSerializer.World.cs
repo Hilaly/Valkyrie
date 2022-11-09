@@ -32,6 +32,17 @@ namespace Valkyrie
                 sb.EndBlock();
                 methods.Add(new KeyValuePair<string, string>($"{window.ClassName}.cs", sb.ToString()));
             }
+            foreach (var entityType in world.Get<EntityType>())
+            {
+                if(!world.IsEntityClass(entityType))
+                    continue;
+                var sb = new FormatWriter();
+                WriteFileStart(sb);
+                sb.BeginBlock($"namespace {rootNamespace}");
+                entityType.WriteView(sb);
+                sb.EndBlock();
+                methods.Add(new KeyValuePair<string, string>($"{entityType.Name}View.cs", sb.ToString()));
+            }
 
             //2. Prepare directory
             Debug.Log($"[GENERATION]: Writing to directory {dirPath}");

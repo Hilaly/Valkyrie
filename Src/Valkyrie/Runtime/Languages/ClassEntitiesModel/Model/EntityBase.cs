@@ -497,6 +497,14 @@ namespace Valkyrie
         public static void Write(this BaseTypeProperty property, FormatWriter sb) =>
             sb.AppendLine($"public {property.GetMemberType()} {property.Name} {{ get; set; }}");
 
+        public static void WriteView(this BaseType baseType, FormatWriter sb)
+        {
+            if (!baseType.HasView)
+                return;
+            
+            
+        }
+        
         public static void WriteViewModels(this BaseType baseType, FormatWriter sb)
         {
             if (!baseType.HasView)
