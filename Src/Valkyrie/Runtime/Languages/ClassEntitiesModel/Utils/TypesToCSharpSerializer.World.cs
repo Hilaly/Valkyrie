@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
@@ -9,6 +10,7 @@ using Valkyrie.Ecs;
 using Valkyrie.Language.Description.Utils;
 using Valkyrie.MVVM.Bindings;
 using Valkyrie.Tools;
+using Valkyrie.Utils;
 using Valkyrie.Utils.Pool;
 
 namespace Valkyrie
@@ -23,26 +25,31 @@ namespace Valkyrie
             {
                 new(mainCsFile, ToString(world, false))
             };
+
+            void WriteToSeparateFile(string fileName, Action<FormatWriter> writeCall)
+            {
+                var sb = new FormatWriter();
+                WriteFileStart(sb);
+                sb.BeginBlock($"namespace {rootNamespace}");
+
+                writeCall(sb);
+
+                sb.EndBlock();
+                methods.Add(new KeyValuePair<string, string>(fileName, sb.ToString()));
+            }
+
+            //Configs
+            foreach (var configType in world.Get<ConfigType>())
+                WriteToSeparateFile(Path.Combine("Configs", $"{configType.Name}.cs"),
+                    sb => configType.WriteConfigClass(sb));
+
+            //Windows
             foreach (var window in world.Windows)
-            {
-                var sb = new FormatWriter();
-                WriteFileStart(sb);
-                sb.BeginBlock($"namespace {rootNamespace}");
-                window.WriteWindow(sb);
-                sb.EndBlock();
-                methods.Add(new KeyValuePair<string, string>($"{window.ClassName}.cs", sb.ToString()));
-            }
-            foreach (var entityType in world.Get<EntityType>())
-            {
-                if(!world.IsEntityClass(entityType))
-                    continue;
-                var sb = new FormatWriter();
-                WriteFileStart(sb);
-                sb.BeginBlock($"namespace {rootNamespace}");
-                entityType.WriteView(sb);
-                sb.EndBlock();
-                methods.Add(new KeyValuePair<string, string>($"{entityType.Name}View.cs", sb.ToString()));
-            }
+                WriteToSeparateFile(Path.Combine("Windows", $"{window.ClassName}.cs"), sb => window.WriteWindow(sb));
+
+            //Entities Views
+            foreach (var entityType in world.Get<EntityType>().Where(x => world.IsEntityClass(x) && x.HasView))
+                WriteToSeparateFile(Path.Combine("Views", $"{entityType.Name}View.cs"), sb => entityType.WriteView(sb));
 
             //2. Prepare directory
             Debug.Log($"[GENERATION]: Writing to directory {dirPath}");
@@ -58,6 +65,7 @@ namespace Valkyrie
             foreach (var (fileName, text) in methods)
             {
                 var fullPath = Path.Combine(dirPath, fileName);
+                UtilsExtensions.EnsureDirectoryExistsForFile(fullPath);
                 Debug.Log($"[GENERATION]: writing to file {fullPath}");
                 File.WriteAllText(fullPath, text);
             }
@@ -101,16 +109,6 @@ namespace Valkyrie
             world.Profile.Write(sb);
             sb.AppendLine();
             sb.AppendLine($"#endregion //Profile");
-            sb.EndBlock();
-
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region ConfigData");
-            sb.AppendLine();
-            WriteConfigs(world, sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //ConfigData");
             sb.EndBlock();
 
             sb.AppendLine();
@@ -162,12 +160,6 @@ namespace Valkyrie
             sb.AppendLine();
 
             world.Profile.WriteEvents(sb);
-        }
-
-        static private void WriteConfigs(this WorldModelInfo world, FormatWriter sb)
-        {
-            foreach (var entity in world.Get<ConfigType>())
-                entity.WriteConfigClass(sb);
         }
 
         static private void WriteBaseClassesToImplement(this WorldModelInfo world, FormatWriter sb)
@@ -616,7 +608,8 @@ namespace Valkyrie
             sb.EndBlock();
         }
 
-        static private void WriteInterfaces(this WorldModelInfo world, FormatWriter sb, List<(string, BaseType)> allTimers)
+        static private void WriteInterfaces(this WorldModelInfo world, FormatWriter sb,
+            List<(string, BaseType)> allTimers)
         {
             sb.AppendLine("public interface IEntity { }");
             sb.AppendLine();

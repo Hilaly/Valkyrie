@@ -18,7 +18,7 @@ namespace Valkyrie
 
             sb.AppendLine($"#region {BaseConfigInterface}");
             sb.AppendLine();
-            sb.BeginBlock($"public override void PastLoad(IDictionary<string, {BaseConfigInterface}> configData)");
+            sb.BeginBlock($"public override void PastLoad(IDictionary<string, {typeof(IConfigData).FullName}> configData)");
             sb.AppendLine("base.PastLoad(configData);");
             sb.EndBlock();
             sb.AppendLine();

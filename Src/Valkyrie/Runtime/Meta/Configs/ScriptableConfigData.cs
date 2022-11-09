@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Configs
 {
-    public abstract class ScriptableConfigData : ScriptableObject
+    public abstract class ScriptableConfigData : ScriptableObject, IConfigData
     {
         public string GetId() => name;
 
