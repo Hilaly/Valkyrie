@@ -12,7 +12,7 @@ namespace Valkyrie
     {
         private static readonly Regex ListMatch = new Regex(@"List<(?<value>[\d\w\.]+)>");
         
-        public static Type FindType(this string typeName)
+        public static Type FindType(this string typeName, bool throwOnError = true)
         {
             var match = ListMatch.Match(typeName);
             if (match.Success)
@@ -33,7 +33,7 @@ namespace Valkyrie
             var allSubTypes = typeof(object).GetAllSubTypes(x => x.FullName == typeName || x.Name == typeName);
             var r = allSubTypes.FirstOrDefault(x => x.FullName == typeName)
                     ?? allSubTypes.FirstOrDefault();
-            if (r == null)
+            if (r == null && throwOnError)
                 throw new Exception($"Couldn't find type {typeName}");
             return r;
         }

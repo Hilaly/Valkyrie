@@ -14,6 +14,7 @@ namespace Valkyrie.Model
     {
         public string Name { get; }
         public Direction Direction => Direction.Output;
+        public Port.Capacity Capacity { get; set; } = Port.Capacity.Single;
 
         public OutputAttribute(string name)
         {
@@ -25,6 +26,7 @@ namespace Valkyrie.Model
     {
         public string Name { get; }
         public Direction Direction => Direction.Input;
+        public Port.Capacity Capacity { get; set; } = Port.Capacity.Single;
 
         public InputAttribute(string name)
         {

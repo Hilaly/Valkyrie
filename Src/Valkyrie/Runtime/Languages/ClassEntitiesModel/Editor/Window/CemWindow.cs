@@ -75,13 +75,7 @@ namespace Valkyrie.Window
             
             while (_toolbarBreadcrumbs.childCount > 0) _toolbarBreadcrumbs.PopItem();
 
-            var graphList = new List<IGraph>();
-            var g = graph;
-            while (g != null)
-            {
-                graphList.Add(g);
-                g = g is INode node ? node.Graph : default;
-            }
+            var graphList = graph.GetGraphTree();
 
             for (var i = graphList.Count - 1; i >= 0; --i)
             {

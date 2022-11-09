@@ -18,6 +18,8 @@ namespace Valkyrie.Model
         IEnumerable<IPort> Ports { get; }
 
         public event Action<CemNodeChangedEvent> NodeChanged;
+
+        void PrepareForDrawing();
     }
 
     public interface INodeExt : INode
@@ -29,6 +31,8 @@ namespace Valkyrie.Model
     {
         IEnumerable<INodeProperty> Properties { get; }
     }
+    
+    public interface IPersistentNode {}
     
     public interface IRenamable {}
 

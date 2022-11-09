@@ -19,7 +19,8 @@ namespace Valkyrie.Model
         private List<INodeProperty> properties = new();
 
         public event Action<CemNodeChangedEvent> NodeChanged;
-        
+        public virtual void PrepareForDrawing() { }
+
         public IGraph Graph { get; set; }
 
         [JsonIgnore]
@@ -62,11 +63,12 @@ namespace Valkyrie.Model
 
         public IPort GetPort(string name) => ports.SingleOrDefault(x => x.Value.Name == name).Value;
 
-        protected IPort CreatePort<T>(string name) where T : CemPort => CreatePort(name, typeof(T));
+        protected IPort CreatePort<T>(string name) where T : CemPort => CreatePort(name, typeof(T), Port.Capacity.Single);
 
-        private IPort CreatePort(string name, Type portConcreteType)
+        private IPort CreatePort(string name, Type portConcreteType, Port.Capacity capacity)
         {
             var port = (CemPort)Activator.CreateInstance(portConcreteType);
+            port.Capacity = capacity;
             port.Init(this, name);
             ports.Add(name, port);
             OnNodeChanged(CemNodeChangedEvent.AddPort(port));
@@ -91,13 +93,13 @@ namespace Valkyrie.Model
         protected IPort CreateInputPort<TType>(string name) => CreatePort<CemInputPort<TType>>(name);
         protected IPort CreateOutputPort<TType>(string name) => CreatePort<CemOutputPort<TType>>(name);
 
-        protected IPort CreatePort(string name, Type valueType, Direction direction)
+        protected IPort CreatePort(string name, Type valueType, Direction direction, Port.Capacity capacity)
         {
             var genericType = direction == Direction.Input
                 ? typeof(CemInputPort<>)
                 : typeof(CemOutputPort<>);
             var portType = genericType.MakeGenericType(valueType);
-            return CreatePort(name, portType);
+            return CreatePort(name, portType, capacity);
         }
 
         protected INodeProperty CreateProperty(string propertyName, string displayName,
@@ -115,10 +117,15 @@ namespace Valkyrie.Model
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
+            EnsureNodesExist();
             foreach (var pair in ports)
                 pair.Value.Node = this;
             SubscribeToInputChangedEvents();
             SubscribeToPropertiesChangedEvents();
+        }
+
+        protected virtual void EnsureNodesExist()
+        {
         }
 
         #region INodeExr
@@ -137,6 +144,7 @@ namespace Valkyrie.Model
 
         public virtual void OnCreate()
         {
+            EnsureNodesExist();
             CreateAttributesPorts();
             SubscribeToInputChangedEvents();
             SubscribeToPropertiesChangedEvents();
@@ -145,9 +153,9 @@ namespace Valkyrie.Model
         private void CreateAttributesPorts()
         {
             Collect<OutputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty,
-                (info, attr) => CreatePort(attr.Name, info.PropertyType, attr.Direction));
+                (info, attr) => CreatePort(attr.Name, info.PropertyType, attr.Direction, attr.Capacity));
             Collect<InputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty,
-                (info, attr) => CreatePort(attr.Name, info.PropertyType, attr.Direction));
+                (info, attr) => CreatePort(attr.Name, info.PropertyType, attr.Direction, attr.Capacity));
         }
 
         private void InitAttributesProperties()

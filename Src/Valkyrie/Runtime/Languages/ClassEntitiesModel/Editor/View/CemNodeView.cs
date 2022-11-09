@@ -45,6 +45,11 @@ namespace Valkyrie.View
             SetPosition(node.NodeRect);
             SetupProperties();
 
+            if (node is IPersistentNode)
+            {
+                capabilities ^= Capabilities.Deletable;
+            }
+
             if (node is IRenamable)
             {
                 capabilities |= Capabilities.Renamable;
