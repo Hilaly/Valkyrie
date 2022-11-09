@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using UnityEditor;
@@ -17,14 +18,23 @@ namespace Valkyrie.Window
         [MenuItem("Valkyrie/CEM %g")]
         public static void OpenWindow()
         {
+            GetOrCreate().Load();
+        }
+
+        static CemWindow GetOrCreate()
+        {
             CemWindow wnd = GetWindow<CemWindow>();
             wnd.titleContent = new GUIContent("CemWindow");
-            
-            wnd.Load();
+            return wnd;
+        }
+
+        public static void Open(IGraph graph)
+        {
+            GetOrCreate().Load(graph);
         }
 
         internal static string fileName = "Assets/graph.json";
-        internal static JsonSerializerSettings SerializeSettings = new()
+        internal static readonly JsonSerializerSettings SerializeSettings = new()
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             TypeNameHandling = TypeNameHandling.All,
@@ -32,31 +42,64 @@ namespace Valkyrie.Window
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        private void Load()
+        private void Load(IGraph graph = default)
         {
-            if (File.Exists(fileName))
+            if (graph == null)
+                if (File.Exists(fileName))
+                {
+                    try
+                    {
+                        Debug.Log($"[CEM]: loading from {fileName}");
+                        graph = JsonConvert.DeserializeObject<OverAllGraph>(File.ReadAllText(fileName),
+                            SerializeSettings);
+                    }
+                    catch (Exception e)
+                    {
+                        graph = new OverAllGraph();
+                        Debug.LogException(e);
+                    }
+                }
+                else
+                {
+                    graph = new OverAllGraph();
+                }
+
+            _graphView.Graph = graph;
+
+            UpdateView();
+        }
+
+        private void UpdateView()
+        {
+            var graph = _graphView.Graph;
+            
+            while (_toolbarBreadcrumbs.childCount > 0) _toolbarBreadcrumbs.PopItem();
+
+            var graphList = new List<IGraph>();
+            var g = graph;
+            while (g != null)
             {
-                try
-                {
-                    Debug.Log($"[CEM]: loading from {fileName}");
-                    _graphView.Graph = JsonConvert.DeserializeObject<OverAllGraph>(File.ReadAllText(fileName), SerializeSettings);
-                    _graphView.Reload();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
+                graphList.Add(g);
+                g = g is INode node ? node.Graph : default;
             }
 
-            if (_graphView.Graph == null)
+            for (var i = graphList.Count - 1; i >= 0; --i)
             {
-                _graphView.Graph = new OverAllGraph();
-                _graphView.Reload();
+                var temp = graphList[i];
+                _toolbarBreadcrumbs.PushItem(temp.Name, () => HandleBreadcrumbClick(temp));
             }
+            
+            _graphView.Reload();
+        }
+
+        private void HandleBreadcrumbClick(IGraph graph)
+        {
+            Load(graph);
         }
 
         private CemGraphView _graphView;
         private Toolbar _toolbar;
+        private ToolbarBreadcrumbs _toolbarBreadcrumbs;
 
         public void CreateGUI()
         {
@@ -83,7 +126,7 @@ namespace Valkyrie.Window
         {
             _toolbar = new Toolbar();
 
-            var _toolbarBreadcrumbs = new ToolbarBreadcrumbs();
+            _toolbarBreadcrumbs = new ToolbarBreadcrumbs();
             _toolbar.Add(_toolbarBreadcrumbs);
 
             var spacer = new ToolbarSpacer {flex = true};

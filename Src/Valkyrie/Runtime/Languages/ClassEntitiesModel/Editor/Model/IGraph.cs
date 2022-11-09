@@ -6,6 +6,7 @@ namespace Valkyrie.Model
     public interface IGraph
     {
         IReadOnlyList<INode> Nodes { get; }
+        string Name { get; }
 
         INode Create(INodeFactory nodeType);
 

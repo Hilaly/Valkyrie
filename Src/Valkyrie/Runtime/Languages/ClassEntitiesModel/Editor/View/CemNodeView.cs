@@ -5,6 +5,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Valkyrie.Model;
+using Valkyrie.Window;
 
 namespace Valkyrie.View
 {
@@ -38,6 +39,7 @@ namespace Valkyrie.View
             style.minHeight = node.NodeRect.size.y;
             */
 
+            AddOpenButton();
             UpdateTitle();
             InitializePorts();
             SetPosition(node.NodeRect);
@@ -50,6 +52,20 @@ namespace Valkyrie.View
             }
 
             RefreshExpandedState();
+        }
+
+        private void AddOpenButton()
+        {
+            if (Node is IGraph graph)
+            {
+                var button = new Button(OnClickOpenGraph) {text = "Open"};
+                titleButtonContainer.Add(button);
+            }
+        }
+
+        private void OnClickOpenGraph()
+        {
+            CemWindow.Open(Node as IGraph);
         }
 
         private void SetupProperties()

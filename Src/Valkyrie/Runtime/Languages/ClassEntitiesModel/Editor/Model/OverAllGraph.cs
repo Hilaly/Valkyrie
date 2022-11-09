@@ -10,6 +10,11 @@ namespace Valkyrie.Model
 {
     class OverAllGraph : CemGraph
     {
+        public OverAllGraph()
+        {
+            Name = "All";
+        }
+
         public override IEnumerable<INodeFactory> GetFactories()
         {
             return typeof(INodeFactory)

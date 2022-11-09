@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Scripting;
 
 namespace Valkyrie.Model.Nodes
@@ -10,6 +12,11 @@ namespace Valkyrie.Model.Nodes
             public Factory() : base("Archetype", "Types")
             {
             }
+        }
+
+        public override IEnumerable<INodeFactory> GetFactories()
+        {
+            return Enumerable.Empty<INodeFactory>();
         }
     }
 }

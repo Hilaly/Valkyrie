@@ -5,7 +5,7 @@ namespace Valkyrie.Model.Nodes
 {
     [Preserve]
     abstract class TypeDefineNode<T> :
-        CemNode, IRenamable
+        CemGraph, IRenamable
         where T : TypeDefineNode<T>
     {
         public override void OnCreate()

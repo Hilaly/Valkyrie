@@ -328,10 +328,6 @@ namespace Valkyrie.View
         public void Reload()
         {
             Cleanup();
-
-            /*TODO if (GraphAsset == null) return;
-            Graph.Definition(Graph);
-            */
             CreateSearch();
             // TODO: If graph.NodeCount > 100 we need a loading bar and maybe an async process that does the below
             // https://docs.unity3d.com/ScriptReference/EditorUtility.DisplayProgressBar.html
