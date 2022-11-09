@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
@@ -42,6 +41,8 @@ namespace Valkyrie
             foreach (var configType in world.Get<ConfigType>())
                 WriteToSeparateFile(Path.Combine("Configs", $"{configType.Name}.cs"),
                     sb => configType.WriteConfigClass(sb));
+            WriteToSeparateFile(Path.Combine("Configs", $"ProjectConfigService.cs"),
+                sb => WriteConfigService(world, sb));
 
             //Windows
             foreach (var window in world.Windows)

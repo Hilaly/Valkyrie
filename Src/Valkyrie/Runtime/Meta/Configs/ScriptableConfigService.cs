@@ -71,14 +71,37 @@ namespace Configs
         public T Create<T>() where T : ScriptableObject, IConfigData
         {
             var r = CreateInstance<T>();
+            r.name = Guid.NewGuid().ToString();
             serializedData.Add(r);
             
 #if UNITY_EDITOR
             UnityEditor.AssetDatabase.AddObjectToAsset(r, this);
             UnityEditor.AssetDatabase.Refresh();
+
+            UnityEditor.AssetDatabase.ImportAsset(UnityEditor.AssetDatabase.GetAssetPath(r));
 #endif
 
             return r;
+        }
+
+        public void Refresh()
+        {
+#if UNITY_EDITOR
+            var assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(UnityEditor.AssetDatabase.GetAssetPath(this));
+            foreach (var asset in assets)
+            {
+                if (asset is ScriptableConfigData cd)
+                    cd.name = cd.id;
+                if(this == asset)
+                    continue;
+                if(this.serializedData.Contains(asset))
+                    continue;
+                UnityEditor.AssetDatabase.RemoveObjectFromAsset(asset);
+                UnityEditor.AssetDatabase.Refresh();
+            }
+            
+            UnityEditor.AssetDatabase.ImportAsset(UnityEditor.AssetDatabase.GetAssetPath(this));
+#endif
         }
     }
 }

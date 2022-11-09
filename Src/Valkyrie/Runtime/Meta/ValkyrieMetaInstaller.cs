@@ -13,9 +13,10 @@ namespace Meta
         [SerializeField] private string _localSavePath = "profile.json";
 
         [Header("Use Valkyrie Configs")] 
-        [SerializeField, Tooltip("Do we use configs")] private bool useConfigs = true;
+        [SerializeField, Tooltip("Scriptable Instance of Config")]
+        private ScriptableConfigService configService;
 
-        [SerializeField, Tooltip("Do we use standart json configs")]
+        [SerializeField, Tooltip("Do we use standard json configs")]
         private bool useJsonConfig = true;
 
         [Header("Use commands")] [SerializeField, Tooltip("Do we need commands handling")]
@@ -23,18 +24,17 @@ namespace Meta
 
         public override void Register(IContainer container)
         {
-            if (useConfigs)
+            if (configService != null)
             {
-                container.Register<ConfigService>()
-                    .AsInterfacesAndSelf()
-                    .SingleInstance();
+                container.Register(configService).AsInterfacesAndSelf();
+                
                 if (useJsonConfig)
                     container.Register<JsonConfigLoader>()
                         .AsInterfacesAndSelf()
                         .SingleInstance()
                         .NonLazy();
             }
-            
+
             container.Register<PlayerInfoProvider>()
                 .AsInterfacesAndSelf()
                 .SingleInstance();

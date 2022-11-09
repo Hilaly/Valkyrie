@@ -30,5 +30,30 @@ namespace Valkyrie
 
             sb.EndBlock();
         }
+
+        private static void WriteConfigService(this WorldModelInfo world, FormatWriter sb)
+        {
+            const string typeName = "ProjectConfigService";
+            sb.AppendLine("[CreateAssetMenu(menuName = \"Project/Config\")]");
+            sb.BeginBlock($"public class {typeName} : {typeof(ScriptableConfigService).FullName}");
+            sb.EndBlock();
+            sb.AppendLine();
+
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine();
+            sb.AppendLine($"[UnityEditor.CustomEditor(typeof({typeName}), true)]");
+            sb.BeginBlock("public class ConfigServiceEditor : UnityEditor.Editor");
+            sb.AppendLine($"private {typeName} Model => ({typeName})target;");
+            sb.BeginBlock("public override void OnInspectorGUI()");
+            sb.AppendLine("base.OnInspectorGUI();");
+            foreach (var type in world.Get<ConfigType>())
+                sb.AppendLine($"if (GUILayout.Button(\"Create {type.Name}\")) Model.Create<{type.Name}>();");
+            sb.AppendLine("GUILayout.Space(10);");
+            sb.AppendLine("if(GUILayout.Button(\"Refresh\")) Model.Refresh();");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
+            sb.AppendLine("#endif");
+        }
     }
 }

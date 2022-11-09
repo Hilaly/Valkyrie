@@ -5,7 +5,8 @@ namespace Configs
 {
     public abstract class ScriptableConfigData : ScriptableObject, IConfigData
     {
-        public string GetId() => name;
+        public string id;
+        public string GetId() => id;
 
         public virtual void PastLoad(IDictionary<string, IConfigData> configData) { }
     }
