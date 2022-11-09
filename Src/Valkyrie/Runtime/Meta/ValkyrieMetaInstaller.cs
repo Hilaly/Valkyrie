@@ -8,14 +8,13 @@ namespace Meta
 {
     public class ValkyrieMetaInstaller : MonoBehaviourInstaller
     {
-        [Header("Save Data storage")]
-        [SerializeField, Tooltip("Do we use local storage for persistent data")] private bool _registerLocalStorageData;
-        [SerializeField] private string _localSavePath = "profile.json";
+        [Header("Data Storage")]
+        [SerializeField, Tooltip("Do we use local storage for persistent data")] private bool registerLocalStorageData;
+        [SerializeField] private string localSavePath = "profile.json";
 
-        [Header("Use Valkyrie Configs")] 
+        [Header("Configs")] 
         [SerializeField, Tooltip("Scriptable Instance of Config")]
         private ScriptableConfigService configService;
-
         [SerializeField, Tooltip("Do we use standard json configs")]
         private bool useJsonConfig = true;
 
@@ -45,8 +44,8 @@ namespace Meta
                 .AsInterfacesAndSelf()
                 .SingleInstance();
             
-            if (_registerLocalStorageData)
-                container.Register(() => new LocalSaveDataStorage(_localSavePath))
+            if (registerLocalStorageData)
+                container.Register(() => new LocalSaveDataStorage(localSavePath))
                     .AsInterfacesAndSelf()
                     .SingleInstance();
 
