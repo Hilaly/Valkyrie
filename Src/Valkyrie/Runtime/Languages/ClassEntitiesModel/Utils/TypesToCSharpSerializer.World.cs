@@ -7,7 +7,6 @@ using Utils;
 using Valkyrie.Di;
 using Valkyrie.Ecs;
 using Valkyrie.Language.Description.Utils;
-using Valkyrie.MVVM.Bindings;
 using Valkyrie.Tools;
 using Valkyrie.Utils;
 using Valkyrie.Utils.Pool;
@@ -25,7 +24,7 @@ namespace Valkyrie
                 new(mainCsFile, ToString(world, false))
             };
 
-            void WriteToSeparateFile(string fileName, Action<FormatWriter> writeCall)
+            void WriteToSeparateFileFull(string fileName, Action<FormatWriter> writeCall)
             {
                 var sb = new FormatWriter();
                 WriteFileStart(sb);
@@ -37,20 +36,45 @@ namespace Valkyrie
                 methods.Add(new KeyValuePair<string, string>(fileName, sb.ToString()));
             }
 
+            void WriteToSeparateFile(string subDirectory, string fileName, Action<FormatWriter> writeCall) =>
+                WriteToSeparateFileFull(Path.Combine(subDirectory, fileName), writeCall);
+
             //Configs
             foreach (var configType in world.Get<ConfigType>())
-                WriteToSeparateFile(Path.Combine("Configs", $"{configType.Name}.cs"),
+                WriteToSeparateFile("Configs", $"{configType.Name}.cs",
                     sb => configType.WriteConfigClass(sb));
-            WriteToSeparateFile(Path.Combine("Configs", $"ProjectConfigService.cs"),
+            WriteToSeparateFile("Configs", $"ProjectConfigService.cs",
                 sb => WriteConfigService(world, sb));
 
             //Windows
             foreach (var window in world.Windows)
-                WriteToSeparateFile(Path.Combine("Windows", $"{window.ClassName}.cs"), sb => window.WriteWindow(sb));
+                WriteToSeparateFile("Windows", $"{window.ClassName}.cs", sb => window.WriteWindow(sb));
 
             //Entities Views
             foreach (var entityType in world.Get<EntityType>().Where(x => world.IsEntityClass(x) && x.HasView))
-                WriteToSeparateFile(Path.Combine("Views", $"{entityType.Name}View.cs"), sb => entityType.WriteView(sb));
+                WriteToSeparateFile("Views", $"{entityType.Name}View.cs", sb => entityType.WriteView(sb));
+
+            //Events
+            foreach (var e in world.Events)
+                WriteToSeparateFile("Events", $"{e.ClassName}.cs", sb => e.Write(sb));
+            WriteToSeparateFile("Events", "EventsHandler.cs", sb => world.Profile.WriteEvents(sb));
+
+            //Profile
+            WriteToSeparateFile("Profile", "PlayerProfile.cs", sb => world.Profile.Write(sb));
+
+            //Simulation
+            WriteToSeparateFile("Simulation", "Sim.cs", sb => WriteGeneral(world, sb));
+            WriteToSeparateFile("Simulation", "Timers.cs", sb => WriteTimerHandlers(world, sb));
+            foreach (var entityType in world.Get<EntityType>())
+                WriteToSeparateFile("Simulation", $"{entityType.Name}.cs", sb =>
+                {
+                    if (world.IsEntityClass(entityType))
+                        entityType.WriteTypeClass(sb);
+                    else if (world.IsEntityInterface(entityType))
+                        entityType.WriteTypeInterface(sb);
+                    else
+                        throw new Exception($"Can not determine what is this entity is");
+                });
 
             //2. Prepare directory
             Debug.Log($"[GENERATION]: Writing to directory {dirPath}");
@@ -92,46 +116,6 @@ namespace Valkyrie
             sb.AppendLine($"#endregion //Ui");
             sb.EndBlock();
 
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region Events");
-            sb.AppendLine();
-            WriteEvents(world, sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //Events");
-            sb.EndBlock();
-
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region Profile");
-            sb.AppendLine();
-            world.Profile.Write(sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //Profile");
-            sb.EndBlock();
-
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region Entities");
-            sb.AppendLine();
-            WriteEntities(world, sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //Entities");
-            sb.EndBlock();
-
-            sb.AppendLine();
-
-            sb.BeginBlock($"namespace {rootNamespace}");
-            sb.AppendLine($"#region Simulation");
-            sb.AppendLine();
-            WriteGeneral(world, sb);
-            sb.AppendLine();
-            sb.AppendLine($"#endregion //Simulation");
-            sb.EndBlock();
-
             return sb.ToString();
         }
 
@@ -153,16 +137,6 @@ namespace Valkyrie
                 window.WriteWindow(sb);
         }
 
-        static private void WriteEvents(this WorldModelInfo world, FormatWriter sb)
-        {
-            foreach (var entity in world.Events)
-                entity.Write(sb);
-
-            sb.AppendLine();
-
-            world.Profile.WriteEvents(sb);
-        }
-
         static private void WriteBaseClassesToImplement(this WorldModelInfo world, FormatWriter sb)
         {
             sb.AppendLine($"/// <summary>");
@@ -180,18 +154,8 @@ namespace Valkyrie
             sb.EndBlock();
         }
 
-        static private void WriteEntities(this WorldModelInfo world, FormatWriter sb)
+        static private void WriteTimerHandlers(this WorldModelInfo world, FormatWriter sb)
         {
-            foreach (var entityType in world.Get<EntityType>())
-            {
-                if (world.IsEntityClass(entityType))
-                    entityType.WriteTypeClass(sb);
-                else if (world.IsEntityInterface(entityType))
-                    entityType.WriteTypeInterface(sb);
-                else
-                    throw new Exception($"Can not determine what is this entity is");
-            }
-
             var allTimers = world.GetAllTimers();
             foreach (var timer in allTimers)
             {
@@ -289,7 +253,8 @@ namespace Valkyrie
             sb.AppendLine("private readonly IViewsProvider _viewsProvider;");
             foreach (var entity in world.Get<EntityType>())
             foreach (var property in entity.GetPrefabsProperties())
-                sb.AppendLine($"private readonly Dictionary<{entity.Name}ViewModel, {entity.Name}View> _views{entity.Name}{property.PropertyName} = new();");
+                sb.AppendLine(
+                    $"private readonly Dictionary<{entity.Name}ViewModel, {entity.Name}View> _views{entity.Name}{property.PropertyName} = new();");
             sb.BeginBlock("public WorldView(WorldState worldState, IViewsProvider viewsProvider)");
             sb.AppendLine("_worldState = worldState;");
             sb.AppendLine("_viewsProvider = viewsProvider;");
@@ -489,7 +454,8 @@ namespace Valkyrie
             sb.BeginBlock("TView IViewsProvider.Spawn<TView>(string prefabName)");
             sb.AppendLine("var disposable = _objectsPool.Instantiate<TView>(prefabName);");
             sb.AppendLine("#if UNITY_EDITOR");
-            sb.AppendLine("Debug.Assert(disposable.Instance != null, $\"Couldn't find {typeof(TView).Name} component on {prefabName}\");");
+            sb.AppendLine(
+                "Debug.Assert(disposable.Instance != null, $\"Couldn't find {typeof(TView).Name} component on {prefabName}\");");
             sb.AppendLine("#endif");
             sb.AppendLine("_cache.Add(disposable.Instance, disposable);");
             sb.AppendLine("return disposable.Instance;");
