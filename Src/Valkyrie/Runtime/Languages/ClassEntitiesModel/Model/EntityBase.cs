@@ -79,6 +79,17 @@ namespace Valkyrie
         }
     }
 
+    class ViewTypeData : TypeData
+    {
+        public readonly BaseType Type;
+
+        public ViewTypeData(BaseType type)
+        {
+            Type = type;
+        }
+
+        public override string GetTypeName() => $"{Type.Name}View";
+    }
     class RefTypeData : TypeData
     {
         public readonly BaseType Type;
@@ -244,7 +255,7 @@ namespace Valkyrie
                     if (withPrefab.ViewName.NotNullOrEmpty())
                         r.Add(new BaseTypeProperty
                         {
-                            Name = withPrefab.ViewName, TypeData = typeof(GameObject).ToTypeData(), IsRequired = false
+                            Name = withPrefab.ViewName, TypeData = new ViewTypeData(this), IsRequired = false
                         });
             }
 

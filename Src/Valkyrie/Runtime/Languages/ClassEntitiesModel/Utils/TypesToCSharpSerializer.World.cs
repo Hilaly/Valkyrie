@@ -289,8 +289,7 @@ namespace Valkyrie
             sb.AppendLine("private readonly IViewsProvider _viewsProvider;");
             foreach (var entity in world.Get<EntityType>())
             foreach (var property in entity.GetPrefabsProperties())
-                sb.AppendLine(
-                    $"private readonly Dictionary<{entity.Name}ViewModel, {typeof(Template).FullName}> _views{entity.Name}{property.PropertyName} = new();");
+                sb.AppendLine($"private readonly Dictionary<{entity.Name}ViewModel, {entity.Name}View> _views{entity.Name}{property.PropertyName} = new();");
             sb.BeginBlock("public WorldView(WorldState worldState, IViewsProvider viewsProvider)");
             sb.AppendLine("_worldState = worldState;");
             sb.AppendLine("_viewsProvider = viewsProvider;");
@@ -316,11 +315,11 @@ namespace Valkyrie
                     sb.AppendLine(
                         $"{typeof(Debug).FullName}.Assert(!string.IsNullOrEmpty(model.{property.PropertyName}), $\"{entityInfo.Name}.{property.PropertyName} is null or empty\");");
                     sb.AppendLine(
-                        $"var view = _viewsProvider.Spawn<{typeof(Template).FullName}>(model.{property.PropertyName});");
-                    sb.AppendLine($"view.ViewModel = viewModel;");
+                        $"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName});");
+                    sb.AppendLine($"view.Model = model;");
                     sb.AppendLine($"_views{entityInfo.Name}{property.PropertyName}.Add(viewModel, view);");
                     if (property.ViewName.NotNullOrEmpty())
-                        sb.AppendLine($"model.{property.ViewName} = view.gameObject;");
+                        sb.AppendLine($"model.{property.ViewName} = view;");
                     sb.EndBlock();
                 }
 
@@ -489,6 +488,9 @@ namespace Valkyrie
             sb.EndBlock();
             sb.BeginBlock("TView IViewsProvider.Spawn<TView>(string prefabName)");
             sb.AppendLine("var disposable = _objectsPool.Instantiate<TView>(prefabName);");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("Debug.Assert(disposable.Instance != null, $\"Couldn't find {typeof(TView).Name} component on {prefabName}\");");
+            sb.AppendLine("#endif");
             sb.AppendLine("_cache.Add(disposable.Instance, disposable);");
             sb.AppendLine("return disposable.Instance;");
             sb.EndBlock();

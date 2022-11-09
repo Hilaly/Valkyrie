@@ -39,35 +39,6 @@ namespace Valkyrie
         public static void WriteAsField(this BaseTypeProperty property, FormatWriter sb) =>
             sb.AppendLine($"public {property.GetMemberType()} {property.Name};");
 
-        public static void WriteView(this BaseType baseType, FormatWriter sb)
-        {
-            if (!baseType.HasView)
-                return;
-            
-            
-        }
-        
-        public static void WriteViewModels(this BaseType baseType, FormatWriter sb)
-        {
-            if (!baseType.HasView)
-                return;
-
-            sb.BeginBlock($"[{typeof(BindingAttribute).FullName}] public partial class {baseType.Name}ViewModel");
-            sb.AppendLine($"public {baseType.Name} Model {{ get; }}");
-            sb.BeginBlock($"public {baseType.Name}ViewModel({baseType.Name} model)");
-            sb.AppendLine("Model = model;");
-            sb.EndBlock();
-            foreach (var property in baseType.GetAllProperties(true))
-                sb.AppendLine(
-                    $"[{typeof(BindingAttribute).FullName}] public {property.GetMemberType()} {property.Name} => Model.{property.Name};");
-            foreach (var info in baseType.GetAllInfos(true))
-                sb.AppendLine(
-                    $"[{typeof(BindingAttribute).FullName}] public {info.GetMemberType()} {info.Name} => Model.{info.Name};");
-            foreach (var timer in baseType.GetAllTimers()) WriteViewModelTimer(timer, sb);
-
-            sb.EndBlock();
-        }
-
         public static void WriteTypeClass(this BaseType baseType, FormatWriter sb)
         {
             var blockName = $"public partial class {baseType.Name} : IEntity";
