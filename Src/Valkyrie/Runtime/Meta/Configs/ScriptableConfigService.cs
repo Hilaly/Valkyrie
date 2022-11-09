@@ -7,6 +7,7 @@ using Valkyrie.Di;
 
 namespace Configs
 {
+    [CreateAssetMenu(menuName = "Valkyrie/Config")]
     public class ScriptableConfigService : ScriptableObject, IConfigService
     {
         [SerializeField] private List<ScriptableObject> serializedData = new();
@@ -65,6 +66,19 @@ namespace Configs
         {
             foreach (var d in data) 
                 _configData[d.GetId()] = d;
+        }
+
+        public T Create<T>() where T : ScriptableObject, IConfigData
+        {
+            var r = CreateInstance<T>();
+            serializedData.Add(r);
+            
+#if UNITY_EDITOR
+            UnityEditor.AssetDatabase.AddObjectToAsset(r, this);
+            UnityEditor.AssetDatabase.Refresh();
+#endif
+
+            return r;
         }
     }
 }
