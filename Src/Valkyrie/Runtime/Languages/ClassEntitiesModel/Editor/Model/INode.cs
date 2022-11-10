@@ -22,9 +22,9 @@ namespace Valkyrie.Model
         void PrepareForDrawing();
     }
 
-    public interface INodeExt : INode
+    public interface INodeClone
     {
-        void OnCreate();
+        void Clone();
     }
 
     public interface INodeWithFields : INode
@@ -42,4 +42,6 @@ namespace Valkyrie.Model
         Type PropertyType { get; }
         object Value { get; set; }
     }
+    
+    public interface IFlow{}
 }

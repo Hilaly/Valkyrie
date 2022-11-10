@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -7,29 +8,31 @@ using Valkyrie.Utils;
 
 namespace Valkyrie.Model.Nodes
 {
-    interface ITypeDefine
-    {
-        string Name { get; }
-    }
-    
     [Preserve]
     abstract class TypeDefineNode<T> :
         CemGraph, IRenamable, ITypeDefine
         where T : TypeDefineNode<T>
     {
-        public override void OnCreate()
+        public override IEnumerable<INodeFactory> GetFactories()
         {
-            base.OnCreate();
-            CreateInputPort<T>("Parents").Capacity = Port.Capacity.Multi;
-            CreateOutputPort<T>("Self").Capacity = Port.Capacity.Multi;
+            return NodeFactories.GetInTypeDefinesNodes()
+                .Union(NodeFactories.GetFlowNodes());
         }
 
         protected override void EnsureNodesExist()
         {
             base.EnsureNodesExist();
+            
+            if(GetPort("Parents") == null)
+                CreateInputPort<T>("Parents").Capacity = Port.Capacity.Multi;
+            if(GetPort("Self") == null)
+                CreateOutputPort<T>("Self").Capacity = Port.Capacity.Multi;
 
             if (Nodes.FirstOrDefault(x => x is PropertiesEndPointNode) == null)
                 Create(new PropertiesEndPointNode.Factory());
+            
+            if (Nodes.FirstOrDefault(x => x is InfoEndPoint) == null)
+                Create(new InfoEndPoint.Factory());
         }
 
         public override void PrepareForDrawing()

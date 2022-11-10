@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -13,6 +14,8 @@ namespace Valkyrie.View
 {
     public class CemGraphView : GraphView
     {
+        Vector2 NewNodeMove = new Vector2(3, 26);
+        
         public new class UxmlFactory : UxmlFactory<CemGraphView, UxmlTraits>
         {
         }
@@ -48,6 +51,10 @@ namespace Valkyrie.View
 
             graphViewChanged = OnGraphViewChanged;
             viewTransformChanged = OnViewTransformChanged;
+            
+            serializeGraphElements = SerializeGraphElementsCallback;
+            canPasteSerializedData = CanPasteSerializedDataCallback;
+            unserializeAndPaste = UnserializeAndPasteCallback;
         }
 
         private void CreateDefaultElements()
@@ -256,7 +263,7 @@ namespace Valkyrie.View
             var node = Graph.Create(nodeFactory);
             var window = EditorWindow.GetWindow<CemWindow>();
             node.NodePosition = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer,
-                position - window.position.position - new Vector2(3, 26));
+                position - window.position.position - NewNodeMove);
             CreateNodeView(node);
             Save();
         }
@@ -370,6 +377,52 @@ namespace Valkyrie.View
 
             return compatible;
         }
+
+        #endregion
+
+        #region Copy/Paste
+
+        class CopyHelper
+        {
+            public List<INode> Nodes = new();
+        }
+
+        private string SerializeGraphElementsCallback(IEnumerable<GraphElement> elements)
+        {
+            var data = new CopyHelper();
+
+            foreach (CemNodeView node in elements.Where(e => e is CemNodeView).OfType<CemNodeView>())
+                data.Nodes.Add(node.Node);
+            
+            ClearSelection();
+
+            return JsonConvert.SerializeObject(data, CemWindow.SerializeSettings);
+        }
+
+        private bool CanPasteSerializedDataCallback(string data)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<CopyHelper>(data, CemWindow.SerializeSettings) != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void UnserializeAndPasteCallback(string operationname, string json)
+        {
+            var data = JsonConvert.DeserializeObject<CopyHelper>(json, CemWindow.SerializeSettings);
+            foreach (var deserializedNode in data.Nodes)
+            {
+                var node = Graph.Clone(deserializedNode);
+                node.NodePosition += NewNodeMove;
+                CreateNodeView(node);
+                Save();
+            }
+        }
+
 
         #endregion
     }

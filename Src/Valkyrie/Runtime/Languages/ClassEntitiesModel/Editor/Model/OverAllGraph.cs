@@ -18,16 +18,8 @@ namespace Valkyrie.Model
 
         public override IEnumerable<INodeFactory> GetFactories()
         {
-            return new INodeFactory[]
-            {
-                //Types defines
-                new ArchetypeNode.Factory(),
-                new ConfigNode.Factory(),
-                
-                //Types references
-                new TypeReferenceNode<ArchetypeNode>.Factory(),
-                new TypeReferenceNode<ConfigNode>.Factory(),
-            };
+            return NodeFactories.GetTypesNodes();
+            
             return typeof(INodeFactory)
                 .GetAllSubTypes(x => x.IsClass && !x.IsAbstract && x.GetConstructor(Type.EmptyTypes) != null && !x.ContainsGenericParameters)
                 .Select(x => (INodeFactory)Activator.CreateInstance(x))

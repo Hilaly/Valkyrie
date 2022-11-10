@@ -24,11 +24,11 @@ namespace Valkyrie.Utils
             foreach (var group in GetSearchGroups())
             {
                 tree.Add(group.Section);
-                Debug.LogWarning($"[CEM] Add search section {group.Section.name} d={group.Section.level}");
+                //Debug.LogWarning($"[CEM] Add search section {group.Section.name} d={group.Section.level}");
                 foreach (var entry in group.Entries)
                 {
                     tree.Add(entry);
-                    Debug.LogWarning($"[CEM] Add search entry {entry.name} d={entry.level}");
+                    //Debug.LogWarning($"[CEM] Add search entry {entry.name} d={entry.level}");
                 }
             }
 

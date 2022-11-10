@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Valkyrie.Model
 {
     [Serializable]
-    public class CemNode : INodeExt, INodeWithFields
+    public class CemNode : INodeWithFields, INodeClone
     {
         [SerializeField, JsonProperty] private string uid = Guid.NewGuid().ToString();
         [SerializeField, JsonProperty] private Rect rect;
@@ -19,7 +19,6 @@ namespace Valkyrie.Model
         private List<INodeProperty> properties = new();
 
         public event Action<CemNodeChangedEvent> NodeChanged;
-        public virtual void PrepareForDrawing() { }
 
         public IGraph Graph { get; set; }
 
@@ -59,6 +58,8 @@ namespace Valkyrie.Model
         public CemNode()
         {
             InitAttributesProperties();
+            SubscribeToInputChangedEvents();
+            SubscribeToPropertiesChangedEvents();
         }
 
         public IPort GetPort(string name) => ports.SingleOrDefault(x => x.Value.Name == name).Value;
@@ -114,6 +115,12 @@ namespace Valkyrie.Model
             return r;
         }
 
+        public virtual void PrepareForDrawing()
+        {
+            EnsurePortsExists();
+            EnsureNodesExist();
+        }
+
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
@@ -128,6 +135,22 @@ namespace Valkyrie.Model
         {
         }
 
+        private void EnsurePortsExists()
+        {
+            Collect<OutputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty,
+                (info, attr) =>
+                {
+                    if(GetPort(attr.Name) == null)
+                        CreatePort(attr.Name, info.PropertyType, attr.Direction, attr.Capacity);
+                });
+            Collect<InputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty,
+                (info, attr) =>
+                {
+                    if(GetPort(attr.Name) == null)
+                        CreatePort(attr.Name, info.PropertyType, attr.Direction, attr.Capacity);
+                });
+        }
+
         #region INodeExr
 
         void Collect<T>(BindingFlags filter, Action<PropertyInfo, T> call)
@@ -140,22 +163,6 @@ namespace Valkyrie.Model
                 foreach (var attribute in property.GetCustomAttributes<T>())
                     call.Invoke(property, attribute);
             }
-        }
-
-        public virtual void OnCreate()
-        {
-            EnsureNodesExist();
-            CreateAttributesPorts();
-            SubscribeToInputChangedEvents();
-            SubscribeToPropertiesChangedEvents();
-        }
-
-        private void CreateAttributesPorts()
-        {
-            Collect<OutputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty,
-                (info, attr) => CreatePort(attr.Name, info.PropertyType, attr.Direction, attr.Capacity));
-            Collect<InputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty,
-                (info, attr) => CreatePort(attr.Name, info.PropertyType, attr.Direction, attr.Capacity));
         }
 
         private void InitAttributesProperties()
@@ -176,13 +183,13 @@ namespace Valkyrie.Model
                 .Where(x => x.GetCustomAttributes<DependsOnInput>().Any())
                 .Where(x => x.GetCustomAttributes<OutputAttribute>().Any()))
             {
-                var outputs = info.GetCustomAttributes<OutputAttribute>().Select(x => GetPort(x.Name)).ToList();
                 foreach (var attribute in info.GetCustomAttributes<DependsOnInput>())
                     NodeChanged += e =>
                     {
                         if (e.portValueChanged == null)
                             return;
 
+                        var outputs = info.GetCustomAttributes<OutputAttribute>().Select(x => GetPort(x.Name)).ToList();
                         foreach (var unused in e.portValueChanged.Where(x => x.Name == attribute.InputName))
                         foreach (var port in outputs)
                             OnNodeChanged(CemNodeChangedEvent.PortValueChanged(port));
@@ -198,14 +205,13 @@ namespace Valkyrie.Model
                 .Where(x => x.GetCustomAttributes<OutputAttribute>().Any()))
 
             {
-                //Debug.LogWarning($"Output depends on property {info.Name}");
-                var outputs = info.GetCustomAttributes<OutputAttribute>().Select(x => GetPort(x.Name)).ToList();
                 foreach (var attribute in info.GetCustomAttributes<DependsOnProperty>())
                     NodeChanged += e =>
                     {
                         if (e.propertyChanged == null)
                             return;
 
+                        var outputs = info.GetCustomAttributes<OutputAttribute>().Select(x => GetPort(x.Name)).ToList();
                         foreach (var unused in e.propertyChanged.Where(x => x.Name == attribute.PropertyName))
                         foreach (var port in outputs)
                             OnNodeChanged(CemNodeChangedEvent.PortValueChanged(port));
@@ -219,6 +225,12 @@ namespace Valkyrie.Model
         {
             var l = NodeChanged;
             l?.Invoke(obj);
+        }
+
+        public virtual void Clone()
+        {
+            uid = Guid.NewGuid().ToString();
+            this.ports.Clear();
         }
     }
 

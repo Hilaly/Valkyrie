@@ -13,13 +13,5 @@ namespace Valkyrie.Model.Nodes
             {
             }
         }
-
-        public override IEnumerable<INodeFactory> GetFactories()
-        {
-            return new INodeFactory[]
-            {
-                new CustomPropertyNode.Factory()
-            };
-        }
     }
 }

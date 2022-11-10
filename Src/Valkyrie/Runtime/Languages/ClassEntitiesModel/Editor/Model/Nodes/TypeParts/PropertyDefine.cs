@@ -5,4 +5,9 @@ namespace Valkyrie.Model.Nodes
         public string Name;
         public string Type;
     }
+
+    class InfoDefine
+    {
+        public string Name;
+    }
 }

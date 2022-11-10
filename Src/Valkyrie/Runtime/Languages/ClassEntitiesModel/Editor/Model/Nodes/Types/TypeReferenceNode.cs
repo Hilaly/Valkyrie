@@ -15,11 +15,6 @@ namespace Valkyrie.Model.Nodes
             {
             }
         }
-        
-        public override void OnCreate()
-        {
-            base.OnCreate();
-        }
 
         [ExportProperty(Name = nameof(Typename))]
         public string Typename

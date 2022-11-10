@@ -6,6 +6,7 @@ using Valkyrie.Tools;
 
 namespace Valkyrie.Model
 {
+    [Serializable]
     public abstract class CemPort : IPort
     {
         [SerializeField, JsonProperty] private string uid;
@@ -16,7 +17,12 @@ namespace Valkyrie.Model
         
         public abstract Direction Direction { get; }
 
-        [JsonIgnore] public string Uid => uid;
+        [JsonIgnore] public string Uid
+        {
+            get => uid;
+            set => uid = value;
+        }
+
         [JsonIgnore] public virtual Type Type { get; set; }
         [JsonIgnore] public INode Node { get; internal set; }
         [JsonIgnore] public string Name

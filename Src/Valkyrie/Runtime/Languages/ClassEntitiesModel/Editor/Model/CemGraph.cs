@@ -1,10 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using UnityEngine;
+using Valkyrie.Window;
 
 namespace Valkyrie.Model
 {
@@ -18,7 +18,7 @@ namespace Valkyrie.Model
 
         public virtual void MarkDirty()
         {
-            Debug.Log($"[CEM] graph {Uid} changed");
+            Graph?.MarkDirty();
         }
 
         public abstract IEnumerable<INodeFactory> GetFactories();
@@ -37,9 +37,12 @@ namespace Valkyrie.Model
         public INode Create(INodeFactory nodeType)
         {
             var node = nodeType.Create(this);
+            return Insert(node);
+        }
+
+        INode Insert(INode node)
+        {
             _nodes.Add(node);
-            if(node is INodeExt nodeExt)
-                nodeExt.OnCreate();
             MarkDirty();
             return node;
         }
@@ -91,12 +94,43 @@ namespace Valkyrie.Model
                 .ToList();
             values.ForEach(x => _connections.Disconnect(x.Key, x.Value));
         }
-        
+
+        public override void PrepareForDrawing()
+        {
+            foreach (var node in Nodes)
+            {
+                ((CemNode)node).Graph = this;
+                node.PrepareForDrawing();
+            }
+            base.PrepareForDrawing();
+        }
+
         [OnDeserialized]
         internal new void OnDeserializedMethod(StreamingContext context)
         {
             foreach (var node in _nodes.OfType<CemNode>()) 
                 node.Graph = this;
+        }
+
+        public override void Clone()
+        {
+            base.Clone();
+            var nodesToClone = new List<INode>(_nodes);
+            _nodes.Clear();
+            this._connections.Clear();
+            foreach (var node in nodesToClone) 
+                Clone(node);
+        }
+        
+        public INode Clone(INode nodeTemplate)
+        {
+            var node = (INode)JsonConvert.DeserializeObject(
+                JsonConvert.SerializeObject(nodeTemplate, CemWindow.SerializeSettings), CemWindow.SerializeSettings);
+            if (node is CemNode cemNode)
+                cemNode.Graph = this;
+            (node as INodeClone)?.Clone();
+            
+            return Insert(node);
         }
 
     }

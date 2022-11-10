@@ -19,5 +19,7 @@ namespace Valkyrie.Model
         
         IEnumerable<string> GetOutputConnections(string outputPortUid);
         IEnumerable<string> GetInputConnections(string inputPortUid);
+        
+        INode Clone(INode node);
     }
 }
