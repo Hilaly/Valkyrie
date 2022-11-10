@@ -13,11 +13,4 @@ namespace Valkyrie.Model
         Type Type { get; set; }
         Direction Direction { get; }
     }
-    
-    public interface IInputPort : IPort
-    {}
-    
-    public interface IOutputPort: IPort
-    {
-    }
 }

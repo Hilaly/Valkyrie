@@ -97,12 +97,13 @@ namespace Valkyrie.Model
 
         public override void PrepareForDrawing()
         {
+            base.PrepareForDrawing();
+            
             foreach (var node in Nodes)
             {
                 ((CemNode)node).Graph = this;
                 node.PrepareForDrawing();
             }
-            base.PrepareForDrawing();
         }
 
         [OnDeserialized]

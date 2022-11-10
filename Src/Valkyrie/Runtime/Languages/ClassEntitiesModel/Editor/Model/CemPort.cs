@@ -40,26 +40,4 @@ namespace Valkyrie.Model
                 uid = $"{node.Uid}.{Guid.NewGuid()}";
         }
     }
-
-    public abstract class GenericPort<T> : CemPort
-    {
-        [JsonIgnore]
-        public override Type Type
-        {
-            get => typeof(T);
-            set => throw new Exception();
-        }
-    }
-
-    class CemInputPort<T> : GenericPort<T>, IInputPort
-    {
-        public override Direction Direction => Direction.Input;
-    }
-
-    class CemOutputPort<T> : GenericPort<T>, IOutputPort
-    {
-        public override Direction Direction => Direction.Output;
-    }
-    
-    
 }

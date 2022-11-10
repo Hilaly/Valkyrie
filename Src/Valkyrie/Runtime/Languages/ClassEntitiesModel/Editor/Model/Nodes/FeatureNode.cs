@@ -3,11 +3,18 @@ using System.Linq;
 
 namespace Valkyrie.Model.Nodes
 {
-    public class FeatureNode : CemGraph
+    class FeatureNode : CemGraph
     {
+        public class Factory : SimpleGenericFactory<FeatureNode>
+        {
+            public Factory() : base("Feature", "Project")
+            {
+            }
+        }
+        
         public override IEnumerable<INodeFactory> GetFactories()
         {
-            return Enumerable.Empty<INodeFactory>();
+            return NodeFactories.GetFeatureLevelNodes();
         }
     }
 }

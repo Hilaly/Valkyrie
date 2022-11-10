@@ -1,8 +1,7 @@
 namespace Valkyrie.Model.Nodes
 {
-    class PropertyDefine
+    class InfoDefine
     {
         public string Name;
-        public string Type;
     }
 }

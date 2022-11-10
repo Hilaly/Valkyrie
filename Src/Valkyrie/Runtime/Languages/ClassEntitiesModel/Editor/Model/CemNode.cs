@@ -117,8 +117,8 @@ namespace Valkyrie.Model
 
         public virtual void PrepareForDrawing()
         {
-            EnsurePortsExists();
             EnsureNodesExist();
+            EnsurePortsExists();
         }
 
         [OnDeserialized]
@@ -135,7 +135,7 @@ namespace Valkyrie.Model
         {
         }
 
-        private void EnsurePortsExists()
+        protected virtual void EnsurePortsExists()
         {
             Collect<OutputAttribute>(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty,
                 (info, attr) =>
@@ -231,36 +231,6 @@ namespace Valkyrie.Model
         {
             uid = Guid.NewGuid().ToString();
             this.ports.Clear();
-        }
-    }
-
-    class PropertyInfoNodeProperty : INodeProperty
-    {
-        private readonly INode _instance;
-        private readonly PropertyInfo _info;
-        private readonly Action<INodeProperty> _callOnChanged;
-
-        public PropertyInfoNodeProperty(INode instance, PropertyInfo info, string name,
-            Action<INodeProperty> callOnChanged)
-        {
-            _instance = instance;
-            _info = info;
-            _callOnChanged = callOnChanged;
-            Name = name;
-        }
-
-        public string Name { get; }
-
-        public Type PropertyType => _info.PropertyType;
-
-        public object Value
-        {
-            get => _info.GetValue(_instance);
-            set
-            {
-                _info.SetValue(_instance, value);
-                _callOnChanged?.Invoke(this);
-            }
         }
     }
 }

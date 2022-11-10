@@ -23,16 +23,21 @@ namespace Valkyrie.Model.Nodes
         {
             base.EnsureNodesExist();
             
-            if(GetPort("Parents") == null)
-                CreateInputPort<T>("Parents").Capacity = Port.Capacity.Multi;
-            if(GetPort("Self") == null)
-                CreateOutputPort<T>("Self").Capacity = Port.Capacity.Multi;
-
             if (Nodes.FirstOrDefault(x => x is PropertiesEndPointNode) == null)
                 Create(new PropertiesEndPointNode.Factory());
             
             if (Nodes.FirstOrDefault(x => x is InfoEndPoint) == null)
                 Create(new InfoEndPoint.Factory());
+        }
+
+        protected override void EnsurePortsExists()
+        {
+            base.EnsurePortsExists();
+            
+            if(GetPort("Parents") == null)
+                CreateInputPort<T>("Parents").Capacity = Port.Capacity.Multi;
+            if(GetPort("Self") == null)
+                CreateOutputPort<T>("Self").Capacity = Port.Capacity.Multi;
         }
 
         public override void PrepareForDrawing()

@@ -9,19 +9,23 @@ using Valkyrie.Window;
 
 namespace Valkyrie.Model
 {
-    class OverAllGraph : CemGraph
+    class ProjectGraph : FeatureNode
     {
-        public OverAllGraph()
+        public ProjectGraph()
         {
-            Name = "All";
+            Name = "Project";
         }
 
         public override IEnumerable<INodeFactory> GetFactories()
         {
-            return NodeFactories.GetTypesNodes();
-            
+            return base.GetFactories()
+                    .Union(NodeFactories.GetProjectLevelNodes())
+                ;
+
             return typeof(INodeFactory)
-                .GetAllSubTypes(x => x.IsClass && !x.IsAbstract && x.GetConstructor(Type.EmptyTypes) != null && !x.ContainsGenericParameters)
+                .GetAllSubTypes(x =>
+                    x.IsClass && !x.IsAbstract && x.GetConstructor(Type.EmptyTypes) != null &&
+                    !x.ContainsGenericParameters)
                 .Select(x => (INodeFactory)Activator.CreateInstance(x))
                 .Union(new INodeFactory[]
                 {

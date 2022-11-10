@@ -4,13 +4,13 @@ using UnityEditor.Experimental.GraphView;
 namespace Valkyrie.Model
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class OutputAttribute : Attribute, IPortAttribute
+    public class InputAttribute : Attribute, IPortAttribute
     {
         public string Name { get; }
-        public Direction Direction => Direction.Output;
+        public Direction Direction => Direction.Input;
         public Port.Capacity Capacity { get; set; } = Port.Capacity.Single;
 
-        public OutputAttribute(string name)
+        public InputAttribute(string name)
         {
             Name = name;
         }

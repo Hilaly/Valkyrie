@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine.Scripting;
 
 namespace Valkyrie.Model.Nodes
@@ -9,6 +10,9 @@ namespace Valkyrie.Model.Nodes
         [Output("Output"), JsonIgnore, DependsOnProperty("Name"), DependsOnProperty("Type")]
         [field: JsonProperty]
         public PropertyDefine Output { get; } = new();
+
+        [Output("Flow", Capacity = Port.Capacity.Multi), JsonIgnore, DependsOnProperty("Name"), DependsOnProperty("Type")]
+        public IFlow FlowOutput { get; }
 
         [ExportProperty(Name = "Name")]
         public string PropertyName

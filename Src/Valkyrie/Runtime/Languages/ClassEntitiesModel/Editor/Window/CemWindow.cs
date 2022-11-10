@@ -50,18 +50,18 @@ namespace Valkyrie.Window
                     try
                     {
                         Debug.Log($"[CEM]: loading from {fileName}");
-                        graph = JsonConvert.DeserializeObject<OverAllGraph>(File.ReadAllText(fileName),
+                        graph = JsonConvert.DeserializeObject<ProjectGraph>(File.ReadAllText(fileName),
                             SerializeSettings);
                     }
                     catch (Exception e)
                     {
-                        graph = new OverAllGraph();
+                        graph = new ProjectGraph();
                         Debug.LogException(e);
                     }
                 }
                 else
                 {
-                    graph = new OverAllGraph();
+                    graph = new ProjectGraph();
                 }
 
             _graphView.Graph = graph;

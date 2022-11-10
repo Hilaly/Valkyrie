@@ -21,27 +21,4 @@ namespace Valkyrie.Model
 
         void PrepareForDrawing();
     }
-
-    public interface INodeClone
-    {
-        void Clone();
-    }
-
-    public interface INodeWithFields : INode
-    {
-        IEnumerable<INodeProperty> Properties { get; }
-    }
-    
-    public interface IPersistentNode {}
-    
-    public interface IRenamable {}
-
-    public interface INodeProperty
-    {
-        string Name { get; }
-        Type PropertyType { get; }
-        object Value { get; set; }
-    }
-    
-    public interface IFlow{}
 }
