@@ -201,7 +201,7 @@ namespace Valkyrie.View
 
         private void OnNodeChanged(CemNodeChangedEvent obj)
         {
-            Debug.LogWarning($"[CEM]: OnNodeChanged {Node.Uid} not implemented");
+            //TODO: Debug.LogWarning($"[CEM]: OnNodeChanged {Node.Uid} not implemented");
         }
     }
 }

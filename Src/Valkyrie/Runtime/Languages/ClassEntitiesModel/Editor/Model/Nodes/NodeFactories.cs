@@ -38,6 +38,8 @@ namespace Valkyrie.Model.Nodes
         {
             return new INodeFactory[]
             {
+                new Vec2PropertyNode.Factory(),
+                new Vec3PropertyNode.Factory(),
                 new IntPropertyNode.Factory(),
                 new StringPropertyNode.Factory(),
                 new BoolPropertyNode.Factory(),
