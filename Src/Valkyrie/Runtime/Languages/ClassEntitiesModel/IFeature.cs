@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using Valkyrie.Di;
 
 namespace Valkyrie
 {
@@ -19,6 +21,25 @@ namespace Valkyrie
     public interface ISimSystem
     {
         void Simulate(float dt);
+    }
+
+    public abstract class BaseTypedSystem<T> : ISimSystem
+        where T : IEntity
+    {
+        [Inject] private IStateFilter<T> _stateFilter;
+        
+        public virtual void Simulate(float dt)
+        {
+            foreach (var e in _stateFilter.GetAll())
+                Simulate(e, dt);
+        }
+
+        protected abstract void Simulate(T entity, float dt);
+    }
+
+    public interface IStateFilter<out T> where T : IEntity
+    {
+        IReadOnlyList<T> GetAll();
     }
 
     public interface ITimer

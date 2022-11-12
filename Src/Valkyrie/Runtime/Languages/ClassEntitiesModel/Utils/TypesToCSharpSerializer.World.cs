@@ -172,15 +172,22 @@ namespace Valkyrie
 
             WriteInterfaces(world, sb, allTimers);
 
-            sb.BeginBlock("class WorldState : IWorldState");
+            sb.AppendLine($"class WorldState : IWorldState, {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>");
+            sb.AddTab();
+            foreach (var entityInfo in world.Get<EntityType>())
+                sb.AppendLine($", {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>");
+            sb.RemoveTab();
+            sb.BeginBlock();
             sb.AppendLine($"public readonly List<{typeof(IEntity).FullName}> Entities = new();");
             sb.AppendLine($"public readonly HashSet<{typeof(IEntity).FullName}> ToDestroy = new();");
             sb.AppendLine($"public IReadOnlyList<{typeof(IEntity).FullName}> All => Entities;");
+            sb.AppendLine($"IReadOnlyList<{typeof(IEntity).FullName}> {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>.GetAll() => All;");
             foreach (var entityInfo in world.Get<EntityType>())
             {
                 sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.GetFixedName()} = new();");
                 sb.AppendLine(
                     $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.GetFixedName()} => _allOf{entityInfo.GetFixedName()}; // Entities.OfType<{entityInfo.Name}>().ToList();");
+                sb.AppendLine($"IReadOnlyList<{entityInfo.Name}> {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>.GetAll() => AllOf{entityInfo.GetFixedName()};");
             }
 
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.IsSingleton))
@@ -597,9 +604,14 @@ namespace Valkyrie
             sb.AppendLine();
 
 
-            sb.BeginBlock("public interface IWorldState");
+            sb.AppendLine($"public interface IWorldState : {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>");
+            sb.AddTab();
+            foreach (var entityInfo in world.Get<EntityType>())
+                sb.AppendLine($", {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>");
+            sb.RemoveTab();
+            sb.BeginBlock();
             sb.AppendLine($"IReadOnlyList<{typeof(IEntity).FullName}> All {{ get; }}");
-            foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
+            foreach (var entityInfo in world.Get<EntityType>())
             {
                 if (entityInfo.IsSingleton)
                     sb.AppendLine($"public {entityInfo.Name} {entityInfo.GetFixedName()} {{ get; }}");
