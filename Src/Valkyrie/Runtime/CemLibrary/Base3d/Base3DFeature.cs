@@ -9,11 +9,13 @@ namespace Valkyrie.Cem.Library
 
         public void Import(WorldModelInfo world)
         {
-            var posEntity = world.Import<I3DPositioned>();
-            var rotEntity = world.Import<I3DOriented>()
+            var posEntity = world.ImportEntity<I3DPositioned>();
+            var rotEntity = world.ImportEntity<I3DOriented>()
                 .AddInfo(typeof(Quaternion).FullName, "Rotation",
                     $"{typeof(Quaternion).FullName}.LookRotation(Direction, Vector3.up)");
-            var trEntity = world.Import<ITransformable>();
+            var trEntity = world.ImportEntity<ITransformable>();
+
+            //world.ImportSystem<TestSystem>();
         }
     }
 

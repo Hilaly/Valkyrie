@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -6,7 +7,20 @@ namespace Valkyrie
 {
     public partial class WorldModelInfo
     {
-        public EntityType Import<T>() where T : IEntity => ImportEntity(typeof(T));
+        internal List<Type> RegisteredSystems = new();
+        
+        public WorldModelInfo ImportSystem<T>() where T : ISimSystem => ImportSystem(typeof(T));
+
+        public WorldModelInfo ImportSystem(Type type)
+        {
+            if (!typeof(ISimSystem).IsAssignableFrom(type))
+                throw new Exception($"{type.FullName} is not convertible to ISimSystem");
+            if (!RegisteredSystems.Contains(type)) RegisteredSystems.Add(type);
+
+            return this;
+        }
+        
+        public EntityType ImportEntity<T>() where T : IEntity => ImportEntity(typeof(T));
 
         public EntityType ImportEntity(Type typeInstance)
         {

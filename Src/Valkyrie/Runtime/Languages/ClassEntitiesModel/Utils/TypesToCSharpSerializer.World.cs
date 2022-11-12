@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
@@ -431,6 +432,7 @@ namespace Valkyrie
             sb.AppendLine();
 
 
+            /*
             sb.BeginBlock("class ResourcesViewsProvider : IViewsProvider");
             sb.AppendLine(
                 "public void Release<TView>(TView value) where TView : Component => UnityEngine.Object.Destroy(value.gameObject);");
@@ -460,22 +462,7 @@ namespace Valkyrie
             sb.EndBlock();
             sb.EndBlock();
             sb.AppendLine();
-
-
-            sb.BeginBlock("public enum ViewsSpawnType");
-            sb.AppendLine("Custom,");
-            sb.AppendLine("Resources,");
-            sb.AppendLine("Pool");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
-            sb.BeginBlock("public enum SimulationType");
-            sb.AppendLine("None,");
-            sb.AppendLine("Fixed,");
-            sb.AppendLine("Floating");
-            sb.EndBlock();
-            sb.AppendLine();
+            */
 
 
             sb.BeginBlock("class FloatingSimulationService : IDisposable");
@@ -537,35 +524,53 @@ namespace Valkyrie
             sb.EndBlock();
             sb.AppendLine();
 
+            sb.BeginBlock($"class WorldInstaller : {typeof(IWorldLoader).FullName}");
+            sb.AppendLine($"[{typeof(InjectAttribute).FullName}] IWorldSimulation _worldSimulation;");
+            foreach (var systemType in world.RegisteredSystems)
+                sb.AppendLine(
+                    $"[{typeof(InjectAttribute).FullName}] {systemType.FullName} _{systemType.FullName.Replace(".", "")};");
+            sb.AppendLine($"private readonly List<{typeof(ISimSystem).FullName}> _addedSystems = new();");
+            sb.AppendLine();
+            sb.AppendLine($"public void AddSystem({typeof(ISimSystem).FullName} simSystem) => _addedSystems.Add(simSystem);");
+            sb.AppendLine();
+            sb.BeginBlock($"public {typeof(Task).FullName} InstallSystems()");
+            sb.AppendLine("foreach (var simSystem in _addedSystems) _worldSimulation.AddSystem(simSystem);");
+            foreach (var systemType in world.RegisteredSystems)
+                sb.AppendLine($"_worldSimulation.AddSystem( _{systemType.FullName.Replace(".", "")} );");
+            sb.AppendLine($"return {typeof(Task).FullName}.{nameof(Task.CompletedTask)};");
+            sb.EndBlock();
+            sb.EndBlock();
+            sb.AppendLine();
 
             sb.BeginBlock($"public class WorldLibrary : {typeof(ILibrary).FullName}");
-            sb.AppendLine("private readonly SimulationType _simulation;");
-            sb.AppendLine("private readonly ViewsSpawnType _viewsHandlingType;");
-            sb.BeginBlock("public WorldLibrary(SimulationType simulation, ViewsSpawnType viewsHandlingType)");
+            sb.AppendLine($"private readonly {typeof(SimulationType).FullName} _simulation;");
+            sb.AppendLine($"private readonly {typeof(ViewsSpawnType).FullName} _viewsHandlingType;");
+            sb.BeginBlock($"public WorldLibrary({typeof(SimulationType).FullName} simulation, {typeof(ViewsSpawnType).FullName} viewsHandlingType)");
             sb.AppendLine("_simulation = simulation;");
             sb.AppendLine("_viewsHandlingType = viewsHandlingType;");
             sb.EndBlock();
             sb.BeginBlock($"public void Register({typeof(IContainer).FullName} container)");
+            sb.AppendLine("container.Register<WorldInstaller>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldState>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldController>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldView>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("container.Register<WorldSimulation>().AsInterfacesAndSelf().SingleInstance();");
             sb.BeginBlock("switch (_viewsHandlingType)");
-            sb.BeginBlock("case ViewsSpawnType.Resources:");
-            sb.AppendLine("container.Register<ResourcesViewsProvider>().AsInterfacesAndSelf().SingleInstance();");
+            sb.BeginBlock($"case {typeof(ViewsSpawnType).FullName}.Resources:");
+            sb.AppendLine($"container.Register<{typeof(ResourcesViewsProvider).FullName}>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("break;");
             sb.EndBlock();
-            sb.BeginBlock("case ViewsSpawnType.Pool:");
-            sb.AppendLine("container.Register<PoolViewsProvider>().AsInterfacesAndSelf().SingleInstance();");
+            sb.BeginBlock($"case {typeof(ViewsSpawnType).FullName}.Pool:");
+            sb.AppendLine($"container.Register<{typeof(PoolViewsProvider).FullName}>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("break;");
             sb.EndBlock();
             sb.EndBlock();
             sb.BeginBlock("switch (_simulation)");
-            sb.BeginBlock("case SimulationType.Fixed:");
+            sb.BeginBlock($"case {typeof(SimulationType).FullName}.Fixed:");
             sb.AppendLine("container.Register<SimulationService>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
             sb.AppendLine("break;");
             sb.EndBlock();
-            sb.BeginBlock("case SimulationType.Floating:");
+            sb.BeginBlock($"case {typeof(SimulationType).FullName}.Floating:");
             sb.AppendLine(
                 "container.Register<FloatingSimulationService>().AsInterfacesAndSelf().SingleInstance().NonLazy();");
             sb.AppendLine("break;");

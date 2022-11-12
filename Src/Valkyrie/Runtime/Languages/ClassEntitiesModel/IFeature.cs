@@ -1,10 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Valkyrie.Di;
 
 namespace Valkyrie
 {
+    public enum ViewsSpawnType
+    {
+        Custom,
+        Resources,
+        Pool
+    }
+	
+    public enum SimulationType
+    {
+        None,
+        Fixed,
+        Floating
+    }
+
     [AttributeUsage(AttributeTargets.Property)]
     public class RequiredPropertyAttribute : Attribute
     {}
@@ -21,6 +36,13 @@ namespace Valkyrie
     public interface ISimSystem
     {
         void Simulate(float dt);
+    }
+
+    public interface IWorldLoader
+    {
+        void AddSystem(Valkyrie.ISimSystem simSystem);
+        
+        Task InstallSystems();
     }
 
     public abstract class BaseEntitySimulateSystem<T> : BaseTypedSystem<T> where T : IEntity
@@ -64,6 +86,35 @@ namespace Valkyrie
     {
         void Release<TView>(TView value) where TView : Component;
         TView Spawn<TView>(string prefabName) where TView : Component;
+    }
+
+    public class ResourcesViewsProvider : IViewsProvider
+    {
+        public void Release<TView>(TView value) where TView : Component => UnityEngine.Object.Destroy(value.gameObject);
+        public TView Spawn<TView>(string prefabName) where TView : Component => UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));
+    }
+	
+    public class PoolViewsProvider : IViewsProvider
+    {
+        private readonly Dictionary<object, IDisposable> _cache = new();
+        private readonly Valkyrie.Utils.Pool.IObjectsPool _objectsPool;
+        public PoolViewsProvider(Valkyrie.Utils.Pool.IObjectsPool objectsPool)
+        {
+            _objectsPool = objectsPool;
+        }
+        void IViewsProvider.Release<TView>(TView value)
+        {
+            if(_cache.Remove(value, out var disposable)) disposable.Dispose();
+        }
+        TView IViewsProvider.Spawn<TView>(string prefabName)
+        {
+            var disposable = _objectsPool.Instantiate<TView>(prefabName);
+#if UNITY_EDITOR
+            Debug.Assert(disposable.Instance != null, $"Couldn't find {typeof(TView).Name} component on {prefabName}");
+#endif
+            _cache.Add(disposable.Instance, disposable);
+            return disposable.Instance;
+        }
     }
 
     public class EntityTimer : ITimer
