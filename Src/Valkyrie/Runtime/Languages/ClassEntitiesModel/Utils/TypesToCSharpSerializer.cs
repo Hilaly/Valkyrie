@@ -27,7 +27,7 @@ namespace Valkyrie
 
         public static void WriteInterfaceTimer(string timer, FormatWriter sb)
         {
-            sb.AppendLine($"ITimer {timer} {{ get; }}");
+            sb.AppendLine($"{typeof(ITimer).FullName} {timer} {{ get; }}");
             sb.AppendLine($"void Start{timer}(float time);");
             sb.AppendLine($"void Stop{timer}();");
             sb.AppendLine($"bool {timer}JustFinished {{ get; }}");
@@ -54,12 +54,12 @@ namespace Valkyrie
             var timers = baseType.GetAllTimers();
             foreach (var timer in timers)
             {
-                sb.AppendLine($"private EntityTimer {timer.ConvertToCamelCaseFieldName()};");
+                sb.AppendLine($"private {typeof(EntityTimer).FullName} {timer.ConvertToCamelCaseFieldName()};");
                 sb.AppendLine(
-                    $"public ITimer {timer} => {timer.ConvertToCamelCaseFieldName()} is {{ TimeLeft: > 0 }} ? {timer.ConvertToCamelCaseFieldName()} : {timer.ConvertToCamelCaseFieldName()} = default;");
+                    $"public {typeof(ITimer).FullName} {timer} => {timer.ConvertToCamelCaseFieldName()} is {{ TimeLeft: > 0 }} ? {timer.ConvertToCamelCaseFieldName()} : {timer.ConvertToCamelCaseFieldName()} = default;");
                 sb.BeginBlock($"public void Start{timer}(float time)");
                 sb.AppendLine($"if ({timer} != null) throw new Exception(\"Timer {timer} already exist\");");
-                sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()} = new EntityTimer(time);");
+                sb.AppendLine($"{timer.ConvertToCamelCaseFieldName()} = new {typeof(EntityTimer).FullName}(time);");
                 sb.EndBlock();
                 sb.AppendLine($"public void Stop{timer}() => {timer.ConvertToCamelCaseFieldName()} = default;");
                 sb.AppendLine($"public bool {timer}JustFinished {{ get; private set; }}");

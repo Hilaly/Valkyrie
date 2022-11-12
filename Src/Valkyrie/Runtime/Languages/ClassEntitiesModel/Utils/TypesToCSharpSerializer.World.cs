@@ -172,17 +172,6 @@ namespace Valkyrie
 
             WriteInterfaces(world, sb, allTimers);
 
-            sb.BeginBlock("class EntityTimer : ITimer");
-            sb.AppendLine("public float FullTime { get; }");
-            sb.AppendLine("public float TimeLeft { get; private set; }");
-            sb.BeginBlock("public EntityTimer(float time)");
-            sb.AppendLine("FullTime = TimeLeft = time;");
-            sb.EndBlock();
-            sb.AppendLine("public void Advance(float dt) => TimeLeft -= dt;");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
             sb.BeginBlock("class WorldState : IWorldState");
             sb.AppendLine($"public readonly List<{typeof(IEntity).FullName}> Entities = new();");
             sb.AppendLine($"public readonly HashSet<{typeof(IEntity).FullName}> ToDestroy = new();");
@@ -580,26 +569,6 @@ namespace Valkyrie
         static private void WriteInterfaces(this WorldModelInfo world, FormatWriter sb,
             List<(string, BaseType)> allTimers)
         {
-            sb.BeginBlock("public interface ITimer");
-            sb.AppendLine("float FullTime { get; }");
-            sb.AppendLine("float TimeLeft { get; }");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
-            sb.BeginBlock("public interface IView<in TModel>");
-            sb.AppendLine("void UpdateDate(TModel model);");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
-            sb.BeginBlock("public interface IViewsProvider");
-            sb.AppendLine("void Release<TView>(TView value) where TView : Component;");
-            sb.AppendLine("TView Spawn<TView>(string prefabName) where TView : Component;");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
             sb.BeginBlock("public interface IWorldView");
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.HasView))
                 sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} {{ get; }}");
