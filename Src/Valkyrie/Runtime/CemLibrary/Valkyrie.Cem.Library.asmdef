@@ -1,0 +1,17 @@
+{
+    "name": "Valkyrie.Cem.Library",
+    "rootNamespace": "Valkyrie.Cem.Library",
+    "references": [
+        "GUID:06d683358a9bf1549974f36ef8fc5080",
+        "GUID:5467f2229aa769f42b160bd3a0b06908"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

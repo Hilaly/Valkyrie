@@ -41,7 +41,7 @@ namespace Valkyrie
 
         public static void WriteTypeClass(this BaseType baseType, FormatWriter sb)
         {
-            var blockName = $"public partial class {baseType.Name} : IEntity";
+            var blockName = $"public partial class {baseType.Name} : {typeof(IEntity).FullName}";
             if (baseType.BaseTypes.Count > 0)
                 blockName += ", " + string.Join(", ", baseType.BaseTypes.Select(x => x.Name));
             sb.BeginBlock(blockName);
@@ -90,7 +90,7 @@ namespace Valkyrie
 
         public static void WriteTypeInterface(this BaseType baseType, FormatWriter sb)
         {
-            var blockName = $"public interface {baseType.Name} : IEntity";
+            var blockName = $"public interface {baseType.Name} : {typeof(IEntity).FullName}";
             if (baseType.BaseTypes.Count > 0)
                 blockName += ", " + string.Join(", ", baseType.BaseTypes.Select(x => x.Name));
             sb.BeginBlock(blockName);

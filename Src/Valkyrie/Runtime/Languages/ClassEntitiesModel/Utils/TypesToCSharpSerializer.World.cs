@@ -184,9 +184,9 @@ namespace Valkyrie
 
 
             sb.BeginBlock("class WorldState : IWorldState");
-            sb.AppendLine("public readonly List<IEntity> Entities = new();");
-            sb.AppendLine("public readonly HashSet<IEntity> ToDestroy = new();");
-            sb.AppendLine("public IReadOnlyList<IEntity> All => Entities;");
+            sb.AppendLine($"public readonly List<{typeof(IEntity).FullName}> Entities = new();");
+            sb.AppendLine($"public readonly HashSet<{typeof(IEntity).FullName}> ToDestroy = new();");
+            sb.AppendLine($"public IReadOnlyList<{typeof(IEntity).FullName}> All => Entities;");
             foreach (var entityInfo in world.Get<EntityType>())
             {
                 sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
@@ -242,7 +242,7 @@ namespace Valkyrie
                 sb.EndBlock();
             }
 
-            sb.AppendLine("public void Destroy(IEntity entity) => _worldState.ToDestroy.Add(entity);");
+            sb.AppendLine($"public void Destroy({typeof(IEntity).FullName} entity) => _worldState.ToDestroy.Add(entity);");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -331,7 +331,7 @@ namespace Valkyrie
             sb.EndBlock();
             sb.AppendLine("*/");
             sb.AppendLine("/*");
-            sb.BeginBlock($"public void DestroyViewModels(IEntity model)");
+            sb.BeginBlock($"public void DestroyViewModels({typeof(IEntity).FullName} model)");
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.HasView))
                 sb.AppendLine(
                     $"if(model is {entityInfo.Name} val{entityInfo.Name}) Destroy{entityInfo.Name}ViewModel(val{entityInfo.Name});");
@@ -342,7 +342,7 @@ namespace Valkyrie
 
 
             sb.BeginBlock("class WorldSimulation : IWorldSimulation");
-            sb.AppendLine("private readonly List<ISimSystem> _simSystems = new ();");
+            sb.AppendLine($"private readonly List<{typeof(ISimSystem).FullName}> _simSystems = new ();");
             sb.AppendLine("private readonly WorldState _worldState;");
             sb.AppendLine("private readonly WorldView _worldView;");
 
@@ -366,7 +366,7 @@ namespace Valkyrie
                     $"public void AddTimerHandler(I{timer.Item2.Name}{timer.Item1}Handler handler) => {timerField}.Add(handler);");
             }
 
-            sb.BeginBlock("public void AddSystem(ISimSystem simSystem)");
+            sb.BeginBlock($"public void AddSystem({typeof(ISimSystem).FullName} simSystem)");
             sb.AppendLine("_simSystems.Add(simSystem);");
             sb.EndBlock();
             sb.BeginBlock("public void Simulate(float dt)");
@@ -411,7 +411,7 @@ namespace Valkyrie
             sb.EndBlock();
             sb.AppendLine("_worldState.ToDestroy.Clear();");
             sb.EndBlock();
-            sb.BeginBlock($"void Destroy(IEntity entity)");
+            sb.BeginBlock($"void Destroy({typeof(IEntity).FullName} entity)");
             sb.AppendLine($"_worldState.Entities.Remove(entity);");
             sb.BeginBlock($"switch (entity)");
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
@@ -580,16 +580,6 @@ namespace Valkyrie
         static private void WriteInterfaces(this WorldModelInfo world, FormatWriter sb,
             List<(string, BaseType)> allTimers)
         {
-            sb.AppendLine("public interface IEntity { }");
-            sb.AppendLine();
-
-
-            sb.BeginBlock("public interface ISimSystem");
-            sb.AppendLine("void Simulate(float dt);");
-            sb.EndBlock();
-            sb.AppendLine();
-
-
             sb.BeginBlock("public interface ITimer");
             sb.AppendLine("float FullTime { get; }");
             sb.AppendLine("float TimeLeft { get; }");
@@ -628,13 +618,13 @@ namespace Valkyrie
                 sb.AppendLine($"{entityInfo.Name} Create{entityInfo.Name}({argsStr});");
             }
 
-            sb.AppendLine($"void Destroy(IEntity entity);");
+            sb.AppendLine($"void Destroy({typeof(IEntity).FullName} entity);");
             sb.EndBlock();
             sb.AppendLine();
 
 
             sb.BeginBlock("public interface IWorldState");
-            sb.AppendLine($"IReadOnlyList<IEntity> All {{ get; }}");
+            sb.AppendLine($"IReadOnlyList<{typeof(IEntity).FullName}> All {{ get; }}");
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
                 if (entityInfo.IsSingleton)
@@ -647,7 +637,7 @@ namespace Valkyrie
 
 
             sb.BeginBlock("public interface IWorldSimulation");
-            sb.AppendLine("void AddSystem(ISimSystem simSystem);");
+            sb.AppendLine($"void AddSystem({typeof(ISimSystem).FullName} simSystem);");
             foreach (var timer in allTimers)
                 sb.AppendLine($"void AddTimerHandler(I{timer.Item2.Name}{timer.Item1}Handler handler);");
             sb.AppendLine("void Simulate(float dt);");

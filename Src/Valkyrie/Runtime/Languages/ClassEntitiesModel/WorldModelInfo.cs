@@ -109,5 +109,11 @@ namespace Valkyrie
         }
 
         #endregion
+
+        public WorldModelInfo Import(IFeature feature)
+        {
+            feature.Import(this);
+            return this;
+        }
     }
 }
