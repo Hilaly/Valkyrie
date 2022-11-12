@@ -23,18 +23,25 @@ namespace Valkyrie
         void Simulate(float dt);
     }
 
-    public abstract class BaseTypedSystem<T> : ISimSystem
-        where T : IEntity
+    public abstract class BaseEntitySimulateSystem<T> : BaseTypedSystem<T> where T : IEntity
     {
-        [Inject] private IStateFilter<T> _stateFilter;
-        
-        public virtual void Simulate(float dt)
+        protected override void Simulate(float dt, IReadOnlyList<T> entities)
         {
-            foreach (var e in _stateFilter.GetAll())
-                Simulate(e, dt);
+            for (var index = 0; index < entities.Count; index++) 
+                Simulate(entities[index], dt);
         }
 
         protected abstract void Simulate(T entity, float dt);
+    }
+
+    public abstract class BaseTypedSystem<T> : ISimSystem
+        where T : IEntity
+    {
+        [field: Inject] protected IStateFilter<T> Filter { get; }
+
+        public void Simulate(float dt) => Simulate(dt, Filter.GetAll());
+
+        protected abstract void Simulate(float dt, IReadOnlyList<T> entities);
     }
 
     public interface IStateFilter<out T> where T : IEntity

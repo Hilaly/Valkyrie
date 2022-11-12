@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Valkyrie.Cem.Library
@@ -30,12 +31,11 @@ namespace Valkyrie.Cem.Library
     {
     }
     
-    public class TestSystem : ISimSystem
+    public class TestSystem : BaseTypedSystem<ITransformable>
     {
-        private IStateFilter<IEntity> _filter;
-        public void Simulate(float dt)
+        protected override void Simulate(float dt, IReadOnlyList<ITransformable> entities)
         {
-            throw new System.NotImplementedException();
+            Debug.Log($"Sim {entities.Count} entities");
         }
     }
 }
