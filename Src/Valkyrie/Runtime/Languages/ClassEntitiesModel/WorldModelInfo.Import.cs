@@ -37,10 +37,12 @@ namespace Valkyrie
             foreach (var propertyInfo in typeInstance.GetProperties(BindingFlags.Instance | BindingFlags.Public
                 | BindingFlags.GetProperty | BindingFlags.SetProperty | BindingFlags.DeclaredOnly))
             {
+                var type = propertyInfo.PropertyType;
+                var propName = propertyInfo.Name;
+                var required = propertyInfo.GetCustomAttribute<RequiredPropertyAttribute>() != null;
                 Debug.Log(
-                    $"[CEM] {e.Name} has property {propertyInfo.Name} of type {propertyInfo.PropertyType.FullName}");
-                e.AddProperty(propertyInfo.PropertyType, propertyInfo.Name,
-                    propertyInfo.GetCustomAttribute<RequiredPropertyAttribute>() != null);
+                    $"[CEM] {e.Name} has {(required ? "required" : string.Empty)} property {propName} of type {type.FullName}");
+                e.AddProperty(type, propName, required);
             }
 
             return e;

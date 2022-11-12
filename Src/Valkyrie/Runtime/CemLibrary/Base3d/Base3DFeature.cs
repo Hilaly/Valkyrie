@@ -15,7 +15,7 @@ namespace Valkyrie.Cem.Library
 
     public interface I3DPositioned : IEntity
     {
-        public Vector3 Position { get; set; }
+        [RequiredProperty] public Vector3 Position { get; set; }
     }
     
     public interface ITransformable : I3DPositioned
