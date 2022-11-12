@@ -40,7 +40,7 @@ namespace Valkyrie
 
     public interface IWorldLoader
     {
-        void AddSystem(Valkyrie.ISimSystem simSystem);
+        void AddSystem(Valkyrie.ISimSystem simSystem, int order = SimulationOrder.Default);
         
         Task InstallSystems();
     }

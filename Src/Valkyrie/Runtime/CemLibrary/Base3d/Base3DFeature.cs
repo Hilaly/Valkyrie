@@ -15,7 +15,7 @@ namespace Valkyrie.Cem.Library
                     $"{typeof(Quaternion).FullName}.LookRotation(Direction, Vector3.up)");
             var trEntity = world.ImportEntity<ITransformable>();
 
-            //world.ImportSystem<TestSystem>();
+            world.ImportSystem<TestSystem>();
         }
     }
 

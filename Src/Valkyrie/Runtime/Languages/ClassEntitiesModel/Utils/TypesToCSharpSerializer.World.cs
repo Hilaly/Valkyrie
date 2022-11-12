@@ -528,15 +528,18 @@ namespace Valkyrie
             sb.AppendLine($"[{typeof(InjectAttribute).FullName}] IWorldSimulation _worldSimulation;");
             foreach (var systemType in world.RegisteredSystems)
                 sb.AppendLine(
-                    $"[{typeof(InjectAttribute).FullName}] {systemType.FullName} _{systemType.FullName.Replace(".", "")};");
-            sb.AppendLine($"private readonly List<{typeof(ISimSystem).FullName}> _addedSystems = new();");
+                    $"[{typeof(InjectAttribute).FullName}] {systemType.Key.FullName} _{systemType.Key.FullName.Replace(".", "")};");
+            sb.AppendLine($"private readonly List<KeyValuePair<{typeof(ISimSystem).FullName}, int>> _addedSystems = new();");
             sb.AppendLine();
-            sb.AppendLine($"public void AddSystem({typeof(ISimSystem).FullName} simSystem) => _addedSystems.Add(simSystem);");
+            sb.AppendLine($"public void AddSystem({typeof(ISimSystem).FullName} simSystem, int order) => _addedSystems.Add(new KeyValuePair<{typeof(ISimSystem).FullName}, int>(simSystem, order));");
             sb.AppendLine();
             sb.BeginBlock($"public {typeof(Task).FullName} InstallSystems()");
-            sb.AppendLine("foreach (var simSystem in _addedSystems) _worldSimulation.AddSystem(simSystem);");
+            sb.BeginBlock($"var temp = new List<KeyValuePair<{typeof(ISimSystem).FullName}, int>>(_addedSystems)");
             foreach (var systemType in world.RegisteredSystems)
-                sb.AppendLine($"_worldSimulation.AddSystem( _{systemType.FullName.Replace(".", "")} );");
+                sb.AppendLine($"new( _{systemType.Key.FullName.Replace(".", "")}, {systemType.Value} ),");
+            sb.EndBlock();
+            sb.AppendLine(";");
+            sb.AppendLine("foreach (var simSystem in temp.OrderBy(x => x.Value).Select(x => x.Key)) _worldSimulation.AddSystem(simSystem);");
             sb.AppendLine($"return {typeof(Task).FullName}.{nameof(Task.CompletedTask)};");
             sb.EndBlock();
             sb.EndBlock();
@@ -576,7 +579,14 @@ namespace Valkyrie
             sb.AppendLine("break;");
             sb.EndBlock();
             sb.EndBlock();
+            sb.AppendLine("RegisterSystems(container);");
             sb.EndBlock();
+
+            sb.BeginBlock($"void RegisterSystems({typeof(IContainer).FullName} container)");
+            foreach (var pair in world.RegisteredSystems)
+                sb.AppendLine($"container.Register<{pair.Key.FullName}>().AsInterfacesAndSelf().SingleInstance();");
+            sb.EndBlock();
+            
             sb.EndBlock();
         }
 

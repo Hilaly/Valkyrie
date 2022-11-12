@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -7,19 +8,21 @@ namespace Valkyrie
 {
     public partial class WorldModelInfo
     {
-        internal List<Type> RegisteredSystems = new();
-        
-        public WorldModelInfo ImportSystem<T>() where T : ISimSystem => ImportSystem(typeof(T));
+        internal readonly List<KeyValuePair<Type, int>> RegisteredSystems = new();
 
-        public WorldModelInfo ImportSystem(Type type)
+        public WorldModelInfo ImportSystem<T>(int order = SimulationOrder.Default) where T : ISimSystem =>
+            ImportSystem(typeof(T), order);
+
+        public WorldModelInfo ImportSystem(Type type, int order = SimulationOrder.Default)
         {
             if (!typeof(ISimSystem).IsAssignableFrom(type))
                 throw new Exception($"{type.FullName} is not convertible to ISimSystem");
-            if (!RegisteredSystems.Contains(type)) RegisteredSystems.Add(type);
+            if (RegisteredSystems.TrueForAll(x => x.Key != type))
+                RegisteredSystems.Add(new KeyValuePair<Type, int>(type, order));
 
             return this;
         }
-        
+
         public EntityType ImportEntity<T>() where T : IEntity => ImportEntity(typeof(T));
 
         public EntityType ImportEntity(Type typeInstance)
@@ -35,7 +38,7 @@ namespace Valkyrie
             e.AddAttribute("native");
             foreach (var inherited in typeInstance.GetInterfaces())
             {
-                if(inherited == typeof(IEntity))
+                if (inherited == typeof(IEntity))
                     continue;
                 if (!typeof(IEntity).IsAssignableFrom(inherited))
                     throw new Exception("Allow inherit only from entities");
