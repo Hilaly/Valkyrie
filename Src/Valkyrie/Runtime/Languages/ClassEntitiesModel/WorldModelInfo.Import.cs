@@ -34,20 +34,20 @@ namespace Valkyrie
 
             Debug.Log($"[CEM] registering {typeInstance.FullName}");
 
-            var e = CreateEntity(typeInstance.FullName);
+            var e = Get<EntityType>(typeInstance.FullName);
+            if (e != null)
+                return e;
+
+            e = CreateEntity(typeInstance.FullName);
             e.AddAttribute("native");
-            foreach (var inherited in typeInstance.GetInterfaces())
+            foreach (var inherits in typeInstance.GetInterfaces())
             {
-                if (inherited == typeof(IEntity))
+                if (inherits == typeof(IEntity))
                     continue;
-                if (!typeof(IEntity).IsAssignableFrom(inherited))
+                if (!typeof(IEntity).IsAssignableFrom(inherits))
                     throw new Exception("Allow inherit only from entities");
-                var ex = Get<EntityType>(inherited.FullName);
-                if (ex == null)
-                    throw new Exception($"{inherited.FullName} is not registered entity");
-
+                var ex = Get<EntityType>(inherits.FullName) ?? ImportEntity(inherits);
                 Debug.Log($"[CEM] {e.Name} inherited from {ex.Name}");
-
                 e.Inherit(ex);
             }
 
@@ -60,6 +60,16 @@ namespace Valkyrie
                 Debug.Log(
                     $"[CEM] {e.Name} has {(required ? "required" : string.Empty)} property {propName} of type {type.FullName}");
                 e.AddProperty(type, propName, required);
+            }
+
+            foreach (var propertyInfo in typeInstance.GetProperties(BindingFlags.Instance | BindingFlags.Public
+                | BindingFlags.GetProperty | BindingFlags.DeclaredOnly))
+            {
+                if (propertyInfo.PropertyType != typeof(ITimer))
+                    continue;
+
+                Debug.Log($"[CEM] {e.Name} has timer {propertyInfo.Name}");
+                e.AddTimer(propertyInfo.Name);
             }
 
             return e;

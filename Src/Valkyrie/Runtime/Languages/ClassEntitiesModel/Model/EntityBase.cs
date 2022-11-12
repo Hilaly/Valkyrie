@@ -306,7 +306,6 @@ namespace Valkyrie
         public BaseType View() => AddAttribute("view");
         [JsonIgnore] public bool IsNative => Attributes.Contains("native");
         public bool HasView => GetAllAttributes().Contains("view");
-        public string Uid { get; set; } = Guid.NewGuid().ToString();
 
         #endregion
 
