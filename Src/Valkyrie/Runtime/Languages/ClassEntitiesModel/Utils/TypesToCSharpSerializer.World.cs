@@ -65,7 +65,7 @@ namespace Valkyrie
             //Simulation
             WriteToSeparateFile("Simulation", "Sim.cs", sb => WriteGeneral(world, sb));
             WriteToSeparateFile("Simulation", "Timers.cs", sb => WriteTimerHandlers(world, sb));
-            foreach (var entityType in world.Get<EntityType>())
+            foreach (var entityType in world.Get<EntityType>().Where(x => !x.IsNative))
                 WriteToSeparateFile("Simulation", $"{entityType.Name}.cs", sb =>
                 {
                     if (world.IsEntityClass(entityType))
@@ -178,14 +178,14 @@ namespace Valkyrie
             sb.AppendLine($"public IReadOnlyList<{typeof(IEntity).FullName}> All => Entities;");
             foreach (var entityInfo in world.Get<EntityType>())
             {
-                sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.Name} = new();");
+                sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.GetFixedName()} = new();");
                 sb.AppendLine(
-                    $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} => _allOf{entityInfo.Name}; // Entities.OfType<{entityInfo.Name}>().ToList();");
+                    $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.GetFixedName()} => _allOf{entityInfo.GetFixedName()}; // Entities.OfType<{entityInfo.Name}>().ToList();");
             }
 
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.IsSingleton))
                 sb.AppendLine(
-                    $"public {entityInfo.Name} {entityInfo.Name} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
+                    $"public {entityInfo.Name} {entityInfo.GetFixedName()} => ({entityInfo.Name})Entities.Find(x => x is {entityInfo.Name});");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -199,12 +199,14 @@ namespace Valkyrie
             sb.EndBlock();
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
+                if(entityInfo.IsNative)
+                    continue;
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
                 var args = allProperties.Union(allConfigs).ToList();
                 var argsStr = string.Join(", ",
                     args.Select(x => $"{x.GetMemberType()} {x.Name.ConvertToUnityPropertyName()}"));
-                sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.Name}({argsStr})");
+                sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr})");
                 if (entityInfo.IsSingleton)
                     sb.AppendLine(
                         $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
@@ -216,7 +218,7 @@ namespace Valkyrie
                 sb.AppendLine("_worldState.Entities.Add(result);");
                 sb.BeginBlock($"//Update Caches");
                 foreach (var entityBase in entityInfo.GetAllImplemented())
-                    sb.AppendLine($"_worldState._allOf{entityBase.Name}.Add(result);");
+                    sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Add(result);");
                 sb.EndBlock();
                 sb.BeginBlock($"//Spawn views");
                 foreach (var type in entityInfo.GetAllImplemented())
@@ -256,7 +258,7 @@ namespace Valkyrie
                     $"private readonly List<{entityInfo.Name}ViewModel> _viewModels{entityInfo.Name}List = new ();");
                 sb.AppendLine($"/* private readonly List<{entityInfo.Name}> _toRemove{entityInfo.Name} = new (); */");
                 sb.AppendLine(
-                    $"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} => _viewModels{entityInfo.Name}List;");
+                    $"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.GetFixedName()} => _viewModels{entityInfo.Name}List;");
                 sb.BeginBlock($"public void Create{entityInfo.Name}ViewModel({entityInfo.Name} model)");
                 sb.AppendLine(
                     $"if (_viewModels{entityInfo.Name}Dictionary.TryGetValue(model, out var viewModel)) return;");
@@ -302,7 +304,7 @@ namespace Valkyrie
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.HasView))
             {
                 sb.BeginBlock($"//Sync {entityInfo.Name} view models");
-                sb.AppendLine($"var models = _worldState.AllOf{entityInfo.Name};");
+                sb.AppendLine($"var models = _worldState.AllOf{entityInfo.GetFixedName()};");
                 sb.AppendLine($"_toRemove{entityInfo.Name}.Clear();");
                 sb.BeginForEachIterationBlock("pair",
                     $"_viewModels{entityInfo.Name}Dictionary.Where(pair => !models.Contains(pair.Key))");
@@ -373,7 +375,7 @@ namespace Valkyrie
                 if (args.Count == 0)
                     continue;
                 sb.BeginBlock();
-                sb.AppendLine($"var list = _worldState.AllOf{entityInfo.Name};");
+                sb.AppendLine($"var list = _worldState.AllOf{entityInfo.GetFixedName()};");
                 sb.BeginForIterationBlock("e", "list");
                 sb.AppendLine($"e.AdvanceTimers(dt);");
                 sb.EndBlock();
@@ -383,7 +385,7 @@ namespace Valkyrie
             foreach (var timer in allTimers)
             {
                 sb.BeginBlock();
-                sb.AppendLine($"var list = _worldState.AllOf{timer.Item2.Name};");
+                sb.AppendLine($"var list = _worldState.AllOf{timer.Item2.GetFixedName()};");
                 sb.BeginForIterationBlock("e", "list");
                 sb.AppendLine($"if(!e.{timer.Item1}JustFinished) continue;");
                 sb.BeginForIterationBlock("handler", GetTimersFieldName(timer), "hIndex");
@@ -405,10 +407,10 @@ namespace Valkyrie
             sb.BeginBlock($"switch (entity)");
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
-                sb.BeginBlock($"case {entityInfo.Name} val{entityInfo.Name}:");
+                sb.BeginBlock($"case {entityInfo.Name} val{entityInfo.GetFixedName()}:");
                 sb.AppendLine("//Clean state cache");
                 foreach (var entityBase in entityInfo.GetAllImplemented())
-                    sb.AppendLine($"_worldState._allOf{entityBase.Name}.Remove(val{entityInfo.Name});");
+                    sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Remove(val{entityInfo.GetFixedName()});");
                 sb.AppendLine("//Clean views");
                 foreach (var entityBase in entityInfo.GetAllImplemented().Where(x => x.HasView))
                     sb.AppendLine($"_worldView.Destroy{entityBase.Name}ViewModel(val{entityInfo.Name});");
@@ -571,7 +573,7 @@ namespace Valkyrie
         {
             sb.BeginBlock("public interface IWorldView");
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.HasView))
-                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.Name} {{ get; }}");
+                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.GetFixedName()} {{ get; }}");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -579,12 +581,15 @@ namespace Valkyrie
             sb.BeginBlock("public interface IWorldController");
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
+                if(entityInfo.IsNative)
+                    continue;
+                
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
                 var args = allProperties.Union(allConfigs).ToList();
                 var argsStr = string.Join(", ",
                     args.Select(x => $"{x.GetMemberType()} {x.Name.ConvertToUnityPropertyName()}"));
-                sb.AppendLine($"{entityInfo.Name} Create{entityInfo.Name}({argsStr});");
+                sb.AppendLine($"{entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr});");
             }
 
             sb.AppendLine($"void Destroy({typeof(IEntity).FullName} entity);");
@@ -597,8 +602,8 @@ namespace Valkyrie
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
                 if (entityInfo.IsSingleton)
-                    sb.AppendLine($"public {entityInfo.Name} {entityInfo.Name} {{ get; }}");
-                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.Name} {{ get; }}");
+                    sb.AppendLine($"public {entityInfo.Name} {entityInfo.GetFixedName()} {{ get; }}");
+                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.GetFixedName()} {{ get; }}");
             }
 
             sb.EndBlock();

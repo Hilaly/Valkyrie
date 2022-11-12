@@ -8,7 +8,8 @@ namespace Valkyrie.Cem.Library
         
         public void Import(WorldModelInfo world)
         {
-            
+            var posEntity = world.Import<I3DPositioned>();
+            var trEntity = world.Import<ITransformable>();
         }
     }
 
@@ -16,4 +17,7 @@ namespace Valkyrie.Cem.Library
     {
         public Vector3 Position { get; set; }
     }
+    
+    public interface ITransformable : I3DPositioned
+    {}
 }

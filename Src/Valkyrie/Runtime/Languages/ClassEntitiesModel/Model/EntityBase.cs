@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 using UnityEngine;
 using Utils;
 using Valkyrie.Tools;
@@ -177,6 +178,8 @@ namespace Valkyrie
     {
         public string Name { get; set; }
 
+        public string GetFixedName() => Name.Replace(".", "");
+
         public IReadOnlyList<IMemberGetter> GetAllMemberGetters(bool includeGenerated)
         {
             var r = new List<IMemberGetter>();
@@ -301,6 +304,7 @@ namespace Valkyrie
         public bool IsSingleton => GetAllAttributes().Contains("singleton");
 
         public BaseType View() => AddAttribute("view");
+        [JsonIgnore] public bool IsNative => Attributes.Contains("native");
         public bool HasView => GetAllAttributes().Contains("view");
         public string Uid { get; set; } = Guid.NewGuid().ToString();
 

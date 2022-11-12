@@ -1,7 +1,12 @@
+using System;
 using UnityEngine;
 
 namespace Valkyrie
 {
+    [AttributeUsage(AttributeTargets.Property)]
+    public class RequiredPropertyAttribute : Attribute
+    {}
+    
     public interface IFeature
     {
         public string Name { get; }
