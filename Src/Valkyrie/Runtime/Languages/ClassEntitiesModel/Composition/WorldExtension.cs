@@ -24,7 +24,12 @@ namespace Valkyrie.Composition
             var methods = new List<KeyValuePair<string, string>>();
 
             WriteToSeparateFile(methods, string.Empty, "Test.cs", rootNamespace,
-                sb => { WriteComponents(worldInfo, sb); });
+                sb =>
+                {
+                    WriteComponents(worldInfo, sb);
+                    sb.AppendLine();
+                    WriteInterfaces(worldInfo, sb);
+                });
 
             CleanDirectory(dirPath);
             //3. Write files

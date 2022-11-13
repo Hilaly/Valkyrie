@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Valkyrie.Composition
@@ -30,15 +31,40 @@ namespace Valkyrie.Composition
         
         public IReadOnlyList<IComponentInfo> GetComponents()
         {
-            return new IComponentInfo[]
+            var d = new Dictionary<string, IComponentInfo>();
+            foreach (var archetype in GetArchetypes())
+            foreach (var property in archetype.Properties)
             {
-                new NativeTypeComponent() { Name = "TestInt", Type = typeof(int) },
-                new NativeTypeComponent() { Name = "TestInt2", Type = typeof(int) },
-                new NativeTypeComponent() { Name = "TestFloat", Type = typeof(float) },
-                new NativeTypeComponent() { Name = "TestMarker", Type = typeof(bool) },
-                new NativeTypeComponent() { Name = "TestTimer", Type = typeof(ITimer) },
+                if (d.TryGetValue(property.Name, out var exist))
+                    if (exist.GetTypeName() != property.GetTypeName())
+                        throw new Exception(
+                            $"founded different components {property.Name} -> {exist.GetTypeName()} != {property.GetTypeName()}");
+                d.Add(property.Name, property);
+            }
+
+            return d.Values.ToList();
+        }
+
+        public IReadOnlyList<IArchetypeInfo> GetArchetypes()
+        {
+            return new IArchetypeInfo[]
+            {
+                new NativeTypeArchetype(typeof(Test))
             };
         }
+    }
+
+    public interface Test : IEntity
+    {
+        public bool GetMarker { get; }
+        public bool SetMarker { set; }
+        public bool Marker { get; set; }
+        
+        public Vector3 Position { get; set; }
+        public Vector3 GetPosition { get; }
+        public Vector3 SetPosition { set; }
+        
+        public ITimer Timer { get; }
     }
 
     public interface IWorldInfo
@@ -46,5 +72,6 @@ namespace Valkyrie.Composition
         string Namespace { get; }
 
         IReadOnlyList<IComponentInfo> GetComponents();
+        IReadOnlyList<IArchetypeInfo> GetArchetypes();
     }
 }
