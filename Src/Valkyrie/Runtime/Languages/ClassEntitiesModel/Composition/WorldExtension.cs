@@ -23,7 +23,7 @@ namespace Valkyrie.Composition
             var rootNamespace = worldInfo.Namespace;
             var methods = new List<KeyValuePair<string, string>>();
 
-            WriteToSeparateFile(methods, string.Empty, "Test.cs", rootNamespace,
+            WriteToSeparateFile(methods, string.Empty, "Gen.cs", rootNamespace,
                 sb =>
                 {
                     WriteComponents(worldInfo, sb);
