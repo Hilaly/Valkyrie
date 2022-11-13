@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Valkyrie.Ecs;
 using Valkyrie.Language.Description.Utils;
 using Valkyrie.Tools;
@@ -9,53 +6,62 @@ namespace Valkyrie.Composition
 {
     public static partial class WorldExtension
     {
-        static void WriteInterfaces(this IWorldInfo info, FormatWriter sb)
+        static void WriteGeneralClassesAndInterfaces(IWorldInfo worldInfo, FormatWriter sb)
         {
-            sb.WriteRegion("Archetypes", () =>
+            sb.WriteRegion("General interfaces", () =>
             {
-                foreach (var archetype in info.GetArchetypes())
-                    archetype.WriteImplementation(sb);
+                sb.WriteBlock("public interface IWorldState", () => { });
             });
-        }
-
-        static void WriteImplementation(this IArchetypeInfo archetypeInfo, FormatWriter sb)
-        {
-            var structName = archetypeInfo.Name.Replace(".", "");
-            var header = $"struct {structName}";
-            header += $" : {archetypeInfo.Name}";
-            sb.WriteBlock(header, () =>
+            sb.AppendLine();
+            sb.WriteRegion("General interfaces implementation", () =>
             {
-                sb.AppendLine($"public {typeof(EcsEntity).FullName} Entity;");
-                sb.AppendLine();
-                foreach (var property in archetypeInfo.Properties)
+                sb.WriteBlock("class WorldState : IWorldState", () =>
                 {
-                    sb.WriteBlock($"{property.GetTypeName()} {archetypeInfo.Name}.{property.Name}", () =>
-                    {
-                        var componentTemplate = GetComponentTemplate(property);
-                        if (property.IsReadEnabled) componentTemplate.WriteGetter(property, sb);
-                        if (property.IsWriteEnabled) componentTemplate.WriteSetter(property, sb);
-                    });
-                }
+                    sb.AppendLine($"private readonly {typeof(IEcsWorld).FullName} _ecsWorld;");
+                    sb.AppendLine();
+                    
+                    var t = "All";
+                    WriteGroupField(t, sb);
+                    WriteGroupBuffer(t, sb);
 
-                sb.AppendLine();
-                sb.AppendLine($"public static implicit operator {structName}({typeof(EcsEntity).FullName} e) => new() {{ Entity = e }};");
+                    sb.WriteBlock($"public WorldState({typeof(IEcsWorld).FullName} ecsWorld)", () =>
+                    {
+                        sb.AppendLine("_ecsWorld = ecsWorld;");
+                        sb.AppendLine();
+                        WriteGroupConstructor(t, sb);
+                    });
+                    WriteGroupImpl(t, sb);
+                });
             });
         }
 
-        internal static IEnumerable<IPropertyInfo> CollectProperties(this Type type)
+        static void WriteGroupField(string name, FormatWriter sb)
         {
-            if (!type.IsInterface)
-                throw new Exception("Only interfaces can be used as Archetype");
+            sb.AppendLine($"private readonly {typeof(IEcsGroup).FullName} _{name}Group;");
+        }
 
-            if (!typeof(IEntity).IsAssignableFrom(type))
-                throw new Exception("Archetype must be convertible to IEntity");
+        static void WriteGroupBuffer(string name, FormatWriter sb)
+        {
+            sb.AppendLine($"private readonly List<{typeof(EcsEntity).FullName}> _{name}Buffer = new();");
+        }
 
-            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            foreach (var propertyInfo in properties)
-            {
-                //TODO: additional checks
-                yield return new NativePropertyInfo(propertyInfo);
-            }
+        static void WriteGroupConstructor(string name, FormatWriter sb)
+        {
+            sb.AppendLine($"_{name}Group = _ecsWorld.Groups.Build()");
+            sb.AddTab();
+            //TODO: filters
+            sb.AppendLine(".Build();");
+            sb.RemoveTab();
+        }
+
+        static void WriteGroupDefine(string name, FormatWriter sb)
+        {
+            sb.AppendLine($"public IReadOnlyList<{typeof(EcsEntity).FullName}> GetAllOf_{name}();");
+        }
+
+        static void WriteGroupImpl(string name, FormatWriter sb)
+        {
+            sb.AppendLine($"public IReadOnlyList<{typeof(EcsEntity).FullName}> GetAllOf_{name}() => _{name}Group.GetEntities(_{name}Buffer);");
         }
     }
 }

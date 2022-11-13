@@ -1,34 +1,35 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace Valkyrie.Composition
 {
-    public interface IComponentInfo
-    {
-        string Name { get; }
-        
-        string GetTypeName();
-    }
-
-    class NativeTypeComponent : IComponentInfo
-    {
-        public Type Type;
-        public string Name { get; set; }
-
-        public string GetTypeName() => Type.FullName;
-    }
-    
     public interface IFeature
     {
         void Register(IWorldInfo worldInfo);
     }
-    
+
+    public interface IWorldInfo
+    {
+        string Namespace { get; }
+
+        IReadOnlyList<IComponentInfo> GetComponents();
+        IReadOnlyList<IArchetypeInfo> GetArchetypes();
+        IReadOnlyList<ISystemInfo> GetSystems();
+
+        IWorldInfo RegisterArchetype(Type type);
+        IWorldInfo RegisterSystem(Type type);
+    }
+
     public class WorldInfo : IWorldInfo
     {
+        private readonly Dictionary<string, IArchetypeInfo> _archetypes = new();
+        private readonly Dictionary<string, ISystemInfo> _systens = new();
+
         public string Namespace { get; set; } = "Generated";
-        
+
         public IReadOnlyList<IComponentInfo> GetComponents()
         {
             var d = new Dictionary<string, IComponentInfo>();
@@ -45,33 +46,23 @@ namespace Valkyrie.Composition
             return d.Values.ToList();
         }
 
-        public IReadOnlyList<IArchetypeInfo> GetArchetypes()
+        public IReadOnlyList<IArchetypeInfo> GetArchetypes() => _archetypes.Values.ToList();
+        public IReadOnlyList<ISystemInfo> GetSystems() => _systens.Values.ToList();
+
+        public IWorldInfo RegisterArchetype(Type type)
         {
-            return new IArchetypeInfo[]
-            {
-                new NativeTypeArchetype(typeof(Test))
-            };
+            var typeName = type.FullName;
+            if (!_archetypes.TryGetValue(typeName, out _))
+                _archetypes.Add(typeName, new NativeTypeArchetype(type));
+            return this;
         }
-    }
 
-    public interface Test : IEntity
-    {
-        public bool GetMarker { get; }
-        public bool SetMarker { set; }
-        public bool Marker { get; set; }
-        
-        public Vector3 Position { get; set; }
-        public Vector3 GetPosition { get; }
-        public Vector3 SetPosition { set; }
-        
-        public ITimer Timer { get; }
-    }
-
-    public interface IWorldInfo
-    {
-        string Namespace { get; }
-
-        IReadOnlyList<IComponentInfo> GetComponents();
-        IReadOnlyList<IArchetypeInfo> GetArchetypes();
+        public IWorldInfo RegisterSystem(Type type)
+        {
+            var typeName = type.FullName;
+            if (!_systens.TryGetValue(typeName, out _))
+                _systens.Add(typeName, new NativeTypeSystem(type));
+            return this;
+        }
     }
 }

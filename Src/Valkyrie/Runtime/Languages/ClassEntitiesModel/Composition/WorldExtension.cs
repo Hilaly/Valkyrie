@@ -28,7 +28,11 @@ namespace Valkyrie.Composition
                 {
                     WriteComponents(worldInfo, sb);
                     sb.AppendLine();
-                    WriteInterfaces(worldInfo, sb);
+                    WriteArchetypes(worldInfo, sb);
+                    sb.AppendLine();
+                    WriteSystems(worldInfo, sb);
+                    sb.AppendLine();
+                    WriteGeneralClassesAndInterfaces(worldInfo, sb);
                 });
 
             CleanDirectory(dirPath);
@@ -73,5 +77,11 @@ namespace Valkyrie.Composition
 
             return new KeyValuePair<string, string>(path, sb.ToString());
         }
+
+        public static IWorldInfo RegisterArchetype<T>(this IWorldInfo worldInfo) where T : IEntity =>
+            worldInfo.RegisterArchetype(typeof(T));
+        
+        public static IWorldInfo RegisterSystem<T>(this IWorldInfo worldInfo) where T : ISimSystem =>
+            worldInfo.RegisterSystem(typeof(T));
     }
 }

@@ -8,6 +8,8 @@ namespace Valkyrie.Composition
 {
     public static partial class WorldExtension
     {
+        internal static string ToFullName(this string typeName) => typeName.Replace("+", ".");
+
         class ComponentTemplate
         {
             public List<string> Parents = new();
@@ -29,7 +31,7 @@ namespace Valkyrie.Composition
 
                 sb.WriteBlock(header, () =>
                 {
-                    var typeName = info.GetTypeName();
+                    var typeName = info.GetTypeName().ToFullName();
                     foreach (var field in Fields)
                         sb.AppendLine(string.Format(field, typeName, infoName));
                 });
@@ -38,7 +40,7 @@ namespace Valkyrie.Composition
             public void WriteGetter(IComponentInfo info, FormatWriter sb)
             {
                 var infoName = GetComponentFullName(info);
-                var typeName = info.GetTypeName();
+                var typeName = info.GetTypeName().ToFullName();
                 foreach (var str in Getters)
                     sb.AppendLine(string.Format(str, typeName, infoName));
                 if (!Getters.Any())
@@ -48,7 +50,7 @@ namespace Valkyrie.Composition
             public void WriteSetter(IComponentInfo info, FormatWriter sb)
             {
                 var infoName = GetComponentFullName(info);
-                var typeName = info.GetTypeName();
+                var typeName = info.GetTypeName().ToFullName();
                 foreach (var str in Setters)
                     sb.AppendLine(string.Format(str, typeName, infoName));
                 if (!Setters.Any())
