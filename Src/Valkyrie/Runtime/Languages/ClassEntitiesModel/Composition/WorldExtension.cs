@@ -8,7 +8,7 @@ using Valkyrie.Utils;
 
 namespace Valkyrie.Composition
 {
-    public static class WorldExtension
+    public static partial class WorldExtension
     {
         private static readonly string[] Using = new[]
         {
@@ -24,7 +24,7 @@ namespace Valkyrie.Composition
             var methods = new List<KeyValuePair<string, string>>();
 
             WriteToSeparateFile(methods, string.Empty, "Test.cs", rootNamespace,
-                sb => { sb.AppendLine("//TODO: define"); });
+                sb => { WriteComponents(worldInfo, sb); });
 
             CleanDirectory(dirPath);
             //3. Write files

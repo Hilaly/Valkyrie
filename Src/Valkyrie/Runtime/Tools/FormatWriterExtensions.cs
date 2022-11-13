@@ -29,5 +29,15 @@ namespace Valkyrie.Tools
             sb.EndBlock();
             return sb;
         }
+
+        public static FormatWriter WriteRegion(this FormatWriter sb, string regionName, Action internalWrite)
+        {
+            sb.AppendLine($"#region {regionName}");
+            sb.AppendLine();
+            internalWrite();
+            sb.AppendLine();
+            sb.AppendLine($"#endregion //{regionName}");
+            return sb;
+        }
     }
 }
