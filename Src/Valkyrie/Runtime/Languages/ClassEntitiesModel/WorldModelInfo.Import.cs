@@ -32,11 +32,11 @@ namespace Valkyrie
             if (!typeof(IEntity).IsAssignableFrom(typeInstance))
                 throw new Exception("Interface must be convertible to IEntity");
 
-            Debug.Log($"[CEM] registering {typeInstance.FullName}");
-
             var e = Get<EntityType>(typeInstance.FullName);
             if (e != null)
                 return e;
+
+            Debug.Log($"[CEM] registering {typeInstance.FullName}");
 
             e = CreateEntity(typeInstance.FullName);
             e.AddAttribute("native");

@@ -25,47 +25,35 @@ namespace Valkyrie
                 new(mainCsFile, ToString(world, false))
             };
 
-            void WriteToSeparateFileFull(string fileName, Action<FormatWriter> writeCall)
-            {
-                var sb = new FormatWriter();
-                WriteFileStart(sb);
-                sb.BeginBlock($"namespace {rootNamespace}");
-
-                writeCall(sb);
-
-                sb.EndBlock();
-                methods.Add(new KeyValuePair<string, string>(fileName, sb.ToString()));
-            }
-
-            void WriteToSeparateFile(string subDirectory, string fileName, Action<FormatWriter> writeCall) =>
-                WriteToSeparateFileFull(Path.Combine(subDirectory, fileName), writeCall);
-
             //Configs
             foreach (var configType in world.Get<ConfigType>())
                 WriteToSeparateFile("Configs", $"{configType.Name}.cs",
-                    sb => configType.WriteConfigClass(sb));
+                    sb => configType.WriteConfigClass(sb), rootNamespace, methods);
             WriteToSeparateFile("Configs", $"ProjectConfigService.cs",
-                sb => WriteConfigService(world, sb));
+                sb => WriteConfigService(world, sb), rootNamespace, methods);
 
             //Windows
             foreach (var window in world.Windows)
-                WriteToSeparateFile("Windows", $"{window.ClassName}.cs", sb => window.WriteWindow(sb));
+                WriteToSeparateFile("Windows", $"{window.ClassName}.cs", sb => window.WriteWindow(sb), rootNamespace,
+                    methods);
 
             //Entities Views
             foreach (var entityType in world.Get<EntityType>().Where(x => world.IsEntityClass(x) && x.HasView))
-                WriteToSeparateFile("Views", $"{entityType.Name}View.cs", sb => entityType.WriteView(sb));
+                WriteToSeparateFile("Views", $"{entityType.Name}View.cs", sb => entityType.WriteView(sb), rootNamespace,
+                    methods);
 
             //Events
             foreach (var e in world.Events)
-                WriteToSeparateFile("Events", $"{e.ClassName}.cs", sb => e.Write(sb));
-            WriteToSeparateFile("Events", "EventsHandler.cs", sb => world.Profile.WriteEvents(sb));
+                WriteToSeparateFile("Events", $"{e.ClassName}.cs", sb => e.Write(sb), rootNamespace, methods);
+            WriteToSeparateFile("Events", "EventsHandler.cs", sb => world.Profile.WriteEvents(sb), rootNamespace,
+                methods);
 
             //Profile
-            WriteToSeparateFile("Profile", "PlayerProfile.cs", sb => world.Profile.Write(sb));
+            WriteToSeparateFile("Profile", "PlayerProfile.cs", sb => world.Profile.Write(sb), rootNamespace, methods);
 
             //Simulation
-            WriteToSeparateFile("Simulation", "Sim.cs", sb => WriteGeneral(world, sb));
-            WriteToSeparateFile("Simulation", "Timers.cs", sb => WriteTimerHandlers(world, sb));
+            WriteToSeparateFile("Simulation", "Sim.cs", sb => WriteGeneral(world, sb), rootNamespace, methods);
+            WriteToSeparateFile("Simulation", "Timers.cs", sb => WriteTimerHandlers(world, sb), rootNamespace, methods);
             foreach (var entityType in world.Get<EntityType>().Where(x => !x.IsNative))
                 WriteToSeparateFile("Simulation", $"{entityType.Name}.cs", sb =>
                 {
@@ -75,7 +63,7 @@ namespace Valkyrie
                         entityType.WriteTypeInterface(sb);
                     else
                         throw new Exception($"Can not determine what is this entity is");
-                });
+                }, rootNamespace, methods);
 
             //2. Prepare directory
             Debug.Log($"[GENERATION]: Writing to directory {dirPath}");
@@ -97,6 +85,23 @@ namespace Valkyrie
             }
 
             Debug.Log($"[GENERATION]: SUCCESS in {dirPath}");
+        }
+
+        internal static void WriteToSeparateFile(string subDirectory, string fileName, Action<FormatWriter> writeCall,
+            string rootNamespace, List<KeyValuePair<string, string>> methods) =>
+            WriteToSeparateFileFull(Path.Combine(subDirectory, fileName), writeCall, rootNamespace, methods);
+
+        private static void WriteToSeparateFileFull(string fileName, Action<FormatWriter> writeCall,
+            string rootNamespace, List<KeyValuePair<string, string>> methods)
+        {
+            var sb = new FormatWriter();
+            WriteFileStart(sb);
+            sb.BeginBlock($"namespace {rootNamespace}");
+
+            writeCall(sb);
+
+            sb.EndBlock();
+            methods.Add(new KeyValuePair<string, string>(fileName, sb.ToString()));
         }
 
         internal static string ToString(this WorldModelInfo world, bool includeMono)
@@ -173,7 +178,8 @@ namespace Valkyrie
 
             WriteInterfaces(world, sb, allTimers);
 
-            sb.AppendLine($"class WorldState : IWorldState, {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>");
+            sb.AppendLine(
+                $"class WorldState : IWorldState, {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>");
             sb.AddTab();
             foreach (var entityInfo in world.Get<EntityType>())
                 sb.AppendLine($", {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>");
@@ -182,13 +188,15 @@ namespace Valkyrie
             sb.AppendLine($"public readonly List<{typeof(IEntity).FullName}> Entities = new();");
             sb.AppendLine($"public readonly HashSet<{typeof(IEntity).FullName}> ToDestroy = new();");
             sb.AppendLine($"public IReadOnlyList<{typeof(IEntity).FullName}> All => Entities;");
-            sb.AppendLine($"IReadOnlyList<{typeof(IEntity).FullName}> {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>.GetAll() => All;");
+            sb.AppendLine(
+                $"IReadOnlyList<{typeof(IEntity).FullName}> {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>.GetAll() => All;");
             foreach (var entityInfo in world.Get<EntityType>())
             {
                 sb.AppendLine($"public readonly List<{entityInfo.Name}> _allOf{entityInfo.GetFixedName()} = new();");
                 sb.AppendLine(
                     $"public IReadOnlyList<{entityInfo.Name}> AllOf{entityInfo.GetFixedName()} => _allOf{entityInfo.GetFixedName()}; // Entities.OfType<{entityInfo.Name}>().ToList();");
-                sb.AppendLine($"IReadOnlyList<{entityInfo.Name}> {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>.GetAll() => AllOf{entityInfo.GetFixedName()};");
+                sb.AppendLine(
+                    $"IReadOnlyList<{entityInfo.Name}> {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>.GetAll() => AllOf{entityInfo.GetFixedName()};");
             }
 
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.IsSingleton))
@@ -207,7 +215,7 @@ namespace Valkyrie
             sb.EndBlock();
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
-                if(entityInfo.IsNative)
+                if (entityInfo.IsNative)
                     continue;
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
@@ -241,7 +249,8 @@ namespace Valkyrie
                 sb.EndBlock();
             }
 
-            sb.AppendLine($"public void Destroy({typeof(IEntity).FullName} entity) => _worldState.ToDestroy.Add(entity);");
+            sb.AppendLine(
+                $"public void Destroy({typeof(IEntity).FullName} entity) => _worldState.ToDestroy.Add(entity);");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -418,7 +427,8 @@ namespace Valkyrie
                 sb.BeginBlock($"case {entityInfo.Name} val{entityInfo.GetFixedName()}:");
                 sb.AppendLine("//Clean state cache");
                 foreach (var entityBase in entityInfo.GetAllImplemented())
-                    sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Remove(val{entityInfo.GetFixedName()});");
+                    sb.AppendLine(
+                        $"_worldState._allOf{entityBase.GetFixedName()}.Remove(val{entityInfo.GetFixedName()});");
                 sb.AppendLine("//Clean views");
                 foreach (var entityBase in entityInfo.GetAllImplemented().Where(x => x.HasView))
                     sb.AppendLine($"_worldView.Destroy{entityBase.Name}ViewModel(val{entityInfo.Name});");
@@ -529,9 +539,11 @@ namespace Valkyrie
             foreach (var systemType in world.RegisteredSystems)
                 sb.AppendLine(
                     $"[{typeof(InjectAttribute).FullName}] {systemType.Key.FullName} _{systemType.Key.FullName.Replace(".", "")};");
-            sb.AppendLine($"private readonly List<KeyValuePair<{typeof(ISimSystem).FullName}, int>> _addedSystems = new();");
+            sb.AppendLine(
+                $"private readonly List<KeyValuePair<{typeof(ISimSystem).FullName}, int>> _addedSystems = new();");
             sb.AppendLine();
-            sb.AppendLine($"public void AddSystem({typeof(ISimSystem).FullName} simSystem, int order) => _addedSystems.Add(new KeyValuePair<{typeof(ISimSystem).FullName}, int>(simSystem, order));");
+            sb.AppendLine(
+                $"public void AddSystem({typeof(ISimSystem).FullName} simSystem, int order) => _addedSystems.Add(new KeyValuePair<{typeof(ISimSystem).FullName}, int>(simSystem, order));");
             sb.AppendLine();
             sb.BeginBlock($"public {typeof(Task).FullName} InstallSystems()");
             sb.BeginBlock($"var temp = new List<KeyValuePair<{typeof(ISimSystem).FullName}, int>>(_addedSystems)");
@@ -539,7 +551,8 @@ namespace Valkyrie
                 sb.AppendLine($"new( _{systemType.Key.FullName.Replace(".", "")}, {systemType.Value} ),");
             sb.EndBlock();
             sb.AppendLine(";");
-            sb.AppendLine("foreach (var simSystem in temp.OrderBy(x => x.Value).Select(x => x.Key)) _worldSimulation.AddSystem(simSystem);");
+            sb.AppendLine(
+                "foreach (var simSystem in temp.OrderBy(x => x.Value).Select(x => x.Key)) _worldSimulation.AddSystem(simSystem);");
             sb.AppendLine($"return {typeof(Task).FullName}.{nameof(Task.CompletedTask)};");
             sb.EndBlock();
             sb.EndBlock();
@@ -548,7 +561,8 @@ namespace Valkyrie
             sb.BeginBlock($"public class WorldLibrary : {typeof(ILibrary).FullName}");
             sb.AppendLine($"private readonly {typeof(SimulationType).FullName} _simulation;");
             sb.AppendLine($"private readonly {typeof(ViewsSpawnType).FullName} _viewsHandlingType;");
-            sb.BeginBlock($"public WorldLibrary({typeof(SimulationType).FullName} simulation, {typeof(ViewsSpawnType).FullName} viewsHandlingType)");
+            sb.BeginBlock(
+                $"public WorldLibrary({typeof(SimulationType).FullName} simulation, {typeof(ViewsSpawnType).FullName} viewsHandlingType)");
             sb.AppendLine("_simulation = simulation;");
             sb.AppendLine("_viewsHandlingType = viewsHandlingType;");
             sb.EndBlock();
@@ -560,11 +574,13 @@ namespace Valkyrie
             sb.AppendLine("container.Register<WorldSimulation>().AsInterfacesAndSelf().SingleInstance();");
             sb.BeginBlock("switch (_viewsHandlingType)");
             sb.BeginBlock($"case {typeof(ViewsSpawnType).FullName}.Resources:");
-            sb.AppendLine($"container.Register<{typeof(ResourcesViewsProvider).FullName}>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine(
+                $"container.Register<{typeof(ResourcesViewsProvider).FullName}>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("break;");
             sb.EndBlock();
             sb.BeginBlock($"case {typeof(ViewsSpawnType).FullName}.Pool:");
-            sb.AppendLine($"container.Register<{typeof(PoolViewsProvider).FullName}>().AsInterfacesAndSelf().SingleInstance();");
+            sb.AppendLine(
+                $"container.Register<{typeof(PoolViewsProvider).FullName}>().AsInterfacesAndSelf().SingleInstance();");
             sb.AppendLine("break;");
             sb.EndBlock();
             sb.EndBlock();
@@ -586,7 +602,7 @@ namespace Valkyrie
             foreach (var pair in world.RegisteredSystems)
                 sb.AppendLine($"container.Register<{pair.Key.FullName}>().AsInterfacesAndSelf().SingleInstance();");
             sb.EndBlock();
-            
+
             sb.EndBlock();
         }
 
@@ -595,7 +611,8 @@ namespace Valkyrie
         {
             sb.BeginBlock("public interface IWorldView");
             foreach (var entityInfo in world.Get<EntityType>().Where(x => x.HasView))
-                sb.AppendLine($"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.GetFixedName()} {{ get; }}");
+                sb.AppendLine(
+                    $"public IReadOnlyList<{entityInfo.Name}ViewModel> AllOf{entityInfo.GetFixedName()} {{ get; }}");
             sb.EndBlock();
             sb.AppendLine();
 
@@ -603,9 +620,9 @@ namespace Valkyrie
             sb.BeginBlock("public interface IWorldController");
             foreach (var entityInfo in world.Get<EntityType>().Where(world.IsEntityClass))
             {
-                if(entityInfo.IsNative)
+                if (entityInfo.IsNative)
                     continue;
-                
+
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
                 var args = allProperties.Union(allConfigs).ToList();
@@ -619,7 +636,8 @@ namespace Valkyrie
             sb.AppendLine();
 
 
-            sb.AppendLine($"public interface IWorldState : {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>");
+            sb.AppendLine(
+                $"public interface IWorldState : {typeof(IStateFilter<>).Namespace}.IStateFilter<{typeof(IEntity).FullName}>");
             sb.AddTab();
             foreach (var entityInfo in world.Get<EntityType>())
                 sb.AppendLine($", {typeof(IStateFilter<>).Namespace}.IStateFilter<{entityInfo.Name}>");
