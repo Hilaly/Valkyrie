@@ -61,7 +61,7 @@ namespace Valkyrie.Composition
         {
             var typeName = type.FullName;
             if (!_systens.TryGetValue(typeName, out _))
-                _systens.Add(typeName, new NativeTypeSystem(type));
+                _systens.Add(typeName, new NativeTypeSystem(type, this));
             return this;
         }
     }

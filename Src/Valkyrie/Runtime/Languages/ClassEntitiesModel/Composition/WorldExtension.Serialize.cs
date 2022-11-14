@@ -1,3 +1,4 @@
+using System.Linq;
 using Valkyrie.Ecs;
 using Valkyrie.Language.Description.Utils;
 using Valkyrie.Tools;
@@ -8,10 +9,9 @@ namespace Valkyrie.Composition
     {
         static void WriteGeneralClassesAndInterfaces(IWorldInfo worldInfo, FormatWriter sb)
         {
-            sb.WriteRegion("General interfaces", () =>
-            {
-                sb.WriteBlock("public interface IWorldState", () => { });
-            });
+            var archetypes = worldInfo.GetArchetypes();
+
+            sb.WriteRegion("General interfaces", () => { sb.WriteBlock("public interface IWorldState", () => { }); });
             sb.AppendLine();
             sb.WriteRegion("General interfaces implementation", () =>
             {
@@ -19,18 +19,19 @@ namespace Valkyrie.Composition
                 {
                     sb.AppendLine($"private readonly {typeof(IEcsWorld).FullName} _ecsWorld;");
                     sb.AppendLine();
-                    
-                    var t = "All";
-                    WriteGroupField(t, sb);
-                    WriteGroupBuffer(t, sb);
+
+                    foreach (var archetype in archetypes) WriteGroupField(archetype.Name.Clean(), sb);
+                    foreach (var archetype in archetypes) WriteGroupBuffer(archetype.Name.Clean(), sb);
 
                     sb.WriteBlock($"public WorldState({typeof(IEcsWorld).FullName} ecsWorld)", () =>
                     {
                         sb.AppendLine("_ecsWorld = ecsWorld;");
                         sb.AppendLine();
-                        WriteGroupConstructor(t, sb);
+                        foreach (var archetype in archetypes)
+                            WriteGroupConstructor(archetype.Name.Clean(), archetype, sb);
                     });
-                    WriteGroupImpl(t, sb);
+                    sb.AppendLine();
+                    foreach (var archetype in archetypes) WriteGroupImpl(archetype.Name.Clean(), sb);
                 });
             });
         }
@@ -45,11 +46,18 @@ namespace Valkyrie.Composition
             sb.AppendLine($"private readonly List<{typeof(EcsEntity).FullName}> _{name}Buffer = new();");
         }
 
-        static void WriteGroupConstructor(string name, FormatWriter sb)
+        static void WriteGroupConstructor(string name, IArchetypeFilter filter, FormatWriter sb)
         {
             sb.AppendLine($"_{name}Group = _ecsWorld.Groups.Build()");
             sb.AddTab();
-            //TODO: filters
+            if (filter != null)
+            {
+                if (filter.Required.Any())
+                    sb.AppendLine($".AllOf<{string.Join(", ", filter.Required.Select(GetComponentFullName))}>()");
+                if (filter.Excluded.Any())
+                    sb.AppendLine($".NotOf<{string.Join(", ", filter.Excluded.Select(GetComponentFullName))}>()");
+            }
+
             sb.AppendLine(".Build();");
             sb.RemoveTab();
         }
@@ -61,7 +69,8 @@ namespace Valkyrie.Composition
 
         static void WriteGroupImpl(string name, FormatWriter sb)
         {
-            sb.AppendLine($"public IReadOnlyList<{typeof(EcsEntity).FullName}> GetAllOf_{name}() => _{name}Group.GetEntities(_{name}Buffer);");
+            sb.AppendLine(
+                $"public IReadOnlyList<{typeof(EcsEntity).FullName}> GetAllOf_{name}() => _{name}Group.GetEntities(_{name}Buffer);");
         }
     }
 }

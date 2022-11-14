@@ -30,6 +30,14 @@ namespace Valkyrie.Tools
             return sb;
         }
 
+        public static FormatWriter Profile(this FormatWriter sb, string sectionName, Action internalWrite)
+        {
+            sb.AppendLine($"{typeof(UnityEngine.Profiling.Profiler).FullName}.BeginSample(\"{sectionName}\");");
+            internalWrite();
+            sb.AppendLine($"{typeof(UnityEngine.Profiling.Profiler).FullName}.EndSample(); // {sectionName}");
+            return sb;
+        }
+
         public static FormatWriter WriteRegion(this FormatWriter sb, string regionName, Action internalWrite)
         {
             sb.AppendLine($"#region {regionName}");

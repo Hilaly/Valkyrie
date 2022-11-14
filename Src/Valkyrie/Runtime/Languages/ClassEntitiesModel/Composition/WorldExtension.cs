@@ -81,7 +81,7 @@ namespace Valkyrie.Composition
         public static IWorldInfo RegisterArchetype<T>(this IWorldInfo worldInfo) where T : IEntity =>
             worldInfo.RegisterArchetype(typeof(T));
         
-        public static IWorldInfo RegisterSystem<T>(this IWorldInfo worldInfo) where T : ISimSystem =>
+        public static IWorldInfo RegisterSystem<T>(this IWorldInfo worldInfo) where T : ISharedSystem =>
             worldInfo.RegisterSystem(typeof(T));
     }
 }

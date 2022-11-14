@@ -9,6 +9,12 @@ namespace Valkyrie.Composition
     public static partial class WorldExtension
     {
         internal static string ToFullName(this string typeName) => typeName.Replace("+", ".");
+        internal static string Clean(this string typeName) => typeName.Replace(".", "").Replace("+", "");
+
+        internal static string GetComponentFullName(this string componentName)
+        {
+            return $"{componentName}Component";
+        }
 
         class ComponentTemplate
         {
@@ -17,10 +23,7 @@ namespace Valkyrie.Composition
             public List<string> Getters = new();
             public List<string> Setters = new();
 
-            public string GetComponentFullName(IComponentInfo info)
-            {
-                return $"{info.Name}Component";
-            }
+            public string GetComponentFullName(IComponentInfo info) => info.Name.GetComponentFullName();
 
             public void Write(IComponentInfo info, FormatWriter sb)
             {

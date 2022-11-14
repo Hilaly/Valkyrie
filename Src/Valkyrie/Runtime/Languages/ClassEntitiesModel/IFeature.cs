@@ -32,8 +32,23 @@ namespace Valkyrie
     }
     
     public interface IEntity { }
-	
-    public interface ISimSystem
+    
+    public interface ISharedSystem
+    {}
+
+    public interface IArchetypeSimSystem<in T> : ISharedSystem 
+        where T : IEntity
+    {
+        void Simulate(IReadOnlyList<T> e, float dt);
+    }
+
+    public interface IArchetypeEntitySimSystem<in T> : ISharedSystem
+        where T : IEntity
+    {
+        void Simulate(T e, float dt);
+    }
+    
+    public interface ISimSystem : ISharedSystem
     {
         void Simulate(float dt);
     }

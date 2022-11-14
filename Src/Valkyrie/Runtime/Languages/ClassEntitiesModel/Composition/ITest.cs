@@ -1,7 +1,10 @@
 using UnityEngine;
+using Valkyrie.Ecs;
 
 namespace Valkyrie.Composition
 {
+    [RequiredProperty(nameof(Position))]
+    [ExcludeProperty(nameof(Timer))]
     public interface ITest : IEntity
     {
         public bool GetMarker { get; }
@@ -14,8 +17,11 @@ namespace Valkyrie.Composition
         
         public ITimer Timer { get; }
     }
-
-    public interface ITestSystem : ISimSystem
+    
+    public interface ITestInitSystem : ISharedSystem, IEcsInitSystem
+    {}
+    
+    public interface ITestSystem : IArchetypeSimSystem<ITest>, IArchetypeEntitySimSystem<ITest>
     {
         
     }
