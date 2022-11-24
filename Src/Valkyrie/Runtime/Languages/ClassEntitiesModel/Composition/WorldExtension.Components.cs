@@ -16,58 +16,6 @@ namespace Valkyrie.Composition
             return $"{componentName}Component";
         }
 
-        private static readonly Dictionary<string, IComponentTemplate> ComponentTemplates = new()
-        {
-            {
-                typeof(bool).FullName, new ComponentTemplate()
-                {
-                    Getters = new List<string>()
-                    {
-                        "get => Entity.Has<{1}>();"
-                    },
-                    Setters = new List<string>()
-                    {
-                        "set {{ if(Entity.Has<{1}>() == value) return;",
-                        "\tif(value) Entity.Add(new {1}());",
-                        "\telse Entity.Remove<{1}>();",
-                        "}}",
-                    },
-                }
-            },
-            {
-                typeof(ITimer).FullName, new ComponentTemplate()
-                {
-                    Parents = new() { typeof(ITimer).FullName },
-                    Fields = new List<string>()
-                    {
-                        $"public float FullTimeValue;",
-                        $"public float TimeLeftValue;",
-                        "",
-                        $"float {typeof(ITimer).FullName}.FullTime => FullTimeValue;",
-                        $"float {typeof(ITimer).FullName}.TimeLeft => TimeLeftValue;",
-                    },
-                    Getters = new List<string>()
-                    {
-                        "get => Entity.Has<{1}>() ? Entity.Get<{1}>() : null;",
-                    },
-                }
-            },
-            {
-                "default", new ComponentTemplate()
-                {
-                    Fields = new() { "public {0} Value;" },
-                    Getters = new List<string>()
-                    {
-                        "get => Entity.Has<{1}>() ? Entity.Get<{1}>().Value : default;",
-                    },
-                    Setters = new List<string>()
-                    {
-                        $"set => {typeof(EcsExtensions).FullName}.GetOrCreate<{{1}}>(Entity).Value = value;"
-                    }
-                }
-            }
-        };
-
         private static void WriteComponents(IWorldInfo worldInfo, FormatWriter sb)
         {
             sb.WriteRegion("Components", () =>

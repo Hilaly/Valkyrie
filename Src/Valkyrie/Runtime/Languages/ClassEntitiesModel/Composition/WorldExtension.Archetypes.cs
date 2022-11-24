@@ -20,7 +20,7 @@ namespace Valkyrie.Composition
 
         static void WriteArchetypeImplementation(this IArchetypeInfo archetypeInfo, FormatWriter sb)
         {
-            var structName = archetypeInfo.Name.Replace(".", "").Replace("+", "");
+            var structName = archetypeInfo.Name.Clean();
             var header = $"class {structName}";
             header += $" : {typeof(IEntityWrapper)}, {archetypeInfo.Name.ToFullName()}";
             sb.WriteBlock(header, () =>
