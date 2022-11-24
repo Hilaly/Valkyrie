@@ -41,7 +41,7 @@ namespace Valkyrie
 
         public GroupConverter(Valkyrie.Ecs.IEcsGroup @group) => _wrapper = GroupWrapper.Wrap(@group);
 
-        public IReadOnlyList<EcsEntity> AsEntities() => _wrapper.Entities;
+        public List<EcsEntity> AsEntities() => _wrapper.Entities;
 
         public IReadOnlyList<TU> AsConverted()
         {

@@ -18,7 +18,16 @@ namespace Valkyrie.Composition
                     additional = " : \n\t\t" + string.Join(", \n\t\t",
                         archetypes.Select(x => $"{typeof(IStateFilter<>).Namespace}.IStateFilter<{x.Name}>"));
 
-                sb.WriteBlock($"public interface IWorldState{additional}", () => { });
+                sb.WriteBlock($"public interface IWorldState{additional}", () =>
+                {
+                    foreach (var archetype in archetypes)
+                    {
+                        if (archetype is NativeTypeEventArchetype)
+                        {
+                            sb.AppendLine($"//TODO: void Clear{archetype.Name.Clean()}();");
+                        }
+                    }
+                });
             });
             sb.AppendLine();
             sb.WriteRegion("General interfaces implementation", () =>
@@ -49,8 +58,10 @@ namespace Valkyrie.Composition
                     foreach (var archetype in archetypes)
                     {
                         var structName = archetype.Name.Clean();
-                        sb.AppendLine(
-                            $"IReadOnlyList<{archetype.Name}> IStateFilter<{archetype.Name}>.GetAll() => _{structName}Converter.AsConverted();");
+                        sb.AppendLine($"IReadOnlyList<{archetype.Name}> IStateFilter<{archetype.Name}>.GetAll() => _{structName}Converter.AsConverted();");
+                        if (archetype is NativeTypeEventArchetype)
+                            sb.AppendLine(
+                                $"public void Clear{structName}() => _{structName}Converter.AsEntities().ForEach(x => x.Destroy());");
                     }
                 });
             });

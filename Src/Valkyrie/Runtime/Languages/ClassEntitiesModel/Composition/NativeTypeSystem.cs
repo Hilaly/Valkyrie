@@ -9,6 +9,7 @@ namespace Valkyrie.Composition
     {
         public string Name { get; }
         bool NeedInit { get; }
+        bool NeedSimulate { get; }
 
         public IReadOnlyList<KeyValuePair<IArchetypeInfo, ArchetypeUsageInSystem>> GetSimulation();
     }
@@ -29,6 +30,9 @@ namespace Valkyrie.Composition
         public string Name => Type.FullName.ToFullName();
 
         public bool NeedInit => typeof(IEcsInitSystem).IsAssignableFrom(Type);
+
+        public bool NeedSimulate => typeof(ISimSystem).IsAssignableFrom(Type) ||
+                                    typeof(IEcsSimulationSystem).IsAssignableFrom(Type);
 
         public IReadOnlyList<KeyValuePair<IArchetypeInfo, ArchetypeUsageInSystem>> GetSimulation()
             => _archetypeUsages;

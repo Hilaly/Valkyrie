@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Valkyrie.Ecs;
 
@@ -20,15 +21,34 @@ namespace Valkyrie.Composition
 
     public interface ITestEvent : IEventEntity
     {
-        public object Data { get; set; }
+        public ITest Data { get; set; }
+        public float DT { get; set; }
     }
     
     public interface ITestInitSystem : ISharedSystem, IEcsInitSystem
     {}
     
-    public interface ITestSystem : IArchetypeSimSystem<ITest>, IArchetypeEntitySimSystem<ITest>
+    public interface ITestSystem : IArchetypeSimSystem<ITest>, IArchetypeEntitySimSystem<ITest> { }
+    
+    public interface ITestSimSystem : ISimSystem
+    {}
+
+    public class TestSystem : ITestSystem, IEcsSimulationSystem
     {
-        
+        public void Simulate(IReadOnlyList<ITest> e, float dt)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Simulate(ITest e, float dt)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Simulate(float dt)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 
     public interface ITestEventSystem : IEventSystem<ITestEvent>
