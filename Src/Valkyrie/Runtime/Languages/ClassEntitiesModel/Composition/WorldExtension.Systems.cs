@@ -89,6 +89,12 @@ namespace Valkyrie.Composition
                     yield return new KeyValuePair<IArchetypeInfo, ArchetypeUsageInSystem>(archetype,
                         ArchetypeUsageInSystem.Single);
                 }
+                else if (genericType == typeof(IEventSystem<>))
+                {
+                    var archetype = GetArchetypeInfo(worldInfo, implementedInterface, 0);
+                    yield return new KeyValuePair<IArchetypeInfo, ArchetypeUsageInSystem>(archetype,
+                        ArchetypeUsageInSystem.Event);
+                }
             }
         }
 

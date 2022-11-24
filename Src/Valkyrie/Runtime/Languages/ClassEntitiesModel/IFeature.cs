@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using Valkyrie.Di;
+using Valkyrie.Ecs;
 
 namespace Valkyrie
 {
@@ -12,7 +13,7 @@ namespace Valkyrie
         Resources,
         Pool
     }
-	
+
     public enum SimulationType
     {
         None,
@@ -22,21 +23,69 @@ namespace Valkyrie
 
     [AttributeUsage(AttributeTargets.Property)]
     public class RequiredPropertyAttribute : Attribute
-    {}
-    
+    {
+    }
+
     public interface IFeature
     {
         public string Name { get; }
-        
+
         void Import(WorldModelInfo world);
     }
-    
-    public interface IEntity { }
-    
-    public interface ISharedSystem
-    {}
 
-    public interface IArchetypeSimSystem<in T> : ISharedSystem 
+    public class GroupConverter<T, TU>
+        where T : class, IEntityWrapper, TU, new()
+    {
+        private readonly GroupWrapper _wrapper;
+        private readonly List<T> _output = new();
+
+        public GroupConverter(Valkyrie.Ecs.IEcsGroup @group) => _wrapper = GroupWrapper.Wrap(@group);
+
+        public IReadOnlyList<EcsEntity> AsEntities() => _wrapper.Entities;
+
+        public IReadOnlyList<TU> AsConverted()
+        {
+            var input = AsEntities();
+            var output = _output;
+            for (var index = 0; index < input.Count; ++index)
+            {
+                if (output.Count > index)
+                    output[index].Entity = input[index];
+                else
+                    output.Add(new T { Entity = input[index] });
+            }
+
+            if (output.Count > input.Count)
+            {
+                output.RemoveRange(input.Count, output.Count - input.Count);
+            }
+
+            return output;
+        }
+    }
+
+    public interface IEntityWrapper
+    {
+        public Ecs.EcsEntity Entity { get; set; }
+    }
+
+    public interface IEntity
+    {
+    }
+
+    public interface IEventEntity : IEntity
+    {
+    }
+
+    public interface ISharedSystem
+    {
+    }
+
+    public interface IEventSystem<T> : ISharedSystem where T : IEventEntity
+    {
+    }
+
+    public interface IArchetypeSimSystem<in T> : ISharedSystem
         where T : IEntity
     {
         void Simulate(IReadOnlyList<T> e, float dt);
@@ -47,7 +96,7 @@ namespace Valkyrie
     {
         void Simulate(T e, float dt);
     }
-    
+
     public interface ISimSystem : ISharedSystem
     {
         void Simulate(float dt);
@@ -56,7 +105,7 @@ namespace Valkyrie
     public interface IWorldLoader
     {
         void AddSystem(Valkyrie.ISimSystem simSystem, int order = SimulationOrder.Default);
-        
+
         Task InstallSystems();
     }
 
@@ -64,7 +113,7 @@ namespace Valkyrie
     {
         protected override void Simulate(float dt, IReadOnlyList<T> entities)
         {
-            for (var index = 0; index < entities.Count; index++) 
+            for (var index = 0; index < entities.Count; index++)
                 Simulate(entities[index], dt);
         }
 
@@ -91,12 +140,12 @@ namespace Valkyrie
         float FullTime { get; }
         float TimeLeft { get; }
     }
-	
+
     public interface IView<in TModel>
     {
         void UpdateDate(TModel model);
     }
-	
+
     public interface IViewsProvider
     {
         void Release<TView>(TView value) where TView : Component;
@@ -106,21 +155,26 @@ namespace Valkyrie
     public class ResourcesViewsProvider : IViewsProvider
     {
         public void Release<TView>(TView value) where TView : Component => UnityEngine.Object.Destroy(value.gameObject);
-        public TView Spawn<TView>(string prefabName) where TView : Component => UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));
+
+        public TView Spawn<TView>(string prefabName) where TView : Component =>
+            UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));
     }
-	
+
     public class PoolViewsProvider : IViewsProvider
     {
         private readonly Dictionary<object, IDisposable> _cache = new();
         private readonly Valkyrie.Utils.Pool.IObjectsPool _objectsPool;
+
         public PoolViewsProvider(Valkyrie.Utils.Pool.IObjectsPool objectsPool)
         {
             _objectsPool = objectsPool;
         }
+
         void IViewsProvider.Release<TView>(TView value)
         {
-            if(_cache.Remove(value, out var disposable)) disposable.Dispose();
+            if (_cache.Remove(value, out var disposable)) disposable.Dispose();
         }
+
         TView IViewsProvider.Spawn<TView>(string prefabName)
         {
             var disposable = _objectsPool.Instantiate<TView>(prefabName);
@@ -136,10 +190,12 @@ namespace Valkyrie
     {
         public float FullTime { get; }
         public float TimeLeft { get; private set; }
+
         public EntityTimer(float time)
         {
             FullTime = TimeLeft = time;
         }
+
         public void Advance(float dt) => TimeLeft -= dt;
     }
 }

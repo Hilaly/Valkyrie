@@ -21,17 +21,17 @@ namespace Valkyrie.Composition
         static void WriteArchetypeImplementation(this IArchetypeInfo archetypeInfo, FormatWriter sb)
         {
             var structName = archetypeInfo.Name.Replace(".", "").Replace("+", "");
-            var header = $"struct {structName}";
-            header += $" : {archetypeInfo.Name.ToFullName()}";
+            var header = $"class {structName}";
+            header += $" : {typeof(IEntityWrapper)}, {archetypeInfo.Name.ToFullName()}";
             sb.WriteBlock(header, () =>
             {
-                sb.AppendLine($"public {typeof(EcsEntity).FullName} Entity;");
+                sb.AppendLine($"public {typeof(EcsEntity).FullName} Entity {{ get; set; }}");
                 sb.AppendLine();
                 foreach (var property in archetypeInfo.Properties)
                 {
                     sb.WriteBlock($"{property.GetTypeName()} {archetypeInfo.Name.ToFullName()}.{property.Name}", () =>
                     {
-                        var componentTemplate = GetComponentTemplate(property);
+                        var componentTemplate = GetComponentTemplate(archetypeInfo, property);
                         if (property.IsReadEnabled) componentTemplate.WriteGetter(property, sb);
                         if (property.IsWriteEnabled) componentTemplate.WriteSetter(property, sb);
                     });
@@ -42,7 +42,7 @@ namespace Valkyrie.Composition
             });
         }
 
-        internal static IEnumerable<IPropertyInfo> CollectArchetypeProperties(this Type type)
+        internal static IEnumerable<NativePropertyInfo> CollectArchetypeProperties(this Type type)
         {
             if (!type.IsInterface)
                 throw new Exception("Only interfaces can be used as Archetype");

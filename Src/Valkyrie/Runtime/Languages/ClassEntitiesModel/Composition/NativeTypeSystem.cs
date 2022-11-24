@@ -17,6 +17,7 @@ namespace Valkyrie.Composition
     {
         Single,
         Multiple,
+        Event
     }
 
     class NativeTypeSystem : ISystemInfo

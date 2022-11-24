@@ -9,13 +9,16 @@ namespace Valkyrie.Composition
         string GetTypeName();
     }
 
-    public interface IPropertyInfo : IComponentInfo
+    public interface IPropertyInfo
     {
+        string Name { get; }
+        
+        string GetTypeName();
         bool IsWriteEnabled { get; }
         bool IsReadEnabled { get; }
     }
 
-    class NativePropertyInfo : IPropertyInfo
+    class NativePropertyInfo : IPropertyInfo, IComponentInfo
     {
         public readonly PropertyInfo PropertyInfo;
 

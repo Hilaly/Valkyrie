@@ -17,11 +17,21 @@ namespace Valkyrie.Composition
         
         public ITimer Timer { get; }
     }
+
+    public interface ITestEvent : IEventEntity
+    {
+        public object Data { get; set; }
+    }
     
     public interface ITestInitSystem : ISharedSystem, IEcsInitSystem
     {}
     
     public interface ITestSystem : IArchetypeSimSystem<ITest>, IArchetypeEntitySimSystem<ITest>
+    {
+        
+    }
+
+    public interface ITestEventSystem : IEventSystem<ITestEvent>
     {
         
     }

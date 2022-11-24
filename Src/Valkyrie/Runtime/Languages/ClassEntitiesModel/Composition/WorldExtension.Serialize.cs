@@ -11,7 +11,15 @@ namespace Valkyrie.Composition
         {
             var archetypes = worldInfo.GetArchetypes();
 
-            sb.WriteRegion("General interfaces", () => { sb.WriteBlock("public interface IWorldState", () => { }); });
+            sb.WriteRegion("General interfaces", () =>
+            {
+                var additional = "";
+                if (archetypes.Any())
+                    additional = " : \n\t\t" + string.Join(", \n\t\t",
+                        archetypes.Select(x => $"{typeof(IStateFilter<>).Namespace}.IStateFilter<{x.Name}>"));
+
+                sb.WriteBlock($"public interface IWorldState{additional}", () => { });
+            });
             sb.AppendLine();
             sb.WriteRegion("General interfaces implementation", () =>
             {
@@ -20,36 +28,39 @@ namespace Valkyrie.Composition
                     sb.AppendLine($"private readonly {typeof(IEcsWorld).FullName} _ecsWorld;");
                     sb.AppendLine();
 
-                    foreach (var archetype in archetypes) WriteGroupField(archetype.Name.Clean(), sb);
-                    foreach (var archetype in archetypes) WriteGroupBuffer(archetype.Name.Clean(), sb);
+                    foreach (var archetype in archetypes)
+                    {
+                        var structName = archetype.Name.Clean();
+                        sb.AppendLine(
+                            $"private readonly {typeof(GroupConverter<,>).Namespace}.GroupConverter<{structName}, {archetype.Name}> _{structName}Converter;");
+                    }
 
                     sb.WriteBlock($"public WorldState({typeof(IEcsWorld).FullName} ecsWorld)", () =>
                     {
                         sb.AppendLine("_ecsWorld = ecsWorld;");
                         sb.AppendLine();
                         foreach (var archetype in archetypes)
-                            WriteGroupConstructor(archetype.Name.Clean(), archetype, sb);
+                        {
+                            var structName = archetype.Name.Clean();
+                            WriteGroupConstructor(structName, archetype, sb);
+                        }
                     });
                     sb.AppendLine();
-                    foreach (var archetype in archetypes) WriteGroupImpl(archetype.Name.Clean(), sb);
+                    foreach (var archetype in archetypes)
+                    {
+                        var structName = archetype.Name.Clean();
+                        sb.AppendLine(
+                            $"IReadOnlyList<{archetype.Name}> IStateFilter<{archetype.Name}>.GetAll() => _{structName}Converter.AsConverted();");
+                    }
                 });
             });
         }
 
-        static void WriteGroupField(string name, FormatWriter sb)
-        {
-            sb.AppendLine($"private readonly {typeof(IEcsGroup).FullName} _{name}Group;");
-        }
-
-        static void WriteGroupBuffer(string name, FormatWriter sb)
-        {
-            sb.AppendLine($"private readonly List<{typeof(EcsEntity).FullName}> _{name}Buffer = new();");
-        }
-
         static void WriteGroupConstructor(string name, IArchetypeFilter filter, FormatWriter sb)
         {
-            sb.AppendLine($"_{name}Group = _ecsWorld.Groups.Build()");
+            sb.AppendLine($"_{name}Converter = new (");
             sb.AddTab();
+            sb.AppendLine($"_ecsWorld.Groups.Build()");
             if (filter != null)
             {
                 if (filter.Required.Any())
@@ -58,19 +69,8 @@ namespace Valkyrie.Composition
                     sb.AppendLine($".NotOf<{string.Join(", ", filter.Excluded.Select(GetComponentFullName))}>()");
             }
 
-            sb.AppendLine(".Build();");
+            sb.AppendLine(".Build() );");
             sb.RemoveTab();
-        }
-
-        static void WriteGroupDefine(string name, FormatWriter sb)
-        {
-            sb.AppendLine($"public IReadOnlyList<{typeof(EcsEntity).FullName}> GetAllOf_{name}();");
-        }
-
-        static void WriteGroupImpl(string name, FormatWriter sb)
-        {
-            sb.AppendLine(
-                $"public IReadOnlyList<{typeof(EcsEntity).FullName}> GetAllOf_{name}() => _{name}Group.GetEntities(_{name}Buffer);");
         }
     }
 }

@@ -16,52 +16,7 @@ namespace Valkyrie.Composition
             return $"{componentName}Component";
         }
 
-        class ComponentTemplate
-        {
-            public List<string> Parents = new();
-            public List<string> Fields = new();
-            public List<string> Getters = new();
-            public List<string> Setters = new();
-
-            public string GetComponentFullName(IComponentInfo info) => info.Name.GetComponentFullName();
-
-            public void Write(IComponentInfo info, FormatWriter sb)
-            {
-                var infoName = GetComponentFullName(info);
-                var header = $"struct {infoName}";
-                if (Parents.Any())
-                    header += " : " + string.Join(", ", Parents);
-
-                sb.WriteBlock(header, () =>
-                {
-                    var typeName = info.GetTypeName().ToFullName();
-                    foreach (var field in Fields)
-                        sb.AppendLine(string.Format(field, typeName, infoName));
-                });
-            }
-
-            public void WriteGetter(IComponentInfo info, FormatWriter sb)
-            {
-                var infoName = GetComponentFullName(info);
-                var typeName = info.GetTypeName().ToFullName();
-                foreach (var str in Getters)
-                    sb.AppendLine(string.Format(str, typeName, infoName));
-                if (!Getters.Any())
-                    sb.AppendLine("get => throw new NotImplementedException();");
-            }
-
-            public void WriteSetter(IComponentInfo info, FormatWriter sb)
-            {
-                var infoName = GetComponentFullName(info);
-                var typeName = info.GetTypeName().ToFullName();
-                foreach (var str in Setters)
-                    sb.AppendLine(string.Format(str, typeName, infoName));
-                if (!Setters.Any())
-                    sb.AppendLine("throw new NotImplementedException();");
-            }
-        }
-
-        private static readonly Dictionary<string, ComponentTemplate> ComponentTemplates = new()
+        private static readonly Dictionary<string, IComponentTemplate> ComponentTemplates = new()
         {
             {
                 typeof(bool).FullName, new ComponentTemplate()
@@ -128,8 +83,21 @@ namespace Valkyrie.Composition
             template.Write(info, sb);
         }
 
-        private static ComponentTemplate GetComponentTemplate(IComponentInfo info)
+        private static IComponentTemplate GetComponentTemplate(IComponentInfo info)
         {
+            if (info is NativeTypeEventArchetype archetype)
+                return new EventComponentTemplate(archetype);
+
+            if (!ComponentTemplates.TryGetValue(info.GetTypeName(), out var template))
+                template = ComponentTemplates["default"];
+            return template;
+        }
+
+        private static IComponentTemplate GetComponentTemplate(IArchetypeInfo archetypeInfo, IPropertyInfo info)
+        {
+            if (archetypeInfo is NativeTypeEventArchetype archetype)
+                return new EventComponentTemplate(archetype);
+
             if (!ComponentTemplates.TryGetValue(info.GetTypeName(), out var template))
                 template = ComponentTemplates["default"];
             return template;
