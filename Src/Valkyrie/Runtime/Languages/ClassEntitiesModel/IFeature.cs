@@ -123,14 +123,14 @@ namespace Valkyrie
     public abstract class BaseTypedSystem<T> : ISimSystem
         where T : IEntity
     {
-        [field: Inject] protected IStateFilter<T> Filter { get; }
+        [field: Inject] protected IWorldFilter<T> Filter { get; }
 
         public void Simulate(float dt) => Simulate(dt, Filter.GetAll());
 
         protected abstract void Simulate(float dt, IReadOnlyList<T> entities);
     }
 
-    public interface IStateFilter<out T> where T : IEntity
+    public interface IWorldFilter<out T> where T : IEntity
     {
         IReadOnlyList<T> GetAll();
     }

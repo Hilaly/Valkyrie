@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Utils;
@@ -39,6 +40,7 @@ namespace Valkyrie.Composition
                     sb.AppendLine(
                         $"private readonly {typeof(GroupConverter<,>).Namespace}.GroupConverter<{structName}, {archetype.Name}> _{structName}Converter;");
                 }
+                sb.AppendLine();
 
                 sb.WriteBlock($"public WorldState({typeof(IEcsWorld).FullName} ecsWorld)", () =>
                 {
@@ -55,7 +57,7 @@ namespace Valkyrie.Composition
                 {
                     var structName = archetype.Name.Clean();
                     sb.AppendLine(
-                        $"IReadOnlyList<{archetype.Name}> IStateFilter<{archetype.Name}>.GetAll() => _{structName}Converter.AsConverted();");
+                        $"IReadOnlyList<{archetype.Name}> IWorldFilter<{archetype.Name}>.GetAll() => _{structName}Converter.AsConverted();");
                     if (archetype is NativeTypeEventArchetype)
                         sb.AppendLine(
                             $"public void Clear{structName}() => _{structName}Converter.AsEntities().ForEach(x => x.Destroy());");
@@ -70,6 +72,10 @@ namespace Valkyrie.Composition
                 sb.AppendLine($"private readonly {typeof(IEcsWorld).FullName} _ecsWorld;");
                 sb.AppendLine();
 
+                sb.WriteBlock($"public WorldController({typeof(IEcsWorld).FullName} ecsWorld)",
+                    () => sb.AppendLine("_ecsWorld = ecsWorld;"));
+                sb.AppendLine();
+                
                 foreach (var archetype in archetypes)
                 {
                     var properties = CollectRequiredProperties(archetype);
@@ -96,6 +102,13 @@ namespace Valkyrie.Composition
                         sb.AppendLine("return resultInstance;");
                     });
                 }
+                sb.AppendLine();
+                sb.WriteBlock($"public void Destroy({typeof(IEntity).FullName} e)",
+                    () =>
+                    {
+                        sb.AppendLine($"if(e is {typeof(IEntityWrapper).FullName} w) w.Entity.Destroy();");
+                        sb.AppendLine($"else throw new {typeof(NotImplementedException).FullName}(\"Only support generated entity destroy\");");
+                    });
             });
         }
 
@@ -106,7 +119,7 @@ namespace Valkyrie.Composition
                 var additional = "";
                 if (archetypes.Any())
                     additional = " : \n\t\t" + string.Join(", \n\t\t",
-                        archetypes.Select(x => $"{typeof(IStateFilter<>).Namespace}.IStateFilter<{x.Name}>"));
+                        archetypes.Select(x => $"{typeof(IWorldFilter<>).Namespace}.IWorldFilter<{x.Name}>"));
 
                 sb.WriteBlock($"public interface IWorldState{additional}", () =>
                 {
@@ -132,6 +145,14 @@ namespace Valkyrie.Composition
                             $"//Properties: {string.Join(",", properties.Select(x => $"{x.Key.Name}->{x.Key.GetTypeName()}"))}");
                         sb.AppendLine($"{archetype.Name} Create{archetype.Name.Clean()}({args});");
                     }
+                    sb.AppendLine($"public void Destroy({typeof(IEntity).FullName} e);");
+                });
+
+                sb.AppendLine();
+
+                sb.WriteBlock("public interface IWorldSimulation", () =>
+                {
+                    sb.AppendLine("void Simulate(float dt);");
                 });
             });
             sb.AppendLine();

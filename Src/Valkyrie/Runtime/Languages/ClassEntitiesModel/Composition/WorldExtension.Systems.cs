@@ -51,7 +51,7 @@ namespace Valkyrie.Composition
                 foreach (var archetypeInfo in typesReferences)
                 {
                     sb.AppendLine(
-                        $"[{typeof(InjectAttribute).FullName}] private readonly {typeof(IStateFilter<>).Namespace}.IStateFilter<{archetypeInfo.Name}> _{archetypeInfo.Name.Clean()}Filter;");
+                        $"[{typeof(InjectAttribute).FullName}] private readonly {typeof(IWorldFilter<>).Namespace}.IWorldFilter<{archetypeInfo.Name}> _{archetypeInfo.Name.Clean()}Filter;");
                 }
 
                 sb.AppendLine();

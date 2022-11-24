@@ -35,19 +35,30 @@ namespace Valkyrie.Composition
 
     public class TestSystem : ITestSystem, IEcsSimulationSystem
     {
+        private readonly IWorldFilter<ITestEvent> _filter;
+
+        public TestSystem(IWorldFilter<ITestEvent> filter)
+        {
+            _filter = filter;
+        }
+
         public void Simulate(IReadOnlyList<ITest> e, float dt)
         {
-            throw new System.NotImplementedException();
+            foreach (var test in e) 
+                Simulate(test, dt);
         }
 
         public void Simulate(ITest e, float dt)
         {
-            throw new System.NotImplementedException();
+            Debug.Log($"Sim {e.Marker}");
         }
 
         public void Simulate(float dt)
         {
-            throw new System.NotImplementedException();
+            foreach (var testEvent in _filter.GetAll())
+            {
+                //testEvent.Data.Destroy();
+            }
         }
     }
 
