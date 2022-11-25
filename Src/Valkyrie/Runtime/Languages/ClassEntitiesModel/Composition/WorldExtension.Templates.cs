@@ -69,7 +69,7 @@ namespace Valkyrie.Composition
         public List<string> Fields { get; set; } = new();
         public List<string> Getters { get; set; } = new();
         public List<string> Setters { get; set; } = new();
-        public List<string> Initters { get; set; } = new();
+        public List<string> Initers { get; set; } = new();
 
         public IReadOnlyList<IPropertyInfo> GetRequiredProperties(IComponentInfo info) => 
             RequiredProperties.ConvertAll(x => x(info));
@@ -116,7 +116,7 @@ namespace Valkyrie.Composition
         {
             var infoName = GetComponentFullName(info);
             var typeName = info.GetTypeName().ToFullName();
-            foreach (var str in Initters)
+            foreach (var str in Initers)
                 sb.AppendLine(string.Format(str, typeName, infoName, info.Name.ConvertToUnityPropertyName()));
         }
     }
@@ -172,7 +172,7 @@ namespace Valkyrie.Composition
                     {
                         $"set => {typeof(EcsExtensions).FullName}.GetOrCreate<{{1}}>(Entity).Value = value;"
                     },
-                    Initters = new List<string>()
+                    Initers = new List<string>()
                     {
                         "Value = {2},"
                     }
