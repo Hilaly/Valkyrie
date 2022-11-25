@@ -32,7 +32,7 @@ namespace Valkyrie.Cem.Library
     public interface ITransformable : I3DPositioned, I3DOriented
     {
     }
-    
+
     public class TestSystem : BaseTypedSystem<ITransformable>
     {
         protected override void Simulate(float dt, IReadOnlyList<ITransformable> entities)
