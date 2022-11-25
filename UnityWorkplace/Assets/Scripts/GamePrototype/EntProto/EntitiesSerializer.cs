@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using Utils;
 using Valkyrie.MVVM;
 
 namespace NaiveEntity.GamePrototype.EntProto

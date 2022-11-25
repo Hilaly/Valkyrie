@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NaiveEntity.GamePrototype.EntProto;
 using NaiveEntity.GamePrototype.EntProto.ViewProto;
 using UnityEngine;
+using Utils;
 using Valkyrie.MVVM;
 
 namespace GamePrototype.GameLogic

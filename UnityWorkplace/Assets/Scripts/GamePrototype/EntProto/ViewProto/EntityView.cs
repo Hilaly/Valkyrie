@@ -1,3 +1,4 @@
+using Utils;
 using Valkyrie.MVVM;
 
 namespace NaiveEntity.GamePrototype.EntProto.ViewProto
