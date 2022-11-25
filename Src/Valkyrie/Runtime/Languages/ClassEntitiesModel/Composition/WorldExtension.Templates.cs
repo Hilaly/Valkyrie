@@ -53,7 +53,7 @@ namespace Valkyrie.Composition
         public void WriteSetter(IPropertyInfo info, FormatWriter sb)
         {
             var infoName = GetComponentFullName(_archetype);
-            sb.AppendLine($"set => Entity.Get<{infoName}>().{info.Name} = value;");
+            sb.AppendLine($"set => Valkyrie.Ecs.EcsExtensions.GetOrCreate<{infoName}>(Entity).{info.Name} = value;");
         }
 
         public void WriteInit(IPropertyInfo info, FormatWriter sb)

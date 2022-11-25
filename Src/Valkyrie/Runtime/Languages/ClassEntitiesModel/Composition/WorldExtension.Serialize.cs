@@ -61,6 +61,17 @@ namespace Valkyrie.Composition
                     if (archetype is NativeTypeEventArchetype)
                         sb.AppendLine(
                             $"public void Clear{structName}() => _{structName}Converter.AsEntities().ForEach(x => x.Destroy());");
+
+                    sb.WriteBlock($"{archetype.Name} IWorldCreator<{archetype.Name}>.Create()", () =>
+                    {
+                        var properties = CollectRequiredProperties(archetype);
+                        var components = properties.Select(x => x.Value).ToHashSet();
+
+                        sb.AppendLine($"var resultInstance = new {archetype.Name.Clean()} {{ Entity = _ecsWorld.State.CreateEntity() }};");
+                        foreach (var component in components)
+                            sb.AppendLine($"resultInstance.Entity.Add(new {component.Name.GetComponentFullName()}());");
+                        sb.AppendLine("return resultInstance;");
+                    });
                 }
             });
         }
@@ -119,7 +130,7 @@ namespace Valkyrie.Composition
                 var additional = "";
                 if (archetypes.Any())
                     additional = " : \n\t\t" + string.Join(", \n\t\t",
-                        archetypes.Select(x => $"{typeof(IWorldFilter<>).Namespace}.IWorldFilter<{x.Name}>"));
+                        archetypes.Select(x => $"{typeof(IWorldFilter<>).Namespace}.IWorldFilter<{x.Name}>, {typeof(IWorldCreator<>).Namespace}.IWorldCreator<{x.Name}>"));
 
                 sb.WriteBlock($"public interface IWorldState{additional}", () =>
                 {

@@ -6,7 +6,7 @@ namespace Valkyrie.Composition
 {
     [RequiredProperty(nameof(Position))]
     [ExcludeProperty(nameof(Timer))]
-    public interface ITest : IEntity
+    public interface ITest : IExtEntity
     {
         public bool GetMarker { get; }
         public bool SetMarker { set; }
@@ -19,7 +19,7 @@ namespace Valkyrie.Composition
         public ITimer Timer { get; }
     }
 
-    public interface ITestEvent : IEventEntity
+    public interface ITestEvent : IEventEntity, IExtEntity
     {
         public ITest Data { get; set; }
         public float DT { get; set; }
@@ -51,13 +51,14 @@ namespace Valkyrie.Composition
         public void Simulate(ITest e, float dt)
         {
             Debug.Log($"Sim {e.Marker}");
+            
         }
 
         public void Simulate(float dt)
         {
             foreach (var testEvent in _filter.GetAll())
             {
-                //testEvent.Data.Destroy();
+                testEvent.Data.Destroy();
             }
         }
     }

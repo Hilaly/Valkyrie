@@ -73,6 +73,13 @@ namespace Valkyrie
     {
     }
 
+    public interface IExtEntity : IEntity
+    {
+        int Id { get; }
+        
+        void Destroy();
+    }
+
     public interface IEventEntity : IEntity
     {
     }
@@ -133,6 +140,11 @@ namespace Valkyrie
     public interface IWorldFilter<out T> where T : IEntity
     {
         IReadOnlyList<T> GetAll();
+    }
+
+    public interface IWorldCreator<out T> where T : IEntity
+    {
+        T Create();
     }
 
     public interface ITimer

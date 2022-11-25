@@ -27,6 +27,8 @@ namespace Valkyrie.Composition
             {
                 sb.AppendLine($"public {typeof(EcsEntity).FullName} Entity {{ get; set; }}");
                 sb.AppendLine();
+                sb.AppendLine("public int Id => Entity.Id;");
+                sb.AppendLine();
                 foreach (var property in archetypeInfo.Properties)
                 {
                     sb.WriteBlock($"{property.GetTypeName()} {archetypeInfo.Name.ToFullName()}.{property.Name}", () =>
@@ -36,6 +38,9 @@ namespace Valkyrie.Composition
                         if (property.IsWriteEnabled) componentTemplate.WriteSetter(property, sb);
                     });
                 }
+
+                sb.AppendLine();
+                sb.AppendLine("public void Destroy() => Entity.Destroy();");
 
                 sb.AppendLine();
                 sb.AppendLine($"public static implicit operator {structName}({typeof(EcsEntity).FullName} e) => new() {{ Entity = e }};");
