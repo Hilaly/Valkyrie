@@ -14,8 +14,6 @@ namespace Valkyrie.Cem.Library
                 .AddInfo(typeof(Quaternion).FullName, "Rotation",
                     $"{typeof(Quaternion).FullName}.LookRotation(Direction, Vector3.up)");
             var trEntity = world.ImportEntity<ITransformable>();
-
-            world.ImportSystem<TestSystem>();
         }
     }
 
@@ -31,14 +29,6 @@ namespace Valkyrie.Cem.Library
 
     public interface ITransformable : I3DPositioned, I3DOriented
     {
-    }
-
-    public class TestSystem : BaseTypedSystem<ITransformable>
-    {
-        protected override void Simulate(float dt, IReadOnlyList<ITransformable> entities)
-        {
-            Debug.Log($"Sim {entities.Count} entities");
-        }
     }
 
     public static class Base3DExt

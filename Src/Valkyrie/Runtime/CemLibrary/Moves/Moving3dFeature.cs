@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,8 +9,9 @@ namespace Valkyrie.Cem.Library.Moves
 
         public void Import(WorldModelInfo world)
         {
+            world.ImportEntity<IPhysicMovement>();
+            
             world.ImportSystem<ApplyPhysicMovementSystem>(SimulationOrder.ApplyPhysicData + 1);
-
             world.ImportSystem<ReadPositionFromPhysicSystem>(SimulationOrder.ReadPhysicData - 1);
         }
     }
