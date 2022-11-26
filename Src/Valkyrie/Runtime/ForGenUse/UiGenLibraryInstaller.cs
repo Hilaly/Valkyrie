@@ -3,7 +3,7 @@ using Valkyrie.Di;
 
 namespace Valkyrie
 {
-    public class UiGenLibrary : MonoBehaviourInstaller
+    public class UiGenLibraryInstaller : MonoBehaviourInstaller
     {
         [SerializeField] private WindowManager windowManager;
         [SerializeField] private PopupsManager popupsManager;
