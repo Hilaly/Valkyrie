@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using Utils;
@@ -48,6 +49,15 @@ namespace Valkyrie
             if (type == null)
                 throw new Exception($"'{typeName}' is not valid type name");
             return type.ToTypeData();
+        }
+
+        public static T Inherit<T, TBase>(this T baseType, WorldModelInfo world) 
+            where T : BaseType
+        {
+            var registered = world.Get<T>(typeof(TBase).FullName);
+            Debug.Assert(registered != null, $"{typeof(TBase)} not registered");
+            baseType.Inherit(registered);
+            return baseType;
         }
     }
 
@@ -245,12 +255,10 @@ namespace Valkyrie
 
             foreach (var propertyInfo in BaseTypes.SelectMany(entityBase =>
                 entityBase.GetAllProperties(includeGenerated)))
-                if (!r.Contains(propertyInfo))
-                    r.Add(propertyInfo);
+                TryAddProperty(r, propertyInfo);
 
             foreach (var propertyInfo in Properties)
-                if (!r.Contains(propertyInfo))
-                    r.Add(propertyInfo);
+                TryAddProperty(r, propertyInfo);
 
             if (includeGenerated)
             {
@@ -263,6 +271,21 @@ namespace Valkyrie
             }
 
             return r;
+        }
+
+        private static void TryAddProperty(List<BaseTypeProperty> r, BaseTypeProperty propertyInfo)
+        {
+            if (r.Contains(propertyInfo)) 
+                return;
+            
+            var existed = r.Find(x => x.Name == propertyInfo.Name);
+            if (existed != null)
+            {
+                if (existed.TypeData.GetTypeName() != propertyInfo.TypeData.GetTypeName())
+                    throw new Exception($"2 properties with different types");
+            }
+            else
+                r.Add(propertyInfo);
         }
 
         public BaseType AddProperty(BaseType type, string name, bool isRequired) =>
