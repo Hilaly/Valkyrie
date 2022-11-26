@@ -137,6 +137,24 @@ namespace Valkyrie
         protected abstract void Simulate(float dt, IReadOnlyList<T> entities);
     }
 
+    public abstract class BaseFilteredSystem<T> : BaseTypedSystem<T> 
+        where T : IEntity
+    {
+        protected override void Simulate(float dt, IReadOnlyList<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                if(!IsFit(entity, dt))
+                    continue;
+                Simulate(dt, entity);
+            }
+        }
+
+        protected abstract void Simulate(float dt, T entity);
+
+        protected abstract bool IsFit(T entity, float dt);
+    }
+
     public interface IWorldFilter<out T> where T : IEntity
     {
         IReadOnlyList<T> GetAll();

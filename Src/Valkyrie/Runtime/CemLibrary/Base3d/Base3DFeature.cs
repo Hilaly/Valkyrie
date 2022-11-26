@@ -40,4 +40,16 @@ namespace Valkyrie.Cem.Library
             Debug.Log($"Sim {entities.Count} entities");
         }
     }
+
+    public static class Base3DExt
+    {
+        public static Quaternion GetRotation(this I3DOriented oriented) =>
+            Quaternion.LookRotation(oriented.Direction, Vector3.up);
+
+        public static Quaternion SetRotation(this I3DOriented oriented, Quaternion rotation)
+        {
+            oriented.Direction = rotation * Vector3.forward;
+            return oriented.GetRotation();
+        }
+    }
 }
