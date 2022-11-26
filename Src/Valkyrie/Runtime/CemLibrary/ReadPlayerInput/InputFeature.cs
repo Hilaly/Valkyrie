@@ -18,10 +18,16 @@ namespace Valkyrie.Cem.Library.ReadPlayerInput
         }
     }
 
+    /// <summary>
+    /// Marker interface for entities, which receive player input
+    /// </summary>
     public interface IInputConsumer : IEntity
     {
     }
 
+    /// <summary>
+    /// Use for direct settings joystick input to entity
+    /// </summary>
     public interface IMoveWithJoystick : IInputConsumer
     {
         public Vector3 MoveDirection { get; set; }

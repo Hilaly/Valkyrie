@@ -15,7 +15,7 @@ namespace Valkyrie.Cem.Library.Projectiles
         }
     }
 
-    public interface IProjectile : ITransformable
+    public interface IProjectile : I3DTransform
     {
         [RequiredProperty] public float Speed { get; set; }
     }

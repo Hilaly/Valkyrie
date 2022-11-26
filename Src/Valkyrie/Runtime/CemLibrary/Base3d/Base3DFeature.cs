@@ -13,21 +13,30 @@ namespace Valkyrie.Cem.Library
             var rotEntity = world.ImportEntity<I3DOriented>()
                 .AddInfo(typeof(Quaternion).FullName, "Rotation",
                     $"{typeof(Quaternion).FullName}.LookRotation(Direction, Vector3.up)");
-            var trEntity = world.ImportEntity<ITransformable>();
+            var trEntity = world.ImportEntity<I3DTransform>();
         }
     }
 
+    /// <summary>
+    /// Entity with 3d position
+    /// </summary>
     public interface I3DPositioned : IEntity
     {
         [RequiredProperty] public Vector3 Position { get; set; }
     }
 
+    /// <summary>
+    /// Entity with 3d Orientation
+    /// </summary>
     public interface I3DOriented : IEntity
     {
         [RequiredProperty] public Vector3 Direction { get; set; }
     }
 
-    public interface ITransformable : I3DPositioned, I3DOriented
+    /// <summary>
+    /// Entity with position and orientation
+    /// </summary>
+    public interface I3DTransform : I3DPositioned, I3DOriented
     {
     }
 

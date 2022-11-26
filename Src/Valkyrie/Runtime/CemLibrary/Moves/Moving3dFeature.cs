@@ -16,6 +16,9 @@ namespace Valkyrie.Cem.Library.Moves
         }
     }
 
+    /// <summary>
+    /// Entity, which move with physic
+    /// </summary>
     public interface IPhysicMovement : IEntity
     {
         public Vector3 MoveDirection { get; set; }
