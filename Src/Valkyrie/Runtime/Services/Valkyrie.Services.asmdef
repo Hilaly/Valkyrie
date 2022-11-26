@@ -1,10 +1,8 @@
 {
-    "name": "Valkyrie.Cem.Library",
-    "rootNamespace": "Valkyrie.Cem.Library",
+    "name": "Valkyrie.Services",
+    "rootNamespace": "",
     "references": [
         "GUID:06d683358a9bf1549974f36ef8fc5080",
-        "GUID:5467f2229aa769f42b160bd3a0b06908",
-        "GUID:6f446d760ddefea43b42f137dd352b6e",
         "GUID:1b0bbacca64baf744ac3a5f9eed468de"
     ],
     "includePlatforms": [],

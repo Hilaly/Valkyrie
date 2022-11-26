@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using Valkyrie;
 
-namespace Hilaly.Services
+namespace Services
 {
     public interface IPathFinder : IService
     {
