@@ -460,6 +460,14 @@ namespace Valkyrie
         {
             return AddProperty(type.FindType(), name, isRequired);
         }
+        
+        private readonly List<IReadOnlyList<BaseType>> Ctors = new ();
+
+        public BaseType Constructor(params BaseType[] sourceDataTypes)
+        {
+            Ctors.Add(sourceDataTypes);
+            return this;
+        }
     }
 
     public class EntityType : BaseType

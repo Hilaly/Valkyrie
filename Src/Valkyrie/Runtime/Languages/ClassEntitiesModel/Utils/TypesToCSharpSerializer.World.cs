@@ -217,36 +217,39 @@ namespace Valkyrie
             {
                 if (entityInfo.IsNative)
                     continue;
+
                 var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
                 var allConfigs = entityInfo.GetAllConfigs();
                 var args = allProperties.Union(allConfigs).ToList();
                 var argsStr = string.Join(", ",
                     args.Select(x => $"{x.GetMemberType()} {x.Name.ConvertToUnityPropertyName()}"));
-                sb.BeginBlock($"public {entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr})");
-                if (entityInfo.IsSingleton)
-                    sb.AppendLine(
-                        $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
-                sb.BeginBlock($"var result = new {entityInfo.Name}");
-                foreach (var propertyInfo in args)
-                    sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
-                sb.EndBlock();
-                sb.AppendLine(";");
-                sb.AppendLine("_worldState.Entities.Add(result);");
-                sb.BeginBlock($"//Update Caches");
-                foreach (var entityBase in entityInfo.GetAllImplemented())
-                    sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Add(result);");
-                sb.EndBlock();
-                sb.BeginBlock($"//Spawn views");
-                foreach (var type in entityInfo.GetAllImplemented())
+                sb.WriteBlock($"public {entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr})", () =>
                 {
-                    if (!type.HasView)
-                        continue;
-                    sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
-                }
-
-                sb.EndBlock();
-                sb.AppendLine("return result;");
-                sb.EndBlock();
+                    if (entityInfo.IsSingleton)
+                        sb.AppendLine($"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
+                    sb.WriteBlock($"var result = new {entityInfo.Name}", () =>
+                    {
+                        foreach (var propertyInfo in args)
+                            sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
+                    });
+                    sb.AppendLine(";");
+                    sb.AppendLine("_worldState.Entities.Add(result);");
+                    sb.WriteBlock($"//Update Caches", () =>
+                    {
+                        foreach (var entityBase in entityInfo.GetAllImplemented())
+                            sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Add(result);");
+                    });
+                    sb.WriteBlock($"//Spawn views", () =>
+                    {
+                        foreach (var type in entityInfo.GetAllImplemented())
+                        {
+                            if (!type.HasView)
+                                continue;
+                            sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
+                        }
+                    });
+                    sb.AppendLine("return result;");
+                });
             }
 
             sb.WriteBlock($"public void Destroy({typeof(IEntity).FullName} entity)",
