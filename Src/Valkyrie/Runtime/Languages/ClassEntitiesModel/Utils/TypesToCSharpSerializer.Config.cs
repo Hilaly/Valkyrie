@@ -12,8 +12,9 @@ namespace Valkyrie
         {
             var blockName = $"public partial class {baseType.Name} : ";
             if (baseType.BaseTypes.Count > 0)
-                blockName += string.Join(", ", baseType.BaseTypes.Select(x => x.Name)) + ", ";
-            blockName += BaseConfigInterface;
+                blockName += string.Join(", ", baseType.BaseTypes.Select(x => x.Name));
+            else
+                blockName += BaseConfigInterface;
             sb.BeginBlock(blockName);
 
             sb.AppendLine($"#region {BaseConfigInterface}");

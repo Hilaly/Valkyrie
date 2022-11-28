@@ -411,7 +411,24 @@ namespace Valkyrie
 
                 foreach (var baseTypeMember in GetAllConfigs())
                 {
-                    foreach (var propertyInfo in ((RefTypeData)baseTypeMember.TypeData).Type.Properties)
+                    var cfgType = ((RefTypeData)baseTypeMember.TypeData);
+                    foreach (var propertyInfo in cfgType.Type.GetAllProperties(true))
+                    {
+                        var infoName = propertyInfo.Name;
+
+                        if (r.Find(x => x.Name == infoName) != null)
+                            continue;
+                        if (allProperties.Any(x => x.Name == infoName))
+                            continue;
+
+                        TryAddProperty(r, new BaseTypeInfo
+                        {
+                            TypeData = propertyInfo.TypeData,
+                            Name = infoName,
+                            Code = $"{baseTypeMember.Name}.{infoName}"
+                        });
+                    }
+                    foreach (var propertyInfo in cfgType.Type.GetAllInfos(true))
                     {
                         var infoName = propertyInfo.Name;
 
