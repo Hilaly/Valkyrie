@@ -41,7 +41,7 @@ namespace Valkyrie
 
         public static void WriteTypeClass(this BaseType baseType, FormatWriter sb)
         {
-            var blockName = $"public partial class {baseType.Name} : {typeof(IEntity).FullName}";
+            var blockName = $"public partial class {baseType.Name} : {typeof(IExtEntity).FullName}";
             if (baseType.BaseTypes.Count > 0)
                 blockName += ", " + string.Join(", ", baseType.BaseTypes.Select(x => x.Name));
             sb.BeginBlock(blockName);
@@ -82,6 +82,21 @@ namespace Valkyrie
 
                 sb.EndBlock();
             }
+
+            sb.AppendLine();
+            sb.WriteRegion("Override operators", () =>
+            {
+                sb.AppendLine($"int {typeof(IExtEntity).FullName}.Id {{ get; }} = default;");
+                sb.AppendLine($"void {typeof(IExtEntity).FullName}.Destroy() => IsDestroyed = true;");
+                sb.AppendLine("public bool IsDestroyed { get; private set; }");
+                sb.AppendLine($"public static bool operator !=({baseType.Name} o1, {baseType.Name} o2) => !(o1 == o2);");
+                sb.WriteBlock($"public static bool operator ==({baseType.Name} o1, {baseType.Name} o2)", () =>
+                {
+                    sb.AppendLine("if (o1 is null) return o2 is null || o2.IsDestroyed;");
+                    sb.AppendLine("if (o2 is null) return o1.IsDestroyed;");
+                    sb.AppendLine("return o1.Equals(o2);");
+                });
+            });
 
             sb.EndBlock();
 

@@ -249,8 +249,12 @@ namespace Valkyrie
                 sb.EndBlock();
             }
 
-            sb.AppendLine(
-                $"public void Destroy({typeof(IEntity).FullName} entity) => _worldState.ToDestroy.Add(entity);");
+            sb.WriteBlock($"public void Destroy({typeof(IEntity).FullName} entity)",
+                () =>
+                {
+                    sb.AppendLine($"_worldState.ToDestroy.Add(entity);");
+                    sb.AppendLine($"(entity as {typeof(IExtEntity).FullName})?.Destroy();");
+                });
             sb.EndBlock();
             sb.AppendLine();
 
@@ -295,22 +299,26 @@ namespace Valkyrie
                         sb.AppendLine($"var startPosition = model.{positionProperty.Name};");
                         var rotationProperty = allProperties.FirstOrDefault(x =>
                             x.Name == "Rotation" && x.TypeData.GetTypeName() == typeof(Quaternion).FullName);
-                        if(rotationProperty != null)
+                        if (rotationProperty != null)
                             sb.AppendLine($"var startRotation = model.{rotationProperty.Name};");
                         else
                         {
                             var directionProperty = allProperties.FirstOrDefault(x =>
                                 x.Name == "Direction" && x.TypeData.GetTypeName() == typeof(Vector3).FullName);
-                            if(directionProperty != null)
-                                sb.AppendLine($"var startRotation = {typeof(Quaternion).FullName}.LookRotation(model.{directionProperty.Name}, Vector3.up);");
+                            if (directionProperty != null)
+                                sb.AppendLine(
+                                    $"var startRotation = {typeof(Quaternion).FullName}.LookRotation(model.{directionProperty.Name}, Vector3.up);");
                             else
                                 sb.AppendLine($"var startRotation = {typeof(Quaternion).FullName}.Identity;");
                         }
-                        sb.AppendLine($"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName}, startPosition, startRotation);");
+
+                        sb.AppendLine(
+                            $"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName}, startPosition, startRotation);");
                     }
                     else
-                        sb.AppendLine($"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName});");
-                    
+                        sb.AppendLine(
+                            $"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName});");
+
                     sb.AppendLine($"view.Model = model;");
                     sb.AppendLine($"_views{entityInfo.Name}{property.PropertyName}.Add(viewModel, view);");
                     if (property.ViewName.NotNullOrEmpty())

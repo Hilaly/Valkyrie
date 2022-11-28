@@ -43,6 +43,9 @@ namespace Valkyrie.Composition
                 sb.AppendLine("public void Destroy() => Entity.Destroy();");
 
                 sb.AppendLine();
+                sb.AppendLine("public bool IsDestroyed => Id == -1;");
+
+                sb.AppendLine();
                 sb.AppendLine($"public static implicit operator {structName}({typeof(EcsEntity).FullName} e) => new() {{ Entity = e }};");
             });
         }

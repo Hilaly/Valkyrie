@@ -10,6 +10,10 @@ namespace Valkyrie.Ecs
         public void Add<T>(T component) where T : struct => State.Add(this, component);
         public void Remove<T>() where T : struct => State.Remove<T>(this);
 
-        public void Destroy() => State.Destroy(Id);
+        public void Destroy()
+        {
+            State.Destroy(Id);
+            Id = -1;
+        }
     }
 }

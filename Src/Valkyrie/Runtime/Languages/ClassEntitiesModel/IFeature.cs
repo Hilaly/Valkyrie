@@ -77,6 +77,8 @@ namespace Valkyrie
     {
         int Id { get; }
         
+        bool IsDestroyed { get; }
+        
         void Destroy();
     }
 
