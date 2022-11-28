@@ -9,6 +9,7 @@ namespace Valkyrie.Cem.Library.Moves
 
         public void Import(WorldModelInfo world)
         {
+            world.ImportEntity<IMovable>();
             world.ImportEntity<IPhysicMovement>();
             
             world.ImportSystem<ApplyPhysicMovementSystem>(SimulationOrder.ApplyPhysicData + 1);
@@ -17,12 +18,20 @@ namespace Valkyrie.Cem.Library.Moves
     }
 
     /// <summary>
+    /// Base movable entity, speed parameter exist
+    /// </summary>
+    public interface IMovable : IEntity
+    {
+        public float Speed { get; }
+    }
+
+    /// <summary>
     /// Entity, which move with physic
     /// </summary>
-    public interface IPhysicMovement : IEntity
+    public interface IPhysicMovement : IMovable
     {
-        public Vector3 MoveDirection { get; set; }
-        public Rigidbody Physic { get; set; }
+        public Vector3 MoveDirection { get; }
+        public Rigidbody Physic { get; }
     }
 
     public class ApplyPhysicMovementSystem : BaseTypedSystem<IPhysicMovement>
@@ -48,8 +57,7 @@ namespace Valkyrie.Cem.Library.Moves
 
                 if (entity is I3DPositioned positioned)
                 {
-                    //TODO: read speed somewhere
-                    var speed = 1f;
+                    var speed = entity.Speed;
                     if (speed > Mathf.Epsilon)
                     {
                         var deltaPosition = entity.MoveDirection.normalized * speed * dt;
