@@ -14,6 +14,10 @@ namespace Valkyrie.Cem.Library
                 .AddInfo(typeof(Quaternion).FullName, "Rotation",
                     $"{typeof(Quaternion).FullName}.LookRotation(Direction, Vector3.up)");
             var trEntity = world.ImportEntity<I3DTransform>();
+            
+            var childEntity = world.ImportEntity<I3DChildEntity>();
+
+            var childSystem = world.ImportSystem<Update3dChildPositions>(SimulationOrder.ReadPhysicData + 1);
         }
     }
 
@@ -38,6 +42,32 @@ namespace Valkyrie.Cem.Library
     /// </summary>
     public interface I3DTransform : I3DPositioned, I3DOriented
     {
+    }
+
+    public interface I3DChildEntity : I3DTransform
+    {
+        public I3DTransform Parent { get; set; }
+        public Vector3 LocalPosition { get; set; }
+        public Quaternion LocalRotation { get; set; }
+    }
+
+    public class Update3dChildPositions : BaseTypedSystem<I3DChildEntity>
+    {
+        protected override void Simulate(float dt, IReadOnlyList<I3DChildEntity> entities)
+        {
+            foreach (var childEntity in entities)
+            {
+                if(childEntity.Parent == null)
+                    continue;
+
+                var rootPosition = childEntity.Parent.Position;
+                var rootRotation = childEntity.Parent.GetRotation();
+                var position = rootPosition + rootRotation * childEntity.LocalPosition;
+
+                childEntity.Position = position;
+                childEntity.SetRotation(rootRotation * childEntity.LocalRotation);
+            }
+        }
     }
 
     public static class Base3DExt
