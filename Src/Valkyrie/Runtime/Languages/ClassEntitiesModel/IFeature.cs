@@ -180,6 +180,7 @@ namespace Valkyrie
     {
         void Release<TView>(TView value) where TView : Component;
         TView Spawn<TView>(string prefabName) where TView : Component;
+        TView Spawn<TView>(string prefabName, Vector3 position, Quaternion rotation) where TView : Component;
     }
 
     public class ResourcesViewsProvider : IViewsProvider
@@ -188,6 +189,9 @@ namespace Valkyrie
 
         public TView Spawn<TView>(string prefabName) where TView : Component =>
             UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName));
+
+        public TView Spawn<TView>(string prefabName, Vector3 position, Quaternion rotation) where TView : Component =>
+            UnityEngine.Object.Instantiate(Resources.Load<TView>(prefabName), position, rotation);
     }
 
     public class PoolViewsProvider : IViewsProvider
@@ -208,6 +212,16 @@ namespace Valkyrie
         TView IViewsProvider.Spawn<TView>(string prefabName)
         {
             var disposable = _objectsPool.Instantiate<TView>(prefabName);
+#if UNITY_EDITOR
+            Debug.Assert(disposable.Instance != null, $"Couldn't find {typeof(TView).Name} component on {prefabName}");
+#endif
+            _cache.Add(disposable.Instance, disposable);
+            return disposable.Instance;
+        }
+
+        public TView Spawn<TView>(string prefabName, Vector3 position, Quaternion rotation) where TView : Component
+        {
+            var disposable = _objectsPool.Instantiate<TView>(prefabName, position, rotation);
 #if UNITY_EDITOR
             Debug.Assert(disposable.Instance != null, $"Couldn't find {typeof(TView).Name} component on {prefabName}");
 #endif

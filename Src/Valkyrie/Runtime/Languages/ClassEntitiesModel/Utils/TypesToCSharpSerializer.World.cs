@@ -287,8 +287,30 @@ namespace Valkyrie
                     sb.BeginBlock($"// Spawn views for {entityInfo.Name} by {property.PropertyName}");
                     sb.AppendLine(
                         $"{typeof(Debug).FullName}.Assert(!string.IsNullOrEmpty(model.{property.PropertyName}), $\"{entityInfo.Name}.{property.PropertyName} is null or empty\");");
-                    sb.AppendLine(
-                        $"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName});");
+
+                    var allProperties = entityInfo.GetAllProperties(true);
+                    var positionProperty = allProperties.FirstOrDefault(x => x.Name == "Position");
+                    if (positionProperty != null && positionProperty.TypeData.GetTypeName() == typeof(Vector3).FullName)
+                    {
+                        sb.AppendLine($"var startPosition = model.{positionProperty.Name};");
+                        var rotationProperty = allProperties.FirstOrDefault(x =>
+                            x.Name == "Rotation" && x.TypeData.GetTypeName() == typeof(Quaternion).FullName);
+                        if(rotationProperty != null)
+                            sb.AppendLine($"var startRotation = model.{rotationProperty.Name};");
+                        else
+                        {
+                            var directionProperty = allProperties.FirstOrDefault(x =>
+                                x.Name == "Direction" && x.TypeData.GetTypeName() == typeof(Vector3).FullName);
+                            if(directionProperty != null)
+                                sb.AppendLine($"var startRotation = {typeof(Quaternion).FullName}.LookRotation(model.{directionProperty.Name}, Vector3.up);");
+                            else
+                                sb.AppendLine($"var startRotation = {typeof(Quaternion).FullName}.Identity;");
+                        }
+                        sb.AppendLine($"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName}, startPosition, startRotation);");
+                    }
+                    else
+                        sb.AppendLine($"var view = _viewsProvider.Spawn<{entityInfo.Name}View>(model.{property.PropertyName});");
+                    
                     sb.AppendLine($"view.Model = model;");
                     sb.AppendLine($"_views{entityInfo.Name}{property.PropertyName}.Add(viewModel, view);");
                     if (property.ViewName.NotNullOrEmpty())
