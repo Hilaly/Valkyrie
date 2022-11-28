@@ -13,13 +13,13 @@ namespace Valkyrie
     public static class ClassEntitiesExtensions
     {
         private static readonly Regex ListMatch = new Regex(@"List<(?<value>[\d\w\.]+)>");
-        
+
         public static Type FindType(this string typeName, bool throwOnError = true)
         {
             var match = ListMatch.Match(typeName);
             if (match.Success)
                 return typeof(List<>).MakeGenericType(FindType(match.Groups["value"].Value));
-            
+
             switch (typeName)
             {
                 case "bool":
@@ -31,7 +31,7 @@ namespace Valkyrie
                 case "int":
                     return typeof(int);
             }
-            
+
             var allSubTypes = typeof(object).GetAllSubTypes(x => x.FullName == typeName || x.Name == typeName);
             var r = allSubTypes.FirstOrDefault(x => x.FullName == typeName)
                     ?? allSubTypes.FirstOrDefault();
@@ -51,7 +51,7 @@ namespace Valkyrie
             return type.ToTypeData();
         }
 
-        public static T Inherit<T, TBase>(this T baseType, WorldModelInfo world) 
+        public static T Inherit<T, TBase>(this T baseType, WorldModelInfo world)
             where T : BaseType
         {
             var registered = world.Get<T>(typeof(TBase).FullName);
@@ -101,6 +101,7 @@ namespace Valkyrie
 
         public override string GetTypeName() => $"{Type.Name}View";
     }
+
     class RefTypeData : TypeData
     {
         public readonly BaseType Type;
@@ -264,24 +265,26 @@ namespace Valkyrie
             {
                 foreach (var withPrefab in _syncWithPrefabs)
                     if (withPrefab.ViewName.NotNullOrEmpty())
-                        r.Add(new BaseTypeProperty
+                        TryAddProperty(r, new BaseTypeProperty
                         {
-                            Name = withPrefab.ViewName, TypeData = new ViewTypeData(this), IsRequired = false
+                            Name = withPrefab.ViewName,
+                            TypeData = new ViewTypeData(this),
+                            IsRequired = false
                         });
             }
 
             return r;
         }
 
-        private static void TryAddProperty(List<BaseTypeProperty> r, BaseTypeProperty propertyInfo)
+        private static void TryAddProperty<T>(List<T> r, T propertyInfo) where T : IMember
         {
-            if (r.Contains(propertyInfo)) 
+            if (r.Contains(propertyInfo))
                 return;
-            
+
             var existed = r.Find(x => x.Name == propertyInfo.Name);
             if (existed != null)
             {
-                if (existed.TypeData.GetTypeName() != propertyInfo.TypeData.GetTypeName())
+                if (existed.GetMemberType() != propertyInfo.GetMemberType())
                     throw new Exception($"2 properties with different types");
             }
             else
@@ -394,16 +397,18 @@ namespace Valkyrie
 
             foreach (var propertyInfo in BaseTypes.SelectMany(entityBase => entityBase.GetAllInfos(addGenerated)))
                 if (!r.Contains(propertyInfo))
-                    r.Add(propertyInfo);
+                    TryAddProperty(r, propertyInfo);
 
             foreach (var propertyInfo in Infos)
                 if (!r.Contains(propertyInfo))
-                    r.Add(propertyInfo);
+                    TryAddProperty(r, propertyInfo);
 
             // TODO: add timers
 
             if (addGenerated)
             {
+                var allProperties = GetAllProperties(true);
+
                 foreach (var baseTypeMember in GetAllConfigs())
                 {
                     foreach (var propertyInfo in ((RefTypeData)baseTypeMember.TypeData).Type.Properties)
@@ -412,8 +417,10 @@ namespace Valkyrie
 
                         if (r.Find(x => x.Name == infoName) != null)
                             continue;
+                        if (allProperties.Any(x => x.Name == infoName))
+                            continue;
 
-                        r.Add(new BaseTypeInfo
+                        TryAddProperty(r, new BaseTypeInfo
                         {
                             TypeData = propertyInfo.TypeData,
                             Name = infoName,
@@ -449,7 +456,7 @@ namespace Valkyrie
 
         public BaseType ViewWithPrefabByProperty(string propertyName, string viewReceiveProperty = null)
         {
-            if(_syncWithPrefabs.TrueForAll(x => x.PropertyName != propertyName && x.ViewName != viewReceiveProperty))
+            if (_syncWithPrefabs.TrueForAll(x => x.PropertyName != propertyName && x.ViewName != viewReceiveProperty))
                 _syncWithPrefabs.Add(new ViewSpawnInfo { PropertyName = propertyName, ViewName = viewReceiveProperty });
             return View();
         }
@@ -460,12 +467,19 @@ namespace Valkyrie
         {
             return AddProperty(type.FindType(), name, isRequired);
         }
-        
-        private readonly List<IReadOnlyList<BaseType>> Ctors = new ();
+
+        internal readonly List<IReadOnlyList<BaseType>> Constructors = new();
+
+        public IReadOnlyList<IReadOnlyList<BaseType>> GetConstructors()
+        {
+            if (Constructors.Count > 0)
+                return Constructors;
+            return new List<IReadOnlyList<BaseType>>() { Array.Empty<BaseType>() };
+        }
 
         public BaseType Constructor(params BaseType[] sourceDataTypes)
         {
-            Ctors.Add(sourceDataTypes);
+            Constructors.Add(sourceDataTypes);
             return this;
         }
     }
@@ -481,14 +495,14 @@ namespace Valkyrie
     public class ItemType : BaseType
     {
     }
-    
+
     public class WindowType : BaseType
     {
         public readonly List<InfoGetter> Bindings = new();
         public readonly List<WindowHandler> Handlers = new();
 
         public string ClassName => $"{Name}Window";
-        
+
         public string GetButtonEvent(string buttonName)
         {
             return $"On{buttonName}ButtonAt{Name}Clicked";

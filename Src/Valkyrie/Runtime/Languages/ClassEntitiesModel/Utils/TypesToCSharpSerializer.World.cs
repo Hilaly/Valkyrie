@@ -217,39 +217,35 @@ namespace Valkyrie
             {
                 if (entityInfo.IsNative)
                     continue;
-
-                var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
-                var allConfigs = entityInfo.GetAllConfigs();
-                var args = allProperties.Union(allConfigs).ToList();
-                var argsStr = string.Join(", ",
-                    args.Select(x => $"{x.GetMemberType()} {x.Name.ConvertToUnityPropertyName()}"));
-                sb.WriteBlock($"public {entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr})", () =>
+                
+                //Create default ctor
+                if(false)
                 {
-                    if (entityInfo.IsSingleton)
-                        sb.AppendLine($"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
-                    sb.WriteBlock($"var result = new {entityInfo.Name}", () =>
+                    var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
+                    var allConfigs = entityInfo.GetAllConfigs();
+                    var args = allProperties.Union(allConfigs).ToList();
+                    var argsStr = string.Join(", ", args.Select(x => $"{x.GetMemberType()} {x.Name.ConvertToUnityPropertyName()}"));
+                    sb.WriteBlock($"public {entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr})", () =>
                     {
-                        foreach (var propertyInfo in args)
-                            sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
-                    });
-                    sb.AppendLine(";");
-                    sb.AppendLine("_worldState.Entities.Add(result);");
-                    sb.WriteBlock($"//Update Caches", () =>
-                    {
-                        foreach (var entityBase in entityInfo.GetAllImplemented())
-                            sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Add(result);");
-                    });
-                    sb.WriteBlock($"//Spawn views", () =>
-                    {
-                        foreach (var type in entityInfo.GetAllImplemented())
+                        WriteEntityCreateMethod(sb, entityInfo, () =>
                         {
-                            if (!type.HasView)
-                                continue;
-                            sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
-                        }
+                            foreach (var propertyInfo in args)
+                                sb.AppendLine($"{propertyInfo.Name} = {propertyInfo.Name.ConvertToUnityPropertyName()},");
+                        });
                     });
-                    sb.AppendLine("return result;");
-                });
+                }
+                foreach (var references in entityInfo.GetConstructors())
+                {
+                    var argsStr = CollectPropertiesForConstructor(entityInfo, references, out var propertyToInits);
+                    sb.WriteBlock($"public {entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr})", () =>
+                    {
+                        WriteEntityCreateMethod(sb, entityInfo, () =>
+                        {
+                            foreach (var propertyToInit in propertyToInits)
+                                sb.AppendLine($"{propertyToInit.Property.Name} = {propertyToInit.GetText()},");
+                        });
+                    });
+                }
             }
 
             sb.WriteBlock($"public void Destroy({typeof(IEntity).FullName} entity)",
@@ -639,6 +635,84 @@ namespace Valkyrie
             sb.EndBlock();
         }
 
+        private static string CollectPropertiesForConstructor(EntityType entityInfo, IReadOnlyList<BaseType> references,
+            out List<IPropertyToInit> propertyToInits)
+        {
+            var allProperties = entityInfo.GetAllProperties(true).ToList();
+            var existMembers = references.SelectMany(x => x.GetAllProperties(true)
+                    .Select(u => new KeyValuePair<BaseType, IMember>(x, u)))
+                .Union(references.SelectMany(x => x.GetAllInfos(true)
+                    .Select(u => new KeyValuePair<BaseType, IMember>(x, u)))).ToList();
+            propertyToInits = allProperties.ConvertAll<IPropertyToInit>(prop =>
+            {
+                foreach (var existMember in existMembers)
+                {
+                    if (existMember.Value.Name != prop.Name)
+                        continue;
+                    if (existMember.Value.GetMemberType() != prop.GetMemberType())
+                        continue;
+                    return new ConfigProperty()
+                    {
+                        Property = prop,
+                        ConfigMember = existMember.Value,
+                        ConfigType = existMember.Key
+                    };
+                }
+
+                if (prop.TypeData is RefTypeData { Type: ConfigType })
+                {
+                    var exCfg = references.FirstOrDefault(x => x.Name == prop.GetMemberType());
+                    if (exCfg != null)
+                        return new ConfigInstance() { Property = prop, ConfigType = exCfg };
+                }
+                
+                return prop.IsRequired ? new ParametersProperty() { Property = prop } : null;
+            });
+
+            propertyToInits.RemoveAll(x => x == null);
+            var args = propertyToInits.Where(x => x.Property.IsRequired && x is ParametersProperty);
+            var argsStr = string.Join(", ",
+                args.Select(x =>
+                        $"{x.Property.GetMemberType()} {x.Property.Name.ConvertToUnityPropertyName()}")
+                    .Union(references.Select(x => $"{x.Name} {x.GetFixedName().ConvertToUnityPropertyName()}")));
+            return argsStr;
+        }
+
+        static void WriteEntityCreateMethod(FormatWriter sb, EntityType entityInfo, Action writeProperties)
+        {
+            CheckForSingleton(sb, entityInfo);
+            sb.WriteBlock($"var result = new {entityInfo.Name}", writeProperties);
+            sb.AppendLine(";");
+            SpawnViews(sb, entityInfo);
+        }
+
+        private static void SpawnViews(FormatWriter sb, EntityType entityInfo)
+        {
+            sb.AppendLine("_worldState.Entities.Add(result);");
+            sb.WriteBlock($"//Update Caches", () =>
+            {
+                foreach (var entityBase in entityInfo.GetAllImplemented())
+                    sb.AppendLine($"_worldState._allOf{entityBase.GetFixedName()}.Add(result);");
+            });
+            sb.WriteBlock($"//Spawn views", () =>
+            {
+                foreach (var type in entityInfo.GetAllImplemented())
+                {
+                    if (!type.HasView)
+                        continue;
+                    sb.AppendLine($"_worldView.Create{type.Name}ViewModel(result);");
+                }
+            });
+            sb.AppendLine("return result;");
+        }
+
+        private static void CheckForSingleton(FormatWriter sb, EntityType entityInfo)
+        {
+            if (entityInfo.IsSingleton)
+                sb.AppendLine(
+                    $"if(_worldState.Entities.Find(x => x is {entityInfo.Name}) != null) throw new Exception(\"{entityInfo.Name} already exists\");");
+        }
+
         static private void WriteInterfaces(this WorldModelInfo world, FormatWriter sb,
             List<(string, BaseType)> allTimers)
         {
@@ -656,12 +730,11 @@ namespace Valkyrie
                 if (entityInfo.IsNative)
                     continue;
 
-                var allProperties = entityInfo.GetAllProperties(true).Where(x => x.IsRequired).OfType<IMember>();
-                var allConfigs = entityInfo.GetAllConfigs();
-                var args = allProperties.Union(allConfigs).ToList();
-                var argsStr = string.Join(", ",
-                    args.Select(x => $"{x.GetMemberType()} {x.Name.ConvertToUnityPropertyName()}"));
-                sb.AppendLine($"{entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr});");
+                foreach (var references in entityInfo.GetConstructors())
+                {
+                    var argsStr = CollectPropertiesForConstructor(entityInfo, references, out var propertyToInits);
+                    sb.AppendLine($"{entityInfo.Name} Create{entityInfo.GetFixedName()}({argsStr});");
+                }
             }
 
             sb.AppendLine($"void Destroy({typeof(IEntity).FullName} entity);");

@@ -89,7 +89,8 @@ namespace Valkyrie
                 sb.AppendLine($"int {typeof(IExtEntity).FullName}.Id {{ get; }} = default;");
                 sb.AppendLine($"void {typeof(IExtEntity).FullName}.Destroy() => IsDestroyed = true;");
                 sb.AppendLine("public bool IsDestroyed { get; private set; }");
-                sb.AppendLine($"public static bool operator !=({baseType.Name} o1, {baseType.Name} o2) => !(o1 == o2);");
+                sb.AppendLine(
+                    $"public static bool operator !=({baseType.Name} o1, {baseType.Name} o2) => !(o1 == o2);");
                 sb.WriteBlock($"public static bool operator ==({baseType.Name} o1, {baseType.Name} o2)", () =>
                 {
                     sb.AppendLine("if (o1 is null) return o2 is null || o2.IsDestroyed;");
@@ -158,6 +159,34 @@ namespace Valkyrie
             }
 
             sb.EndBlock();
+        }
+
+        interface IPropertyToInit
+        {
+            public BaseTypeProperty Property { get; }
+            string GetText();
+        }
+
+        class ParametersProperty : IPropertyToInit
+        {
+            public BaseTypeProperty Property { get; set; }
+            public string GetText() => Property.Name.ConvertToUnityPropertyName();
+        }
+
+        class ConfigInstance : IPropertyToInit
+        {
+            public BaseTypeProperty Property { get; set; }
+            public BaseType ConfigType;
+
+            public virtual string GetText() => $"{ConfigType.GetFixedName().ConvertToUnityPropertyName()}";
+        }
+
+        class ConfigProperty : ConfigInstance
+        {
+            public IMember ConfigMember;
+
+            public override string GetText() =>
+                $"{ConfigType.GetFixedName().ConvertToUnityPropertyName()}.{ConfigMember.Name}";
         }
     }
 }
