@@ -4,7 +4,8 @@ namespace Valkyrie.Cem.Library
 {
     public class SimulatePhysicsFeature : IFeature
     {
-        public string Name { get; }
+        public string Name => "Simulate physics feature";
+        
         public void Import(WorldModelInfo world)
         {
             world.ImportSystem<SimulatePhysicsSystem>(SimulationOrder.SimulatePhysic);

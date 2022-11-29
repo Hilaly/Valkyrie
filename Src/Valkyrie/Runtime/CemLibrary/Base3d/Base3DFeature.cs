@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,8 +17,10 @@ namespace Valkyrie.Cem.Library
             var trEntity = world.ImportEntity<I3DTransform>();
             
             var childEntity = world.ImportEntity<I3DChildEntity>();
+            var dependsEntity = world.ImportEntity<IDependsOnTransform>();
 
-            var childSystem = world.ImportSystem<Update3dChildPositions>(SimulationOrder.ReadPhysicData + 1);
+            var childSystem = world.ImportSystem<Update3dChildPositions>(SimulationOrder.ReadPhysicData);
+            var dependsSystem = world.ImportSystem<UpdateDependsOnTransform>(SimulationOrder.ReadPhysicData);
         }
     }
 
@@ -46,9 +49,14 @@ namespace Valkyrie.Cem.Library
 
     public interface I3DChildEntity : I3DTransform
     {
-        public I3DTransform Parent { get; set; }
-        public Vector3 LocalPosition { get; set; }
-        public Quaternion LocalRotation { get; set; }
+        public I3DTransform Parent { get; }
+        public Vector3 LocalPosition { get; }
+        public Quaternion LocalRotation { get; }
+    }
+
+    public interface IDependsOnTransform : I3DTransform
+    {
+        public Transform ParentTransform { get; set; }
     }
 
     public class Update3dChildPositions : BaseTypedSystem<I3DChildEntity>
@@ -66,6 +74,20 @@ namespace Valkyrie.Cem.Library
 
                 childEntity.Position = position;
                 childEntity.SetRotation(rootRotation * childEntity.LocalRotation);
+            }
+        }
+    }
+
+    public class UpdateDependsOnTransform : BaseTypedSystem<IDependsOnTransform>
+    {
+        protected override void Simulate(float dt, IReadOnlyList<IDependsOnTransform> entities)
+        {
+            foreach (var dependsOnTransform in entities)
+            {
+                if(dependsOnTransform.ParentTransform == null)
+                    continue;
+                dependsOnTransform.Position = dependsOnTransform.ParentTransform.position;
+                dependsOnTransform.Direction = dependsOnTransform.ParentTransform.forward;
             }
         }
     }
