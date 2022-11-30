@@ -14,8 +14,8 @@ namespace Valkyrie.Cem.Library.Tracking
             world.ImportEntity<IEntitiesTracker>();
             world.ImportEntity<ISingleEntityTracker>();
 
-            world.ImportSystem<CollectTargetsSystem>(SimulationOrder.ReadPhysicData + 1);
-            world.ImportSystem<SelectTargetSystem>(SimulationOrder.ReadPhysicData + 1);
+            world.ImportSystem<CollectTargetsSystem>(SimulationOrder.CollectTargets);
+            world.ImportSystem<SelectTargetSystem>(SimulationOrder.CollectTargets);
         }
     }
 
@@ -28,7 +28,6 @@ namespace Valkyrie.Cem.Library.Tracking
 
     public interface ISingleTargetTrackData : ITrackData
     {
-        
     }
 
     /// <summary>
@@ -77,18 +76,18 @@ namespace Valkyrie.Cem.Library.Tracking
                 for (var index = 0; index < targets.Count; ++index)
                 {
                     var target = targets[index];
-                    
+
                     //Filter null and self
-                    if(target == null || target == tracker)
+                    if (target == null || target == tracker)
                         continue;
-                    
+
                     //Use filter for other
-                    if(tracker.Filter != null && !tracker.Filter(target))
+                    if (tracker.Filter != null && !tracker.Filter(target))
                         continue;
 
                     //Filter that are out of range
                     var sqrDistance = (target.Position - tracker.Position).sqrMagnitude;
-                    if(sqrDistance > sqrRange)
+                    if (sqrDistance > sqrRange)
                         continue;
 
                     var added = false;
@@ -96,7 +95,7 @@ namespace Valkyrie.Cem.Library.Tracking
                     {
                         if (_distancesCache[i].Value < sqrDistance)
                             continue;
-                        
+
                         _distancesCache.Insert(i, new KeyValuePair<I3DPositioned, float>(target, sqrDistance));
                         tracker.Targets.Insert(i, target);
                         added = true;
@@ -105,11 +104,11 @@ namespace Valkyrie.Cem.Library.Tracking
 
                     if (added)
                         continue;
-                    
+
                     _distancesCache.Add(new KeyValuePair<I3DPositioned, float>(target, sqrDistance));
                     tracker.Targets.Add(target);
                 }
-                
+
                 /*Debug ogs
                 Debug.Assert(_distancesCache.Count == tracker.Targets.Count);
                 for(var i = 0; i < _distancesCache.Count; ++i)
@@ -118,11 +117,11 @@ namespace Valkyrie.Cem.Library.Tracking
                 Debug.LogWarning($"[TRACK]: targets={string.Join(",", tracker.Targets)}");
                 */
             }
-            
+
             _distancesCache.Clear();
         }
     }
-    
+
     public class SelectTargetSystem : BaseTypedSystem<ISingleEntityTracker>
     {
         protected override void Simulate(float dt, IReadOnlyList<ISingleEntityTracker> entities)
@@ -130,13 +129,13 @@ namespace Valkyrie.Cem.Library.Tracking
             foreach (var tracker in entities)
             {
                 //Reset target if lost
-                if(tracker.SelectedTarget != null)
+                if (tracker.SelectedTarget != null)
                     if (!tracker.Targets.Contains(tracker.SelectedTarget))
                         tracker.SelectedTarget = null;
 
-                if (tracker.SelectedTarget != null && !tracker.CanChangeTarget) 
+                if (tracker.SelectedTarget != null && !tracker.CanChangeTarget)
                     continue;
-                
+
                 if (tracker.TargetWeight != null)
                     tracker.SelectedTarget = tracker.Targets
                         .OrderByDescending(x => tracker.TargetWeight(tracker, x)).FirstOrDefault();
@@ -144,11 +143,6 @@ namespace Valkyrie.Cem.Library.Tracking
                     tracker.SelectedTarget = tracker.Targets[0];
                 else
                     tracker.SelectedTarget = null;
-            }
-
-            foreach (var tracker in entities)
-            {
-                Debug.LogWarning($"[TRACK]: Selected={tracker.SelectedTarget}");
             }
         }
     }

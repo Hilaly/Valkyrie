@@ -13,8 +13,11 @@ namespace Valkyrie
         public const int SimulatePhysic = 200;
         public const int ReadPhysicData = 300;
 
+        public const int CollectTargets = ReadPhysicData + 2;
+        
         public const int ProcessAfterPhysic = 500;
 
         public const int ApplyToView = 1000;
+
     }
 }
