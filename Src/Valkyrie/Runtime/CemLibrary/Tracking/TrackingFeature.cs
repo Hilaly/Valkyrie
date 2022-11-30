@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utils;
+using Valkyrie.Utils;
 
 namespace Valkyrie.Cem.Library.Tracking
 {
@@ -16,6 +18,8 @@ namespace Valkyrie.Cem.Library.Tracking
 
             world.ImportSystem<CollectTargetsSystem>(SimulationOrder.CollectTargets);
             world.ImportSystem<SelectTargetSystem>(SimulationOrder.CollectTargets);
+            
+            world.ImportSystem<DebugDrawTargetsSystem>(SimulationOrder.CollectTargets);
         }
     }
 
@@ -144,6 +148,30 @@ namespace Valkyrie.Cem.Library.Tracking
                 else
                     tracker.SelectedTarget = null;
             }
+        }
+    }
+
+    public class DebugDrawTargetsSystem : BaseTypedSystem<IEntitiesTracker>
+    {
+        private Dictionary<IEntitiesTracker, Color> _colors = new();
+        
+        Color GetColor(IEntitiesTracker tracker)
+        {
+            if (!_colors.TryGetValue(tracker, out var r))
+                _colors.Add(tracker, r = DebugExtensions.GetRandomColor());
+            return r;
+        }
+
+        protected override void Simulate(float dt, IReadOnlyList<IEntitiesTracker> entities)
+        {
+#if UNITY_EDITOR
+            foreach (var tracker in entities)
+            {
+                var color = GetColor(tracker);
+                foreach (var target in tracker.Targets)
+                    DebugExtensions.DrawArrow(tracker.Position, target.Position, color);
+            }
+#endif
         }
     }
 }
