@@ -67,8 +67,9 @@ namespace Valkyrie.Cem.Library.Tracking
         {
             var targets = _worldFilter.GetAll();
 
-            foreach (var tracker in entities)
+            for (var eIndex = 0; eIndex < entities.Count; eIndex++)
             {
+                var tracker = entities[eIndex];
                 if (tracker.Targets == null)
                     tracker.Targets = new List<I3DPositioned>();
                 else
@@ -130,11 +131,13 @@ namespace Valkyrie.Cem.Library.Tracking
     {
         protected override void Simulate(float dt, IReadOnlyList<ISingleEntityTracker> entities)
         {
-            foreach (var tracker in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
+                var tracker = entities[index];
                 //Reset target if lost
-                if (tracker.SelectedTarget != null)
-                    if (!tracker.Targets.Contains(tracker.SelectedTarget))
+                var t = tracker.SelectedTarget;
+                if (t != null)
+                    if (!tracker.Targets.Contains(t))
                         tracker.SelectedTarget = null;
 
                 if (tracker.SelectedTarget != null && !tracker.CanChangeTarget)
@@ -165,8 +168,9 @@ namespace Valkyrie.Cem.Library.Tracking
         protected override void Simulate(float dt, IReadOnlyList<IEntitiesTracker> entities)
         {
 #if UNITY_EDITOR
-            foreach (var tracker in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
+                var tracker = entities[index];
                 var color = GetColor(tracker);
                 foreach (var target in tracker.Targets)
                     DebugExtensions.DrawArrow(tracker.Position, target.Position, color);

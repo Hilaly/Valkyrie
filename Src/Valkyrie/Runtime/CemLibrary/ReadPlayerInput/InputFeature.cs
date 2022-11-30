@@ -49,8 +49,9 @@ namespace Valkyrie.Cem.Library.ReadPlayerInput
             var moveInput = _inputService.MoveInput.Value;
             var moveDirection = _cameraController.ConvertToCameraXZ(moveInput);
 
-            foreach (var consumer in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
+                var consumer = entities[index];
                 if (consumer is IMoveWithJoystick moveWithJoystick)
                     moveWithJoystick.MoveDirection = moveDirection;
             }

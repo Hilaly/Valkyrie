@@ -571,13 +571,18 @@ namespace Valkyrie
             sb.AppendLine(
                 $"private readonly List<KeyValuePair<{typeof(ISimSystem).FullName}, int>> _addedSystems = new();");
             sb.AppendLine();
-            sb.AppendLine(
-                $"public void AddSystem({typeof(ISimSystem).FullName} simSystem, int order) => _addedSystems.Add(new KeyValuePair<{typeof(ISimSystem).FullName}, int>(simSystem, order));");
+            sb.WriteBlock(
+                "public void AddSystem<T>(T simSystem, int order = SimulationOrder.Default) where T : ISimSystem",
+                () =>
+                {
+                    sb.AppendLine(
+                        $"_addedSystems.Add(new KeyValuePair<{typeof(ISimSystem).FullName}, int>(new {typeof(ProfileSystem<>).Namespace}.ProfileSystem<T>( simSystem ), order));");
+                });
             sb.AppendLine();
             sb.BeginBlock($"public {typeof(Task).FullName} InstallSystems()");
             sb.BeginBlock($"var temp = new List<KeyValuePair<{typeof(ISimSystem).FullName}, int>>(_addedSystems)");
             foreach (var systemType in world.RegisteredSystems)
-                sb.AppendLine($"new( _{systemType.Key.FullName.Replace(".", "")}, {systemType.Value} ),");
+                sb.AppendLine($"new( new {typeof(ProfileSystem<>).Namespace}.ProfileSystem<{systemType.Key.FullName}>( _{systemType.Key.FullName.Replace(".", "")} ), {systemType.Value} ),");
             sb.EndBlock();
             sb.AppendLine(";");
             sb.AppendLine(

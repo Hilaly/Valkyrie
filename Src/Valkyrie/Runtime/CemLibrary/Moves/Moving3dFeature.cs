@@ -38,8 +38,9 @@ namespace Valkyrie.Cem.Library.Moves
     {
         protected override void Simulate(float dt, IReadOnlyList<IPhysicMovement> entities)
         {
-            foreach (var entity in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
+                var entity = entities[index];
                 if (entity.Physic == null)
                     continue;
                 if (entity.MoveDirection.sqrMagnitude < Mathf.Epsilon)
@@ -72,8 +73,9 @@ namespace Valkyrie.Cem.Library.Moves
     {
         protected override void Simulate(float dt, IReadOnlyList<IPhysicMovement> entities)
         {
-            foreach (var entity in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
+                var entity = entities[index];
                 if (entity.Physic == null)
                     continue;
 

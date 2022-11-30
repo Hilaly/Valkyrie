@@ -33,8 +33,9 @@ namespace Valkyrie.Cem.Library.CameraFeature
 
         protected override void Simulate(float dt, IReadOnlyList<ICameraPoint> entities)
         {
-            foreach (var entity in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
+                var entity = entities[index];
                 var rot = (entity is I3DOriented o) ? o.GetRotation() : Quaternion.identity;
                 _cameraController.SetTarget(entity.Position, rot);
                 break;

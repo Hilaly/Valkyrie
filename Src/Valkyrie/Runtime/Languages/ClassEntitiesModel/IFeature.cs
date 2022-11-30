@@ -113,7 +113,7 @@ namespace Valkyrie
 
     public interface IWorldLoader
     {
-        void AddSystem(Valkyrie.ISimSystem simSystem, int order = SimulationOrder.Default);
+        void AddSystem<T>(T simSystem, int order = SimulationOrder.Default) where T : ISimSystem;
 
         Task InstallSystems();
     }
@@ -127,6 +127,26 @@ namespace Valkyrie
         }
 
         protected abstract void Simulate(T entity, float dt);
+    }
+
+    public class ProfileSystem<T> : ISimSystem
+        where T : ISimSystem
+    {
+        private readonly T _innerSystem;
+        private readonly string _sectionName;
+
+        public ProfileSystem(T innerSystem)
+        {
+            _innerSystem = innerSystem;
+            _sectionName = typeof(T).FullName;
+        }
+
+        public void Simulate(float dt)
+        {
+            UnityEngine.Profiling.Profiler.BeginSample(_sectionName);
+            _innerSystem.Simulate(dt);
+            UnityEngine.Profiling.Profiler.EndSample();
+        }
     }
 
     public abstract class BaseTypedSystem<T> : ISimSystem

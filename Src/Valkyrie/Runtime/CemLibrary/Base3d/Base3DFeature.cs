@@ -63,9 +63,10 @@ namespace Valkyrie.Cem.Library
     {
         protected override void Simulate(float dt, IReadOnlyList<I3DChildEntity> entities)
         {
-            foreach (var childEntity in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
-                if(childEntity.Parent == null)
+                var childEntity = entities[index];
+                if (childEntity.Parent == null)
                     continue;
 
                 var rootPosition = childEntity.Parent.Position;
@@ -82,9 +83,10 @@ namespace Valkyrie.Cem.Library
     {
         protected override void Simulate(float dt, IReadOnlyList<IDependsOnTransform> entities)
         {
-            foreach (var dependsOnTransform in entities)
+            for (var index = 0; index < entities.Count; index++)
             {
-                if(dependsOnTransform.ParentTransform == null)
+                var dependsOnTransform = entities[index];
+                if (dependsOnTransform.ParentTransform == null)
                     continue;
                 dependsOnTransform.Position = dependsOnTransform.ParentTransform.position;
                 dependsOnTransform.Direction = dependsOnTransform.ParentTransform.forward;
