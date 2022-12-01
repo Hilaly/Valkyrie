@@ -264,4 +264,21 @@ namespace Valkyrie
 
         public void Advance(float dt) => TimeLeft -= dt;
     }
+
+    public interface ITestInput
+    {
+        Vector2 joystick { get; }
+    }
+
+    public interface ITestOutput
+    {
+        Vector3 moveDirection { set; }
+    }
+
+    public interface IProcessor<TInput, TOutput>
+    {
+        void Simulate(float dt);
+    }
+    
+    
 }

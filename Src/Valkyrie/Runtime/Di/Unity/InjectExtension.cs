@@ -103,6 +103,16 @@ namespace Valkyrie.Di
             return instance;
         }
 
+        public static T Instantiate<T>(this IContainer container, T prefab, Vector3 position, Quaternion rotation, Transform parent) where T : Object
+        {
+            var instance = Object.Instantiate(prefab, position, rotation, parent);
+            if (instance is Component component)
+                InjectGameObject(container, component.gameObject);
+            else if (instance is GameObject go)
+                InjectGameObject(container, go);
+            return instance;
+        }
+
         public static GameObject InjectGameObject(this IContainer container, GameObject o, bool includeInactive = true)
         {
             if (o.activeInHierarchy || includeInactive)
