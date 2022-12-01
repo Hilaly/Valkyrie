@@ -24,7 +24,7 @@ namespace Valkyrie.Cem.Library.CameraFeature
     
     public class CameraFollowPointSystem : BaseTypedSystem<ICameraPoint>
     {
-        private ICameraController _cameraController;
+        private readonly ICameraController _cameraController;
 
         public CameraFollowPointSystem(ICameraController cameraController)
         {
