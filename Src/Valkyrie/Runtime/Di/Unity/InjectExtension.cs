@@ -56,7 +56,9 @@ namespace Valkyrie.Di
         {
             return container.Register<T>(c =>
             {
-                var go = !string.IsNullOrEmpty(goName) ? new GameObject(goName) : new GameObject();
+                if (string.IsNullOrEmpty(goName))
+                    goName = typeof(T).Name;
+                var go = new GameObject(goName);
                 var instance = go.AddComponent<T>();
                 return instance;
             });

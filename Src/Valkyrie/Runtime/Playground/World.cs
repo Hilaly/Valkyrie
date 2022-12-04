@@ -19,7 +19,7 @@ namespace Valkyrie.Playground
 
     public class World : MonoBehaviour, IWorld, IWorldController
     {
-        [Inject] private SimulationSettings _simulationSettings;
+        [Inject, SerializeField] private SimulationSettings _simulationSettings;
         
         [Inject] private IContainer _container;
         [Inject] private GameState _gameState;
@@ -28,7 +28,7 @@ namespace Valkyrie.Playground
         
         public void RegisterSystem<T>(T inst, int order = 0) where T : ISystem
         {
-            _systems.Add(inst, order);
+            _systems.Add(new ProfileSystem<T>(inst), order);
         }
 
         public IEntity Create()
