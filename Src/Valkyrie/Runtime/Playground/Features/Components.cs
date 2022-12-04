@@ -28,4 +28,9 @@ namespace Project.Playground.Features
     {
         public Rigidbody Physic { get; }
     }
+
+    public interface INameComponent : IComponent
+    {
+        public string LidName { get; set; }
+    }
 }

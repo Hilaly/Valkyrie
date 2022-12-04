@@ -1,6 +1,6 @@
-using Valkyrie.Playground;
+using Project.Playground.Features;
 
-namespace Project.Playground.Features.MonoImplementations
+namespace Valkyrie.Playground.Features.MonoImplementations
 {
     class CameraPointComponent : MonoComponent, ICameraPointComponent
     {

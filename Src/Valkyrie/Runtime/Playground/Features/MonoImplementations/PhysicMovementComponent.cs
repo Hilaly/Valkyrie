@@ -1,7 +1,7 @@
+using Project.Playground.Features;
 using UnityEngine;
-using Valkyrie.Playground;
 
-namespace Project.Playground.Features.MonoImplementations
+namespace Valkyrie.Playground.Features.MonoImplementations
 {
     class PhysicMovementComponent : MonoComponent, IPhysicBasedMovementComponent
     {

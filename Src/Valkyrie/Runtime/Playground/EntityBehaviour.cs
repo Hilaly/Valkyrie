@@ -9,6 +9,7 @@ namespace Valkyrie.Playground
     {
         string Id { get; }
         IReadOnlyList<T> Get<T>() where T : IComponent;
+        T Add<T>() where T : IComponent;
     }
 
     [SelectionBase]
@@ -22,6 +23,11 @@ namespace Valkyrie.Playground
         
         public IReadOnlyList<T> Get<T>() where T : IComponent => 
             gameObject.GetComponents<T>();
+
+        public T Add<T>() where T : IComponent
+        {
+            throw new NotImplementedException();
+        }
 
         private void OnEnable() => _disposable = _gameState.Register(this);
 
