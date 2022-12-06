@@ -79,5 +79,4 @@ namespace Valkyrie.Playground
             return new List<IEntity>(_entities);
         }
     }
-
 }

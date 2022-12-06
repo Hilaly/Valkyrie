@@ -39,7 +39,7 @@ namespace Valkyrie
         private readonly GroupWrapper _wrapper;
         private readonly List<T> _output = new();
 
-        public GroupConverter(Valkyrie.Ecs.IEcsGroup @group) => _wrapper = GroupWrapper.Wrap(@group);
+        public GroupConverter(IEcsGroup @group) => _wrapper = GroupWrapper.Wrap(@group);
 
         public List<EcsEntity> AsEntities() => _wrapper.Entities;
 
@@ -66,7 +66,7 @@ namespace Valkyrie
 
     public interface IEntityWrapper
     {
-        public Ecs.EcsEntity Entity { get; set; }
+        public EcsEntity Entity { get; set; }
     }
 
     public interface IEntity
@@ -219,9 +219,9 @@ namespace Valkyrie
     public class PoolViewsProvider : IViewsProvider
     {
         private readonly Dictionary<object, IDisposable> _cache = new();
-        private readonly Valkyrie.Utils.Pool.IObjectsPool _objectsPool;
+        private readonly Utils.Pool.IObjectsPool _objectsPool;
 
-        public PoolViewsProvider(Valkyrie.Utils.Pool.IObjectsPool objectsPool)
+        public PoolViewsProvider(Utils.Pool.IObjectsPool objectsPool)
         {
             _objectsPool = objectsPool;
         }
@@ -264,21 +264,4 @@ namespace Valkyrie
 
         public void Advance(float dt) => TimeLeft -= dt;
     }
-
-    public interface ITestInput
-    {
-        Vector2 joystick { get; }
-    }
-
-    public interface ITestOutput
-    {
-        Vector3 moveDirection { set; }
-    }
-
-    public interface IProcessor<TInput, TOutput>
-    {
-        void Simulate(float dt);
-    }
-    
-    
 }

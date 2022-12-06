@@ -54,7 +54,7 @@ namespace Valkyrie.Playground
 
         public void Simulate(float dt)
         {
-            var list = _gameState.GetEntities().SelectMany(x => x.Get<T>()).ToList();
+            var list = _gameState.GetEntities().SelectMany(x => x.GetAll<T>()).ToList();
             Simulate(dt, list);
         }
 
@@ -72,10 +72,10 @@ namespace Valkyrie.Playground
             var list = new List<Tuple<T0, T1>>();
             foreach (var entity in _gameState.GetEntities())
             {
-                var t0 = entity.Get<T0>();
+                var t0 = entity.GetAll<T0>();
                 if (t0.Count == 0)
                     continue;
-                var t1 = entity.Get<T1>();
+                var t1 = entity.GetAll<T1>();
                 if (t1.Count == 0)
                     continue;
                 list.AddRange(from t0i in t0 from t1i in t1 select new Tuple<T0, T1>(t0i, t1i));
@@ -99,13 +99,13 @@ namespace Valkyrie.Playground
             var list = new List<Tuple<T0, T1, T2>>();
             foreach (var entity in _gameState.GetEntities())
             {
-                var t0 = entity.Get<T0>();
+                var t0 = entity.GetAll<T0>();
                 if (t0.Count == 0)
                     continue;
-                var t1 = entity.Get<T1>();
+                var t1 = entity.GetAll<T1>();
                 if (t1.Count == 0)
                     continue;
-                var t2 = entity.Get<T2>();
+                var t2 = entity.GetAll<T2>();
                 if (t2.Count == 0)
                     continue;
                 list.AddRange(from t0i in t0 from t1i in t1 from t2i in t2 select new Tuple<T0, T1, T2>(t0i, t1i, t2i));
