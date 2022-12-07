@@ -201,6 +201,7 @@ namespace Valkyrie.Playground.Features
                 if (speed <= Mathf.Epsilon)
                     continue;
 
+                // Apply modifiers
                 foreach (var modifierComponent in tuple.Item1.GetAll<IMoveDirectionModifierComponent>())
                     moveDirection = modifierComponent.Modify(moveDirection);
 
