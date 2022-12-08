@@ -67,6 +67,12 @@ namespace Valkyrie.Playground.Features
         public Vector3 MoveDirection { get; set; }
     }
 
+    /// <summary>
+    /// Mark entity as player controlled
+    /// </summary>
+    public interface IPlayerComponent : IComponent
+    {}
+
     public class ValkyrieFeature : Feature
     {
         public ValkyrieFeature()
