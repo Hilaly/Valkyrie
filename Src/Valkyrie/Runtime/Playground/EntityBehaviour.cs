@@ -28,17 +28,30 @@ namespace Valkyrie.Playground
         IReadOnlyList<T> GetAll<T>() where T : IComponent;
         T Add<T>() where T : MonoComponent;
     }
-
+    
     [SelectionBase]
-    public class EntityBehaviour : MonoBehaviour, IEntity, ITransformComponent
+    public class EntityBehaviour : MonoBehaviour, IEntity, ITransformComponent, IDisposable
     {
         [Inject] private GameState _gameState;
 
         private IDisposable _disposable;
 
         string IEntity.Id => gameObject.GetInstanceID().ToString();
-        T IEntity.Get<T>() => gameObject.GetComponent<T>();
-        IReadOnlyList<T> IEntity.GetAll<T>() => gameObject.GetComponents<T>();
+        T IEntity.Get<T>()
+        {
+            var t = typeof(T);
+            if (t.IsClass && !typeof(MonoBehaviour).IsAssignableFrom(t))
+                return default;
+            return gameObject.GetComponent<T>();
+        }
+
+        IReadOnlyList<T> IEntity.GetAll<T>()
+        {
+            var t = typeof(T);
+            if (t.IsClass && !typeof(MonoBehaviour).IsAssignableFrom(t))
+                return ArraySegment<T>.Empty;
+            return gameObject.GetComponents<T>();
+        }
 
         public T Add<T>() where T : MonoComponent
         {
@@ -57,6 +70,8 @@ namespace Valkyrie.Playground
         }
 
         #endregion
+
+        public void Dispose() => Destroy(gameObject);
 
         #region ITransform Component
 
@@ -78,15 +93,6 @@ namespace Valkyrie.Playground
         {
             get => transform.rotation;
             set => transform.rotation = value;
-        }
-
-        #endregion
-
-        #region Context menu
-
-        [ContextMenu("ECS/Move by input joystick")]
-        void InitForMoveJoystick()
-        {
         }
 
         #endregion
