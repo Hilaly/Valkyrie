@@ -45,12 +45,30 @@ namespace Valkyrie.Playground
     /// <typeparam name="T"></typeparam>
     public interface IRequestConsumeSystem<T> where T : IEventComponent {}
 
-    class ProfileSystem<T> : ISystem where T : ISystem
+    interface IEventCleaner
+    {
+        IEnumerable<Type> GetHandledTypes();
+    }
+    
+    class ProfileSystem<T> : ISystem, IEventCleaner 
+        where T : ISystem
     {
         private readonly T _instance;
         private readonly string _name = typeof(T).FullName;
         private readonly List<ISystem> _preSystems = new();
         private readonly List<ISystem> _postSystems = new();
+
+        public IEnumerable<Type> GetHandledTypes()
+        {
+            var interfaces = _instance.GetType().GetInterfaces();
+            foreach (var type in interfaces)
+            {
+                if (IsImplementGenericInterface(type, typeof(IEventClearSystem<>)))
+                    yield return type.GetGenericArguments()[0];
+                if (IsImplementGenericInterface(type, typeof(IRequestConsumeSystem<>)))
+                    yield return type.GetGenericArguments()[0];
+            }
+        }
 
         public ProfileSystem(T instance, IWorld world)
         {

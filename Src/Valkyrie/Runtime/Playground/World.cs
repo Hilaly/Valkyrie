@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utils;
 using Valkyrie.Di;
 using Valkyrie.Ecs;
 
@@ -10,6 +11,8 @@ namespace Valkyrie.Playground
     public interface IWorldController
     {
         void RegisterSystem<T>(T inst, int order = 0) where T : ISystem;
+
+        void Build();
     }
 
     public interface IWorld
@@ -70,6 +73,31 @@ namespace Valkyrie.Playground
             var dt = _simulationSettings.SimulationSpeed * Time.deltaTime;
             foreach (var (system, order) in _systems.OrderBy(x => x.Value))
                 system.Simulate(dt);
+        }
+
+        private bool _builded;
+        
+        public void Build()
+        {
+            if(_builded)
+                return;
+
+            var allHandledTypes = new HashSet<Type>();
+            foreach (var key in _systems.Keys)
+                if (key is IEventCleaner cleaner)
+                    allHandledTypes.UnionWith(cleaner.GetHandledTypes());
+
+            var orderToCreate = _systems.Values.Max() + 1;
+            var allEvents = typeof(IEventComponent).GetAllSubTypes(x => x.IsClass && !x.IsAbstract);
+            foreach (var eventType in allEvents)
+            {
+                if(allHandledTypes.Contains(eventType))
+                    continue;
+                _systems.Add(this.CreateEventClearSystem(eventType), orderToCreate);
+                Debug.Log($"[TEST]: create cleaner for {eventType.FullName} event");
+            }
+            
+            _builded = true;
         }
     }
 
