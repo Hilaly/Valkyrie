@@ -1,4 +1,5 @@
 using UnityEngine;
+using Valkyrie.Di;
 
 namespace Valkyrie.Playground.Features
 {
@@ -42,7 +43,34 @@ namespace Valkyrie.Playground.Features
         }
     }
 
-    public abstract class PlayerEnterTriggerComponent : FilterByExistComponentTriggerComponent<IPlayerComponent>
+    public abstract class BasePlayerTriggerEvent : IEventComponent
     {
+        public IEntity Entity { get; }
+
+        public IEntity TriggerEntity;
+        public IEntity PlayerEntity;
+    }
+
+    public class PlayerEnterTriggerEvent : BasePlayerTriggerEvent
+    {
+    }
+
+    public class PlayerExitTriggerEvent : BasePlayerTriggerEvent
+    {
+    }
+
+    public class PlayerTriggerComponent : FilterByExistComponentTriggerComponent<IPlayerComponent>
+    {
+        [Inject] private GameState _world;
+        
+        protected override void OnEnter(IEntity e)
+        {
+            _world.SendEvent(new PlayerEnterTriggerEvent { PlayerEntity = e, TriggerEntity = Entity });
+        }
+
+        protected override void OnExit(IEntity e)
+        {
+            _world.SendEvent(new PlayerExitTriggerEvent { PlayerEntity = e, TriggerEntity = Entity });
+        }
     }
 }
