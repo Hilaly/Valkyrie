@@ -75,13 +75,8 @@ namespace Valkyrie.Playground
                 system.Simulate(dt);
         }
 
-        private bool _builded;
-        
         public void Build()
         {
-            if(_builded)
-                return;
-
             var allHandledTypes = new HashSet<Type>();
             foreach (var key in _systems.Keys)
                 if (key is IEventCleaner cleaner)
@@ -90,14 +85,8 @@ namespace Valkyrie.Playground
             var orderToCreate = _systems.Values.Max() + 1;
             var allEvents = typeof(IEventComponent).GetAllSubTypes(x => x.IsClass && !x.IsAbstract);
             foreach (var eventType in allEvents)
-            {
-                if(allHandledTypes.Contains(eventType))
-                    continue;
-                _systems.Add(this.CreateEventClearSystem(eventType), orderToCreate);
-                Debug.Log($"[TEST]: create cleaner for {eventType.FullName} event");
-            }
-            
-            _builded = true;
+                if (!allHandledTypes.Contains(eventType))
+                    _systems.Add(this.CreateEventClearSystem(eventType), orderToCreate);
         }
     }
 

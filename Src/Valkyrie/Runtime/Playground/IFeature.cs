@@ -109,4 +109,55 @@ namespace Valkyrie.Playground
             Profiler.EndSample();
         }
     }
+    
+
+    class EventEntity<TEvent> : IEntity, IDisposable
+        where TEvent : class, IEventComponent
+    {
+        public readonly TEvent EventComponent;
+        private IDisposable _disposable;
+
+        public void Dispose()
+        {
+            _disposable?.Dispose();
+            _disposable = null;
+        }
+
+        public EventEntity(TEvent eventComponent, GameState gameState)
+        {
+            EventComponent = eventComponent;
+            _disposable = gameState.Register(this);
+        }
+
+        #region IEntity
+
+        public string Id { get; } = Guid.NewGuid().ToString();
+
+        public T Get<T>() where T : IComponent =>
+            EventComponent is T result
+                ? result
+                : default;
+
+        public IReadOnlyList<T> GetAll<T>() where T : IComponent =>
+            EventComponent is T result
+                ? new[] { result }
+                : Array.Empty<T>();
+
+        public T Add<T>() where T : MonoComponent
+        {
+            throw new System.NotImplementedException("Adding components to event entity is not implemented");
+        }
+
+        #endregion
+    }
+
+    class EventClearSystem<T> : ISystem
+        where T : IEventComponent
+    {
+        private readonly IWorld _world;
+
+        public EventClearSystem(IWorld world) => _world = world;
+
+        public void Simulate(float dt) => _world.Destroy(x => x.Get<T>() != null);
+    }
 }
