@@ -51,7 +51,12 @@ namespace Valkyrie.Playground
 
         public IEntity Create(EntityBehaviour prefab, Vector3 position, Quaternion rotation)
         {
-            return _container.Instantiate(prefab, position, rotation, transform);
+            var temp = prefab.gameObject.activeSelf;
+            prefab.gameObject.SetActive(false);
+            var r = _container.Instantiate(prefab, position, rotation, transform);
+            prefab.gameObject.SetActive(temp);
+            r.gameObject.SetActive(true);
+            return r;
         }
 
         public void Destroy(IEntity entity) =>
