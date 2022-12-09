@@ -15,7 +15,7 @@ namespace Valkyrie
 
         public const int CollectTargets = ReadPhysicData + 2;
         
-        public const int ProcessAfterPhysic = 500;
+        public const int MainLogic = 500;
 
         public const int ApplyToView = 1000;
 
