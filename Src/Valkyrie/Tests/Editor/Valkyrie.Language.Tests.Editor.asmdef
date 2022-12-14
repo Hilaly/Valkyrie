@@ -1,5 +1,5 @@
 {
-    "name": "Tests",
+    "name": "Valkyrie.Tests",
     "rootNamespace": "Valkyrie.Language",
     "references": [
         "Valkyrie.Language",
@@ -10,7 +10,6 @@
         "Valkyrie.Editor",
         "Valkyrie.DSL",
         "Valkyrie.Grammar",
-        "Valkyrie.Meta",
         "Valkyrie.Entities.Complex"
     ],
     "includePlatforms": [
