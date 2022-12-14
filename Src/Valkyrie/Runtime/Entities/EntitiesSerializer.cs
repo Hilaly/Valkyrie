@@ -159,7 +159,7 @@ namespace Valkyrie.Entities
             var e = entitiesContext.GetEntity(id);
             if (e == null)
                 entitiesContext.Add(e = new Entity(id));
-            e._finishLoadAction = () => Fill(entitiesContext, e, j);
+            e.FinishLoadAction = () => Fill(entitiesContext, e, j);
             return e.FinishLoading;
         }
 

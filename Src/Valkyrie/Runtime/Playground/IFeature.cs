@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.Profiling;
 using Valkyrie.Di;
 
@@ -109,7 +108,6 @@ namespace Valkyrie.Playground
             Profiler.EndSample();
         }
     }
-    
 
     class EventEntity<TEvent> : IEntity, IDisposable
         where TEvent : class, IEventComponent

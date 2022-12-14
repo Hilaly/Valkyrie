@@ -18,12 +18,12 @@ namespace Valkyrie.Entities
 
     public class Entity : IEntity
     {
-        internal Action _finishLoadAction;
+        internal Action FinishLoadAction;
 
         internal void FinishLoading()
         {
-            _finishLoadAction?.Invoke();
-            _finishLoadAction = null;
+            FinishLoadAction?.Invoke();
+            FinishLoadAction = null;
         }
 
         #region IConfigData

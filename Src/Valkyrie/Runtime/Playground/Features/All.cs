@@ -7,6 +7,18 @@ using Valkyrie.Utils;
 namespace Valkyrie.Playground.Features
 {
     /// <summary>
+    /// Base timer component, allow auto update timers
+    /// </summary>
+    public interface ITimerComponent : IComponent
+    {
+        float FullTime { get; }
+        float TimeLeft { get; }
+
+        void StartTimer(float time);
+        void AdvanceTimer(float dt);
+    }
+
+    /// <summary>
     /// Modify move direction with some algo
     /// </summary>
     public interface IMoveDirectionModifierComponent : IComponent
@@ -77,6 +89,8 @@ namespace Valkyrie.Playground.Features
     {
         public ValkyrieFeature()
         {
+            Register<TimersUpdateSystem>(SimulationOrder.ReadPlayerInput - 10);
+            
             Register<ReadPlayerInputSystem>(SimulationOrder.ReadPlayerInput);
 
             Register<ApplyPhysicRotateInput>(SimulationOrder.ApplyPhysicData + 1);
@@ -215,6 +229,29 @@ namespace Valkyrie.Playground.Features
                 var deltaPosition = moveDirection * speed * dt;
                 var position = tr.Position;
                 rigidbody.MovePosition(position + deltaPosition);
+            }
+        }
+    }
+
+    class TimersUpdateSystem : ISystem
+    {
+        private GameState _gameState;
+
+        public void Simulate(float dt)
+        {
+            foreach (var e in _gameState.GetEntities())
+            {
+                var timers = e.GetAll<ITimerComponent>();
+                foreach (var timer in timers)
+                {
+                    if(timer.TimeLeft <= 0)
+                        continue;
+                    
+                    timer.AdvanceTimer(dt);
+
+                    if (timer.TimeLeft <= 0)
+                        _gameState?.SendEvent(new TimerFinishedEvent { SourceEntity = e, TimerComponent = timer });
+                }
             }
         }
     }

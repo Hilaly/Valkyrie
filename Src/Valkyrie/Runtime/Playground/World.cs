@@ -8,6 +8,11 @@ using Valkyrie.Ecs;
 
 namespace Valkyrie.Playground
 {
+    public interface IArchetype
+    {
+        void Prepare(IEntity e);
+    }
+
     public interface IWorldController
     {
         void RegisterSystem<T>(T inst, int order = 0) where T : ISystem;

@@ -26,5 +26,10 @@ namespace Valkyrie.Playground
                 systemInstance, world);
             return result;
         }
+
+        public static object Add(this IEntity entity, Type component)
+        {
+            return (entity as EntityBehaviour)?.gameObject.AddComponent(component);
+        }
     }
 }
