@@ -366,6 +366,16 @@ namespace Valkyrie.Grammar
             return n.Nodes[0].GetString();
         }
 
+        public static string GetStringWithoutQuote(this IAstNode node)
+        {
+            if (node is TerminalNode terminalNode)
+                return terminalNode.Lexem.Value;
+            var n = (NonTerminalNode)node;
+            if (n.Nodes.Count != 1)
+                throw new Exception($"{node.Name} is not simple");
+            return n.Nodes[0].GetString().Trim('"').Trim('\'');
+        }
+
         internal static List<IAstNode> FindAllInList(this IAstNode node, string listName, string nodeName)
         {
             var result = new List<IAstNode>();
