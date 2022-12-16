@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Profiling;
 using Valkyrie.Di;
 
@@ -16,6 +17,22 @@ namespace Valkyrie.Playground
     public interface IComponent
     {
         IEntity Entity { get; }
+    }
+
+    public interface ITypedComponent<T> : IComponent
+    {
+        public T Value { get; set; }
+    }
+
+    public abstract class TypedComponent<T> : MonoComponent, ITypedComponent<T>
+    {
+        [SerializeField] private T _value;
+
+        public T Value
+        {
+            get => _value;
+            set => _value = value;
+        }
     }
     
     /// <summary>
