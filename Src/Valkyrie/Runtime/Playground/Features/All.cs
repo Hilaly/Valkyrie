@@ -83,14 +83,15 @@ namespace Valkyrie.Playground.Features
     /// Mark entity as player controlled
     /// </summary>
     public interface IPlayerComponent : IComponent
-    {}
+    {
+    }
 
     public class ValkyrieFeature : Feature
     {
         public ValkyrieFeature()
         {
             Register<TimersUpdateSystem>(SimulationOrder.ReadPlayerInput - 10);
-            
+
             Register<ReadPlayerInputSystem>(SimulationOrder.ReadPlayerInput);
 
             Register<ApplyPhysicRotateInput>(SimulationOrder.ApplyPhysicData + 1);
@@ -102,25 +103,20 @@ namespace Valkyrie.Playground.Features
         }
     }
 
-    class CameraFollowPointSystem : BaseTypedSystem<ICameraPointComponent, ITransformComponent>
+    class CameraFollowPointSystem : FilteredSystem<ICameraPointComponent, ITransformComponent>
     {
         private readonly ICameraController _cameraController;
 
-        public CameraFollowPointSystem(ICameraController cameraController)
+        public CameraFollowPointSystem(ICameraController cameraController, GameState gameState)
+            : base(gameState)
         {
             _cameraController = cameraController;
         }
 
-        protected override void Simulate(float dt,
-            IReadOnlyList<Tuple<ICameraPointComponent, ITransformComponent>> entities)
+        protected override void Simulate(float dt, IEntity entity)
         {
-            for (var index = 0; index < entities.Count;)
-            {
-                var entity = entities[index].Item2;
-                var rot = entity.Rotation;
-                _cameraController.SetTarget(entity.Position, rot);
-                break;
-            }
+            var rot = entity.Get<ITransformComponent>().Rotation;
+            _cameraController.SetTarget(entity.Get<ITransformComponent>().Position, rot);
         }
     }
 
@@ -249,9 +245,9 @@ namespace Valkyrie.Playground.Features
                 var timers = e.GetAll<ITimerComponent>();
                 foreach (var timer in timers)
                 {
-                    if(timer.TimeLeft <= 0)
+                    if (timer.TimeLeft <= 0)
                         continue;
-                    
+
                     timer.AdvanceTimer(dt);
 
                     if (timer.TimeLeft <= 0)

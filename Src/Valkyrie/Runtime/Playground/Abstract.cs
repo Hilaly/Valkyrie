@@ -116,4 +116,148 @@ namespace Valkyrie.Playground
 
         protected abstract void Simulate(float dt, IReadOnlyList<Tuple<T0, T1, T2>> entities);
     }
+
+    public class Filter
+    {
+        private readonly GameState _gameState;
+        private readonly List<Func<IEntity, bool>> _filters = new();
+
+        public Filter(GameState gameState)
+        {
+            _gameState = gameState;
+        }
+
+        public Filter Add<T>() where T : IComponent
+        {
+            _filters.Add(e => e.Get<T>() != null);
+            return this;
+        }
+
+        public Filter Add(Type t)
+        {
+            var info = typeof(IEntity).GetMethod(nameof(IEntity.Get)).MakeGenericMethod(t);
+            bool F(IEntity e) => info.Invoke(e, null) != null;
+            _filters.Add(F);
+            return this;
+        }
+
+        public IEnumerable<IEntity> GetAll()
+        {
+            var es = _gameState.GetEntities();
+            foreach (var entity in es)
+            {
+                if (_filters.TrueForAll(x => x(entity)))
+                    yield return entity;
+            }
+        }
+    }
+    
+    public class GenericFilter<T0,T1,T2,T3> : Filter
+        where T0 : IComponent
+        where T1 : IComponent
+        where T2 : IComponent
+        where T3 : IComponent
+    {
+        public GenericFilter(GameState gameState) : base(gameState)
+        {
+            Add<T0>();
+            Add<T1>();
+            Add<T2>();
+            Add<T3>();
+        }
+    }
+    
+    public class GenericFilter<T0,T1,T2> : Filter
+        where T0 : IComponent
+        where T1 : IComponent
+        where T2 : IComponent
+    {
+        public GenericFilter(GameState gameState) : base(gameState)
+        {
+            Add<T0>();
+            Add<T1>();
+            Add<T2>();
+        }
+    }
+    
+    public class GenericFilter<T0,T1> : Filter
+        where T0 : IComponent
+        where T1 : IComponent
+    {
+        public GenericFilter(GameState gameState) : base(gameState)
+        {
+            Add<T0>();
+            Add<T1>();
+        }
+    }
+    
+    public class GenericFilter<T0> : Filter
+        where T0 : IComponent
+    {
+        public GenericFilter(GameState gameState) : base(gameState)
+        {
+            Add<T0>();
+        }
+    }
+    
+    public abstract class FilteredSystem<T0, T1, T2, T3> : ISystem
+        where T0 : IComponent
+        where T1 : IComponent
+        where T2 : IComponent
+        where T3 : IComponent
+    {
+        private readonly GenericFilter<T0, T1, T2, T3> _filter;
+
+        protected FilteredSystem(GameState gameState)
+        {
+            _filter = new GenericFilter<T0, T1, T2, T3>(gameState);
+        }
+
+        public void Simulate(float dt)
+        {
+            foreach (var entity in _filter.GetAll()) 
+                Simulate(dt, entity);
+        }
+
+        protected abstract void Simulate(float dt, IEntity entity);
+    }
+    public abstract class FilteredSystem<T0, T1, T2> : ISystem
+        where T0 : IComponent
+        where T1 : IComponent
+        where T2 : IComponent
+    {
+        private readonly GenericFilter<T0, T1, T2> _filter;
+
+        protected FilteredSystem(GameState gameState)
+        {
+            _filter = new GenericFilter<T0, T1, T2>(gameState);
+        }
+
+        public void Simulate(float dt)
+        {
+            foreach (var entity in _filter.GetAll()) 
+                Simulate(dt, entity);
+        }
+
+        protected abstract void Simulate(float dt, IEntity entity);
+    }
+    public abstract class FilteredSystem<T0, T1> : ISystem
+        where T0 : IComponent
+        where T1 : IComponent
+    {
+        private readonly GenericFilter<T0, T1> _filter;
+
+        protected FilteredSystem(GameState gameState)
+        {
+            _filter = new GenericFilter<T0, T1>(gameState);
+        }
+
+        public void Simulate(float dt)
+        {
+            foreach (var entity in _filter.GetAll()) 
+                Simulate(dt, entity);
+        }
+
+        protected abstract void Simulate(float dt, IEntity entity);
+    }
 }
