@@ -235,7 +235,12 @@ namespace Valkyrie.Playground.Features
 
     class TimersUpdateSystem : ISystem
     {
-        private GameState _gameState;
+        private readonly GameState _gameState;
+
+        public TimersUpdateSystem(GameState gameState)
+        {
+            _gameState = gameState;
+        }
 
         public void Simulate(float dt)
         {
