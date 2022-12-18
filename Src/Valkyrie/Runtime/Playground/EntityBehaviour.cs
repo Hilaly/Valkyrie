@@ -21,9 +21,13 @@ namespace Valkyrie.Playground
     {
     }
 
-    public interface IEntity
+    public interface IHasId
     {
         string Id { get; }
+    }
+
+    public interface IEntity : IHasId
+    {
         T Get<T>() where T : IComponent;
         IReadOnlyList<T> GetAll<T>() where T : IComponent;
         T Add<T>() where T : MonoComponent;
@@ -36,7 +40,7 @@ namespace Valkyrie.Playground
 
         private IDisposable _disposable;
 
-        string IEntity.Id => gameObject.GetInstanceID().ToString();
+        string IHasId.Id => gameObject.GetInstanceID().ToString();
         T IEntity.Get<T>()
         {
             var t = typeof(T);
