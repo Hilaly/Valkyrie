@@ -1,8 +1,8 @@
 using Configs;
-using Meta.Commands;
 using Meta.PlayerInfo;
 using UnityEngine;
 using Valkyrie.Di;
+using Valkyrie.Meta.Commands;
 
 namespace Meta
 {

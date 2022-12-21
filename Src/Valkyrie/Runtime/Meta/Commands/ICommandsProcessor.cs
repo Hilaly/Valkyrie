@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
 
-namespace Meta.Commands
+namespace Valkyrie.Meta.Commands
 {
     public interface ICommandsProcessor
     {
-        Task Execute<T>(T command);
+        Task Execute<T>(T command) where T : ICommand;
     }
 }

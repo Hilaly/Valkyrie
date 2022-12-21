@@ -2,13 +2,21 @@ using Configs;
 using Meta.Inventory;
 using Meta.PlayerInfo;
 
-namespace Meta.Commands
+namespace Valkyrie.Meta.Commands
 {
     public class CommandContext
     {
-        public IPlayerInfoProvider PlayerInfoProvider;
-        public IInventory Inventory;
-        public IWallet Wallet;
-        public IConfigService Config;
+        public readonly IPlayerInfoProvider PlayerInfoProvider;
+        public readonly IInventory Inventory;
+        public readonly IWallet Wallet;
+        public readonly IConfigService Config;
+
+        public CommandContext(IPlayerInfoProvider playerInfoProvider, IInventory inventory, IWallet wallet, IConfigService config)
+        {
+            PlayerInfoProvider = playerInfoProvider;
+            Inventory = inventory;
+            Wallet = wallet;
+            Config = config;
+        }
     }
 }

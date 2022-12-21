@@ -1,59 +1,35 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Meta.PlayerInfo;
+using Meta;
 using Newtonsoft.Json;
 using UnityEngine;
-using Valkyrie.Di;
 
-namespace Meta.Commands
+namespace Valkyrie.Meta.Commands
 {
     class CommandsProcessor : ICommandsProcessor
     {
-        [Inject] private readonly IPlayerInfoProvider _playerInfoProvider;
-
         private readonly ISaveDataStorage _saveData;
-        private readonly Dictionary<Type, object> _cached = new();
-        private readonly List<ICommandHandler> _handlers;
         private readonly CommandArgsResolver _argsResolver;
 
-        public CommandsProcessor(CommandArgsResolver argsResolver, IEnumerable<ICommandHandler> commandHandlers,
-            ISaveDataStorage saveDataStorage)
+        public CommandsProcessor(CommandArgsResolver argsResolver, ISaveDataStorage saveDataStorage)
         {
             _argsResolver = argsResolver;
             _saveData = saveDataStorage;
-            _handlers = new List<ICommandHandler>(commandHandlers);
         }
 
-        ICommandHandler<TCommand> GetHandler<TCommand>()
-        {
-            if (_cached.TryGetValue(typeof(TCommand), out var oHandler))
-            {
-                return (ICommandHandler<TCommand>)oHandler;
-            }
-
-            var handler = (ICommandHandler<TCommand>)_handlers.FirstOrDefault(x => x is ICommandHandler<TCommand>);
-            if (handler == null)
-                throw new Exception($"Handler for {typeof(TCommand).Name} is not registered");
-
-            _cached.Add(typeof(TCommand), handler);
-            return handler;
-        }
-
-        public async Task Execute<TCommand>(TCommand command)
+        public async Task Execute<TCommand>(TCommand command) where TCommand : ICommand
         {
             try
             {
-                Debug.Log(
-                    $"[CMD]: start processing {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)}");
+                Debug.Log($"[CMD]: start processing {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)}");
 
-                await Execute(command, GetHandler<TCommand>());
+                var ctx = _argsResolver.Create();
+                
+                await command.Execute(ctx);
 
-                _playerInfoProvider.Info.Updated = DateTime.UtcNow;
+                ctx.PlayerInfoProvider.Info.Updated = DateTime.UtcNow;
 
-                Debug.Log(
-                    $"[CMD]: {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)} processed, saving...");
+                Debug.Log($"[CMD]: {typeof(TCommand).Name} {JsonConvert.SerializeObject(command)} processed, saving...");
 
                 await _saveData.SaveAsync();
 
@@ -66,12 +42,6 @@ namespace Meta.Commands
                 Debug.LogException(e);
                 throw;
             }
-        }
-
-        async Task Execute<TCommand>(TCommand command, ICommandHandler<TCommand> handler)
-        {
-            var ctx = _argsResolver.Create();
-            await handler.Execute(ctx, command);
         }
     }
 }
