@@ -1,0 +1,17 @@
+{
+    "name": "Valkyrie.Services",
+    "rootNamespace": "",
+    "references": [
+        "GUID:06d683358a9bf1549974f36ef8fc5080",
+        "GUID:1b0bbacca64baf744ac3a5f9eed468de"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

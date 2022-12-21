@@ -56,7 +56,9 @@ namespace Valkyrie.Di
         {
             return container.Register<T>(c =>
             {
-                var go = !string.IsNullOrEmpty(goName) ? new GameObject(goName) : new GameObject();
+                if (string.IsNullOrEmpty(goName))
+                    goName = typeof(T).Name;
+                var go = new GameObject(goName);
                 var instance = go.AddComponent<T>();
                 return instance;
             });
@@ -96,6 +98,16 @@ namespace Valkyrie.Di
         public static T Instantiate<T>(this IContainer container, T prefab, Transform parent) where T : Object
         {
             var instance = Object.Instantiate(prefab, parent);
+            if (instance is Component component)
+                InjectGameObject(container, component.gameObject);
+            else if (instance is GameObject go)
+                InjectGameObject(container, go);
+            return instance;
+        }
+
+        public static T Instantiate<T>(this IContainer container, T prefab, Vector3 position, Quaternion rotation, Transform parent) where T : Object
+        {
+            var instance = Object.Instantiate(prefab, position, rotation, parent);
             if (instance is Component component)
                 InjectGameObject(container, component.gameObject);
             else if (instance is GameObject go)

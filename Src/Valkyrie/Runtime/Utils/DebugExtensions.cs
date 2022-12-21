@@ -239,5 +239,7 @@ namespace Valkyrie.Utils
 
             Debug.DrawLine(n * d, n * (d + 1 * normalScale), normalColor);
         }
+
+        public static Color GetRandomColor() => new(Random.value, Random.value, Random.value, 1);
     }
 }

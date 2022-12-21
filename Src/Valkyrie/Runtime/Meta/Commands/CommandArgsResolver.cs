@@ -1,9 +1,8 @@
-using Configs;
-using Meta.Inventory;
-using Meta.PlayerInfo;
 using Valkyrie.Di;
+using Valkyrie.Meta.Configs;
+using Valkyrie.Meta.Models;
 
-namespace Meta.Commands
+namespace Valkyrie.Meta.Commands
 {
     class CommandArgsResolver
     {
@@ -12,15 +11,7 @@ namespace Meta.Commands
         [InjectOptional] private IPlayerInfoProvider _infoProvider;
         [InjectOptional] private IConfigService _configService;
 
-        public CommandContext Create()
-        {
-            return new CommandContext()
-            {
-                Inventory = _inventory,
-                Wallet = _wallet,
-                PlayerInfoProvider = _infoProvider,
-                Config = _configService
-            };
-        }
+        public CommandContext Create() =>
+            new(_infoProvider, _inventory, _wallet, _configService);
     }
 }

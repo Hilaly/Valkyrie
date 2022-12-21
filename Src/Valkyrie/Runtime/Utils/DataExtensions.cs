@@ -195,6 +195,11 @@ namespace Utils
 
         #region Json
 
+        public static readonly JsonSerializerSettings StandardJsonSettings = new()
+        {
+            TypeNameHandling = TypeNameHandling.All
+        };
+
         public static string ToJson<T>(this T o)
         {
             return JsonConvert.SerializeObject(o);

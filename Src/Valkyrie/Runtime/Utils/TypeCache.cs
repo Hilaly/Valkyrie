@@ -34,7 +34,7 @@ namespace Valkyrie.Utils
             get
             {
                 ShouldBuildCache();
-                return _cache[key];
+                return _cache.TryGetValue(key, out var result) ? result : default;
             }
         }
 

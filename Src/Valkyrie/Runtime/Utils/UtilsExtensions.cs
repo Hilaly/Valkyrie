@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 
 namespace Valkyrie.Utils
@@ -28,5 +29,15 @@ namespace Valkyrie.Utils
         }
 
         #endregion
+
+        public static void EnsureDirectoryExistsForFile(string fileName)
+        {
+            var fullDirName = Path.GetDirectoryName(fileName);
+            if (fullDirName != null && !Directory.Exists(fullDirName))
+            {
+                Debug.Log($"Creating directory {fullDirName}");
+                Directory.CreateDirectory(fullDirName);
+            }
+        }
     }
 }

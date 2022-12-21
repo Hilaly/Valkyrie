@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Numerics;
-using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
+using Vector2 = UnityEngine.Vector2;
 
 namespace Utils
 {
@@ -90,6 +90,9 @@ namespace Utils
 
             return points[^1];
         }
+
+        public static Vector3 X0Z(this Vector3 source) => new(source.x, 0, source.z);
+        public static Vector2 XZ(this Vector3 source) => new(source.x, source.z);
 
         #endregion
     }

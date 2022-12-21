@@ -1,64 +1,52 @@
-using Configs;
-using Meta.Commands;
-using Meta.PlayerInfo;
 using UnityEngine;
 using Valkyrie.Di;
+using Valkyrie.Meta.Commands;
+using Valkyrie.Meta.Configs;
+using Valkyrie.Meta.DataSaver;
+using Valkyrie.Meta.Models;
 
-namespace Meta
+namespace Valkyrie.Meta
 {
     public class ValkyrieMetaInstaller : MonoBehaviourInstaller
     {
-        [Header("Save Data storage")]
-        [SerializeField, Tooltip("Do we use local storage for persistent data")] private bool _registerLocalStorageData;
-        [SerializeField] private string _localSavePath = "profile.json";
+        [Header("Data Storage")] [SerializeField, Tooltip("Do we use local storage for persistent data")]
+        private bool registerLocalStorageData;
 
-        [Header("Use Valkyrie Configs")] 
-        [SerializeField, Tooltip("Do we use configs")] private bool useConfigs = true;
+        [SerializeField] private string localSavePath = "profile.json";
 
-        [SerializeField, Tooltip("Do we use standart json configs")]
-        private bool useJsonConfig = true;
+        [Header("Configs")] [SerializeField, Tooltip("Scriptable Instance of Config (Optional)")]
+        private ScriptableConfigService configService;
+
+        [SerializeField, Tooltip("Do we use standard json configs (Optional)")]
+        private TextAsset jsonConfig;
 
         [Header("Use commands")] [SerializeField, Tooltip("Do we need commands handling")]
         private bool useCommands = true;
 
         public override void Register(IContainer container)
         {
-            if (useConfigs)
+            if (jsonConfig != default)
+                container.RegisterSingleInstance<JsonConfigService>();
+            else if (configService != null)
+                container.Register(configService).AsInterfacesAndSelf();
+            else
+                Debug.LogWarning($"[CORE]: config service isn't registered");
+
+            if (registerLocalStorageData)
             {
-                container.Register<ConfigService>()
-                    .AsInterfacesAndSelf()
-                    .SingleInstance();
-                if (useJsonConfig)
-                    container.Register<JsonConfigLoader>()
-                        .AsInterfacesAndSelf()
-                        .SingleInstance()
-                        .NonLazy();
-            }
-            
-            container.Register<PlayerInfoProvider>()
-                .AsInterfacesAndSelf()
-                .SingleInstance();
-            container.Register<Inventory.InventoryProvider>()
-                .AsInterfacesAndSelf()
-                .SingleInstance();
-            container.Register<Inventory.Wallet>()
-                .AsInterfacesAndSelf()
-                .SingleInstance();
-            
-            if (_registerLocalStorageData)
-                container.Register(() => new LocalSaveDataStorage(_localSavePath))
+                container.Register(() => new ModelsProvider(localSavePath))
                     .AsInterfacesAndSelf()
                     .SingleInstance();
 
+                container.RegisterSingleInstance<PlayerInfoProvider>();
+                container.RegisterSingleInstance<InventoryProvider>();
+                container.RegisterSingleInstance<Wallet>();
+            }
+
             if (useCommands)
             {
-                container.Register<CommandsProcessor>()
-                    .AsInterfacesAndSelf()
-                    .SingleInstance();
-                
-                container.Register<CommandArgsResolver>()
-                    .AsInterfacesAndSelf()
-                    .SingleInstance();
+                container.RegisterSingleInstance<CommandArgsResolver>();
+                container.RegisterSingleInstance<CommandsProcessor>();
             }
         }
     }

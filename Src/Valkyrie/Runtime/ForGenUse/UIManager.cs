@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Configs;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
 using Valkyrie.Ecs;
+using Valkyrie.Meta.Configs;
 
 namespace Valkyrie
 {

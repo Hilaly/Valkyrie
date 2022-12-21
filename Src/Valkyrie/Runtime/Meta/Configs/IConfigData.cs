@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Configs
+namespace Valkyrie.Meta.Configs
 {
     public interface IConfigData
     {

@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Configs
+namespace Valkyrie.Meta.Configs
 {
-    public interface IConfigService
+    public interface IConfigService : IDataStorage<IConfigData>
     {
         Task Load();
-        IDisposable Add(IConfigLoader loader);
-        
-        T Get<T>(string id) where T : IConfigData;
-        List<T> Get<T>() where T : IConfigData;
     }
 }
