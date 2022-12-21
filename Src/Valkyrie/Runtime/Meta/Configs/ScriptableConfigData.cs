@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Configs
+namespace Valkyrie.Meta.Configs
 {
     public abstract class ScriptableConfigData : ScriptableObject, IConfigData
     {

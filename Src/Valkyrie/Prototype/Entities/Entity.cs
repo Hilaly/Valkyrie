@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Configs;
 using Newtonsoft.Json;
+using Valkyrie.Meta.Configs;
 
 namespace Valkyrie.Entities
 {

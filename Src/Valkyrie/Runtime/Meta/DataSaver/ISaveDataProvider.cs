@@ -1,4 +1,4 @@
-namespace Meta
+namespace Valkyrie.Meta.DataSaver
 {
     public interface ISaveDataProvider
     {

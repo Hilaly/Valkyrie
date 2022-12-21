@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Meta.Inventory
+namespace Valkyrie.Meta.Inventory
 {
     public interface IInventory
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Meta
+namespace Valkyrie.Meta.DataSaver
 {
     public interface ISaveDataStorage
     {

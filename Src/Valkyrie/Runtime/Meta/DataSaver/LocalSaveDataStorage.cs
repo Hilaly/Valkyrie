@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using Valkyrie.Di;
 
-namespace Meta
+namespace Valkyrie.Meta.DataSaver
 {
     class LocalSaveDataStorage : ISaveDataStorage, IDisposable
     {

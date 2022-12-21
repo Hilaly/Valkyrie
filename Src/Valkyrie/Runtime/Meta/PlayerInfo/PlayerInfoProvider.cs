@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
+using Valkyrie.Meta.DataSaver;
 
-namespace Meta.PlayerInfo
+namespace Valkyrie.Meta.PlayerInfo
 {
     class PlayerInfoProvider : IPlayerInfoProvider, ISaveDataProvider
     {

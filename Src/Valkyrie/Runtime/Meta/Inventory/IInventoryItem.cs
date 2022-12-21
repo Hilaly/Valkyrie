@@ -1,4 +1,4 @@
-namespace Meta.Inventory
+namespace Valkyrie.Meta.Inventory
 {
     public interface IInventoryItem
     {

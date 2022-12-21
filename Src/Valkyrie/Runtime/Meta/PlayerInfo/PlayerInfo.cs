@@ -1,6 +1,6 @@
 using System;
 
-namespace Meta.PlayerInfo
+namespace Valkyrie.Meta.PlayerInfo
 {
     public class PlayerInfo
     {

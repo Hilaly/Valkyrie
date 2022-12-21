@@ -1,8 +1,7 @@
 using System.Linq;
-using Configs;
-using Meta.Inventory;
 using Utils;
 using Valkyrie.Language.Description.Utils;
+using Valkyrie.Meta.Inventory;
 using Valkyrie.Tools;
 
 namespace Valkyrie

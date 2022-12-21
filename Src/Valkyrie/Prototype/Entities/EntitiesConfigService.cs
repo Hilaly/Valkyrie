@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Configs;
 using UnityEngine;
+using Valkyrie.Meta.Configs;
 
 namespace Valkyrie.Entities
 {

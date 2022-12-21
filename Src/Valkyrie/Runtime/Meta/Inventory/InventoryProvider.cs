@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Valkyrie.Meta.DataSaver;
 
-namespace Meta.Inventory
+namespace Valkyrie.Meta.Inventory
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     class InventoryProvider : ISaveDataProvider, IInventory, IDisposable

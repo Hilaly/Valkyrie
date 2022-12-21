@@ -1,10 +1,11 @@
-using Configs;
-using Meta.PlayerInfo;
 using UnityEngine;
 using Valkyrie.Di;
 using Valkyrie.Meta.Commands;
+using Valkyrie.Meta.Configs;
+using Valkyrie.Meta.DataSaver;
+using Valkyrie.Meta.PlayerInfo;
 
-namespace Meta
+namespace Valkyrie.Meta
 {
     public class ValkyrieMetaInstaller : MonoBehaviourInstaller
     {
@@ -16,23 +17,19 @@ namespace Meta
         [SerializeField, Tooltip("Scriptable Instance of Config")]
         private ScriptableConfigService configService;
         [SerializeField, Tooltip("Do we use standard json configs")]
-        private bool useJsonConfig = true;
+        private TextAsset jsonConfig;
 
         [Header("Use commands")] [SerializeField, Tooltip("Do we need commands handling")]
         private bool useCommands = true;
 
         public override void Register(IContainer container)
         {
-            if (configService != null)
-            {
+            if (jsonConfig != default)
+                container.RegisterSingleInstance<JsonConfigService>();
+            else if (configService != null) 
                 container.Register(configService).AsInterfacesAndSelf();
-                
-                if (useJsonConfig)
-                    container.Register<JsonConfigLoader>()
-                        .AsInterfacesAndSelf()
-                        .SingleInstance()
-                        .NonLazy();
-            }
+            else
+                Debug.LogWarning($"[CORE]: config service isn't registered");
 
             container.Register<PlayerInfoProvider>()
                 .AsInterfacesAndSelf()

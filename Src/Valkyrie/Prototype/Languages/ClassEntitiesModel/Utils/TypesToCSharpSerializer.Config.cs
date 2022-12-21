@@ -1,6 +1,6 @@
 using System.Linq;
-using Configs;
 using Valkyrie.Language.Description.Utils;
+using Valkyrie.Meta.Configs;
 
 namespace Valkyrie
 {

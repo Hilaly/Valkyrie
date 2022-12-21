@@ -1,6 +1,4 @@
-using Newtonsoft.Json;
-
-namespace Meta.Inventory
+namespace Valkyrie.Meta.Inventory
 {
     public abstract class BaseInventoryItem : IInventoryItem
     {

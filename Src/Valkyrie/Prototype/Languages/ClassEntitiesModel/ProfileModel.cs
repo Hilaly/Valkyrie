@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using Configs;
-using Meta.Inventory;
 using Valkyrie.Di;
 using Valkyrie.Language.Description.Utils;
+using Valkyrie.Meta.Configs;
+using Valkyrie.Meta.Inventory;
 using Valkyrie.Tools;
 
 namespace Valkyrie

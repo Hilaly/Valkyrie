@@ -1,4 +1,4 @@
-namespace Meta.PlayerInfo
+namespace Valkyrie.Meta.PlayerInfo
 {
     public interface IPlayerInfoProvider
     {
