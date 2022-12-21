@@ -48,6 +48,8 @@ namespace Valkyrie.Meta
                 container.RegisterSingleInstance<CommandArgsResolver>();
                 container.RegisterSingleInstance<CommandsProcessor>();
             }
+
+            container.RegisterSingleInstance<UiManager>();
         }
     }
 }

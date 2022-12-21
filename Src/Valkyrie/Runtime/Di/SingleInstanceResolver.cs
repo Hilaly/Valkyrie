@@ -8,9 +8,6 @@ namespace Valkyrie.Di
         {
         }
 
-        public override object Resolve(ResolvingArguments args)
-        {
-            return _createdInstance ?? (_createdInstance = base.Resolve(args));
-        }
+        public override object Resolve(ResolvingArguments args) => _createdInstance ??= base.Resolve(args);
     }
 }
