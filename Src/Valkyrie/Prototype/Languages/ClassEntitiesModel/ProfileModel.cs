@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Valkyrie.Di;
 using Valkyrie.Language.Description.Utils;
 using Valkyrie.Meta.Configs;
-using Valkyrie.Meta.Inventory;
+using Valkyrie.Meta.Models;
 using Valkyrie.Tools;
 
 namespace Valkyrie

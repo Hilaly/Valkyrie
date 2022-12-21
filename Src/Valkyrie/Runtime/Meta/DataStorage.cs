@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using UnityEngine;
 using Utils;
@@ -15,20 +16,25 @@ namespace Valkyrie.Meta
 
     class DataStorage<T> : IDataStorage<T>
     {
-        private Dictionary<string, T> _dictionary = new();
+        [JsonProperty] private Dictionary<string, T> _dictionary = new();
         private readonly Dictionary<Type, object> _allCache = new();
 
-        protected internal Dictionary<string, T> Dictionary => _dictionary;
+        [JsonIgnore] protected internal Dictionary<string, T> Dictionary => _dictionary;
 
         protected void Load(string text)
         {
-            _allCache.Clear();
             _dictionary =
                 JsonConvert.DeserializeObject<Dictionary<string, T>>(text, DataExtensions.StandardJsonSettings);
 
             System.Diagnostics.Debug.Assert(_dictionary != null, nameof(_dictionary) + " != null");
 
+            RebuildCache();
+        }
 
+        [OnDeserialized]
+        void RebuildCache()
+        {
+            _allCache.Clear();
             foreach (var pair in _dictionary)
                 AddToCache(pair.Value);
         }
@@ -66,6 +72,13 @@ namespace Valkyrie.Meta
                 AddToTypedCache(t);
                 t = t.BaseType;
             }
+        }
+
+        public void Remove(string id)
+        {
+            if (Dictionary.Remove(id, out var instance))
+                foreach (var value in _allCache.Values)
+                    ((IList)value).Remove(instance);
         }
 
         public void Clear()

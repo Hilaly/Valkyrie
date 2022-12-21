@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Valkyrie.Meta.Inventory
+namespace Valkyrie.Meta.Models
 {
     public interface IWallet
     {

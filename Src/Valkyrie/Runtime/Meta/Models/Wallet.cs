@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Valkyrie.Meta.Inventory
+namespace Valkyrie.Meta.Models
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     class Wallet : IWallet

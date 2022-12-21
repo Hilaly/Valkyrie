@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 
 namespace Valkyrie.Meta.DataSaver
@@ -7,7 +6,5 @@ namespace Valkyrie.Meta.DataSaver
     {
         Task<bool> LoadAsync();
         Task SaveAsync();
-
-        IDisposable RegisterProvider(ISaveDataProvider provider);
     }
 }

@@ -1,8 +1,7 @@
-namespace Valkyrie.Meta.Inventory
+namespace Valkyrie.Meta.Models
 {
     public interface IInventoryItem
     {
         string Id { get; }
-        string TypeId { get; }
     }
 }

@@ -1,6 +1,5 @@
 using Valkyrie.Meta.Configs;
-using Valkyrie.Meta.Inventory;
-using Valkyrie.Meta.PlayerInfo;
+using Valkyrie.Meta.Models;
 
 namespace Valkyrie.Meta.Commands
 {

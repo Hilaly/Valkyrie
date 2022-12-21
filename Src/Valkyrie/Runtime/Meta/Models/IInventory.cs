@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 
-namespace Valkyrie.Meta.Inventory
+namespace Valkyrie.Meta.Models
 {
     public interface IInventory
     {
         void Add(IInventoryItem item);
         T Get<T>(string id) where T : IInventoryItem;
-        IEnumerable<IInventoryItem> Get();
-        IEnumerable<T> Get<T>();
+        IReadOnlyList<IInventoryItem> Get();
+        IReadOnlyList<T> Get<T>() where T : IInventoryItem;
         void Remove(string id);
     }
 }
