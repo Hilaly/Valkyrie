@@ -6,7 +6,6 @@ using Meta.PlayerInfo;
 using Newtonsoft.Json;
 using UnityEngine;
 using Valkyrie.Di;
-using Valkyrie.Profile;
 
 namespace Meta.Commands
 {
