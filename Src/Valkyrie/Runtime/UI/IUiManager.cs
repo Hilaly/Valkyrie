@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Utils;
 using Valkyrie.Di;
 using Object = UnityEngine.Object;
 
-namespace Valkyrie
+namespace Valkyrie.UI
 {
     public interface IWindow
     {
         int Layer { get; }
-        
+
         Task Show();
         Task Hide();
     }
@@ -38,19 +39,20 @@ namespace Valkyrie
         }
 
         [Binding]
-        public async void Close() => 
+        public async void Close() =>
             await _uiManager.OpenPrevious(Layer);
     }
-    
+
     public interface IUiManager
     {
         Task<T> Open<T>() where T : IWindow;
+        Task Reset();
     }
 
     class LayerData
     {
         public IWindow Current;
-        public Stack<IWindow> Windows = new();
+        public readonly Stack<IWindow> Windows = new();
     }
 
     class UiManager : IUiManager
@@ -59,7 +61,7 @@ namespace Valkyrie
         {
             foreach (var sceneContext in Object.FindObjectsOfType<SceneContext>())
             {
-                var r = sceneContext?.Container != null ?sceneContext.Container.TryResolve<T>() : default;
+                var r = sceneContext?.Container != null ? sceneContext.Container.TryResolve<T>() : default;
                 if (r != null)
                     return r;
             }
@@ -71,11 +73,11 @@ namespace Valkyrie
 
         LayerData GetLayer(int id)
         {
-            if(!_layers.TryGetValue(id, out var layer))
+            if (!_layers.TryGetValue(id, out var layer))
                 _layers.Add(id, layer = new LayerData());
             return layer;
         }
-        
+
         public async Task<T> Open<T>() where T : IWindow
         {
             var instance = Get<T>();
@@ -86,7 +88,7 @@ namespace Valkyrie
             {
                 if (layerInfo.Current == (IWindow)instance)
                     return instance;
-                
+
                 await layerInfo.Current.Hide();
                 layerInfo.Windows.Push(layerInfo.Current);
                 layerInfo.Current = null;
@@ -97,6 +99,13 @@ namespace Valkyrie
             await instance.Show();
 
             return instance;
+        }
+
+        public async Task Reset()
+        {
+            foreach (var layerData in _layers.Where(x => x.Value.Current != null))
+                await layerData.Value.Current.Hide();
+            _layers.Clear();
         }
 
         public async Task OpenPrevious(int layer)

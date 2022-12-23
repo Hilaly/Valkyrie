@@ -1,0 +1,17 @@
+{
+    "name": "Valkyrie.TryEvents",
+    "rootNamespace": "",
+    "references": [
+        "GUID:06d683358a9bf1549974f36ef8fc5080",
+        "GUID:805ba43a4c86fd7468ca4812da320a12"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
