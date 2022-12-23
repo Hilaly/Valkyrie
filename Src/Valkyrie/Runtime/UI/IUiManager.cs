@@ -34,7 +34,8 @@ namespace Valkyrie.UI
 
         Task IWindow.Hide()
         {
-            gameObject.SetActive(false);
+            if(this != null && gameObject != null)
+                gameObject.SetActive(false);
             return Task.CompletedTask;
         }
 
