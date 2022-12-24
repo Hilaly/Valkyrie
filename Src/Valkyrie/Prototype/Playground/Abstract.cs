@@ -150,6 +150,8 @@ namespace Valkyrie.Playground
                     yield return entity;
             }
         }
+
+        public IEntity Find(Func<IEntity, bool> filter) => GetAll().FirstOrDefault(filter);
     }
     
     public class GenericFilter<T0,T1,T2,T3> : Filter
