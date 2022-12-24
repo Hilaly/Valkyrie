@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Valkyrie.Playground
 {
@@ -10,6 +11,14 @@ namespace Valkyrie.Playground
 
         public static T Get<T>(this IComponent component) where T : IComponent =>
             component.Entity.Get<T>();
+
+        public static T GetOrCreate<T>(this IEntity e) where T : MonoComponent
+        {
+            var r = e.Get<T>();
+            if (r == null)
+                r = e.Add<T>();
+            return r;
+        }
 
         public static T SendEvent<T>(this GameState gameState, T eventInstance) where T : class, IEventComponent =>
             new EventEntity<T>(eventInstance, gameState).Get<T>();
