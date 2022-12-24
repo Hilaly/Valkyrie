@@ -1,0 +1,71 @@
+#lexer
+
+(--(?<value>(\n|.)+?)\.) -> comment
+
+'(?<value>[^']*)' -> STRING
+"(?<value>[^"]*)" -> STRING
+(true|false) -> BOOL
+(null|NULL|NIL) -> NULL
+([\d]+(\.[\d]+)?|\.[\d]+) -> NUMBER
+[A-Za-z][A-Za-z0-9_]* -> IDENTIFIER
+
+[ \n\r\t]+ -> escape
+
+(--) -> COMMENT
+
+(=>) -> RULE_OP
+(\.) -> SENTENCE_OP
+(,) -> COMMA
+
+(:) -> QUERY
+
+(\*|\/) -> MUL_OP
+(\+|\-) -> ADD_OP
+(<=|>=|==|!=|<|>) -> COMP_OP
+(=) -> ASSIGN_OP
+[\(\)]
+
+(!) -> EXCLAMATION
+
+(#) -> DIRECTIVE
+
+#parser
+
+<root> -> <full_sentence>+
+
+<full_sentence> -> <sentence> SENTENCE_OP
+
+<sentence> -> <alias_sentence>
+<sentence> -> <component_sentence_define>
+<sentence> -> <archetype_sentence_define>
+<sentence> -> <requester_sentence_define>
+
+<alias_sentence> -> "alias" <type_name> <full_name>
+<type_name> -> <identifier>
+<full_name> -> STRING
+
+<component_sentence_define> -> <component_with_type>
+<component_with_type> -> <component_name> QUERY <component_type>
+
+<archetype_sentence_define> -> "archetype" <archetype_name> QUERY <components_list>
+<archetype_name> -> <identifier>
+<components_list> -> <component_define> COMMA <components_list> | <component_define>
+<component_define> -> <component_with_type> | <predefined_component>
+<component_name> -> <identifier>
+<component_type> -> <identifier>
+<predefined_component> -> <component_name>
+
+<requester_sentence_define> -> <requester_name> QUERY <collection_expr>
+<requester_name> -> <identifier>
+
+<collection_expr> -> <entity_collection_define>
+<entity_collection_define> -> \( <local_components_args> \)
+<local_components_args> -> <component_arg> COMMA <local_components_args> | <component_arg>
+<component_arg> -> <excluded_component> | <required_component>
+<required_component> -> <component_name> <var_name> | <component_name>
+<excluded_component> -> EXCLAMATION <component_name>
+
+<component_name> -> <identifier>
+<var_name> -> <identifier>
+
+<identifier> -> IDENTIFIER
