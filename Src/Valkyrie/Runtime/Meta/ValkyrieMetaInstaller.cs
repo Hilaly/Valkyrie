@@ -27,7 +27,8 @@ namespace Valkyrie.Meta
         public override void Register(IContainer container)
         {
             if (jsonConfig != default)
-                container.RegisterSingleInstance<JsonConfigService>();
+                container.Register(new JsonConfigService(jsonConfig))
+                    .AsInterfacesAndSelf();
             else if (configService != null)
                 container.Register(configService).AsInterfacesAndSelf();
             else
